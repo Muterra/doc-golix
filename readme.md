@@ -1,5 +1,7 @@
-A next-generation internet built around secure, private, scalable interactions between people and things 
+A next-generation internet built around secure, private, scalable interactions between people and things
 =========
+
+[From Muterra](http://www.muterra.io)
 
 *(Scroll down if this is confusing. There's a much better non-technical explanation below.)*
 
