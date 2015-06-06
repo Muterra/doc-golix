@@ -1,22 +1,20 @@
-A next-generation internet built around secure, private, scalable interactions between people and things
+Who owns your data?
 =========
 
 [From Muterra](http://www.muterra.io)
 
-*(If this is confusing, there's a much better non-technical explanation [below](#wait-what).)*
+Being online is, in today's world, essentially unavoidable. Whether through direct participation or indirect interaction, you are exceptionally unlikely to leave no internet footprint. But that connectivity comes at tremendous cost: when you upload data, you forfeit power over it. Individual websites compete to control your digital existence, offering you a false sense of privacy in exchange for unsolicited advertising. In an age when social sites are such a core part of everyday life, for many people, non-participation is simply not an option. This relationship between site and user is untenable at best, non-consensual at worst.
 
-Today's web is public and centralized by default. DNS, HTTP, SMTP, and the rest of the internet's application layer negotiate conversations between *machines*, lacking any inherent awareness of the "agent" responsible for receiving and acting upon the transferred information. This network-oriented architecture, in contrast to an agent-oriented architecture, is one of the major limitations of the contemporary internet. 
+This lack of inherent confidentiality is not just a personal concern. The absence of a universal privacy standard irreparably fractures development: it forces every site and every service to reconcile between the uncountable URLs and APIs that make up the modern web, and this hodgepodge is as woefully difficult to secure as it is to describe.
 
-Network-oriented architecture is characterized by static machine addressing, regardless of agent identity: IP addresses talking to each other on behalf of unknown parties. From the agent's perspective, this fails to decouple agent interactions from network operations, hindering modularization and distribution of both network and services. Because of changing network configurations, it decreases the reliability of "persistent" data, and relies heavily upon third parties for information semantics. And because it is blind to the intended recipient of network traffic, network-oriented architecture makes robust end-to-end security exceptionally difficult, posing a significant burden to meaningful digital privacy.
+We offer a new paradigm. It is the logical conclusion of "cloud architecture": a single, global data repository. All uploads are private and protected; they are shared only by explicit choice. Sites distribute data but do not control it. Information is found equally easily by human and machine, and API descriptions are uniform and programmatic.
 
-Agent-oriented architecture is characterized by static agent identity, regardless of machine addressing: agents conversing directly, regardless of their client machines. It requires a new abstraction layer to mediate between the network-oriented transport layer and the redefined, agent-oriented application layer. This new "service layer" is, both by design and necessity, "private by default": encrypted at rest and unshared upon creation. The service layer provides persistence to the network as a whole, and information is inherently semantic. This new internet protocol stack negotiates network-location-based data streams into action-based endpoints more effectively than the existing world wide web, making it far more suitable for the ever-growing world of internet-connected physical devices. Because its primary goal is to transform the loosely-connected tangle of internet services into a single amalgamated source of information, we've termed this new configuration the mesh-made-muse.
+This system turns the chaotic tangle of computers behind the web into a clear and coherent information vault. This is the mesh-made-muse.
 
-[Jump to the technical explanation](#the-technical-explanation)
-
-Wait... what?
+Web vs Muse
 ============
 
-For a layperson explanation, I'm going to use a metaphor with some huge simplifications. This isn't 100% technically accurate, but it gets the idea across effectively. 
+Disclaimer: this is a metaphor with some huge simplifications. Like a book made into a movie, it isn't 100% technically accurate, but it gets the general idea and mood across effectively. **If you're looking for a technical explanation, [jump below](#the-technical-explanation), or read [our whitepaper](/whitepaper.md).**
 
 The web today
 --------------
