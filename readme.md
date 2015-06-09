@@ -3,130 +3,45 @@ Who owns your data?
 
 [From Muterra](http://www.muterra.io)
 
-Being online is, in today's world, essentially unavoidable. Whether through direct participation or indirect interaction, you are exceptionally unlikely to leave no internet footprint. But that connectivity comes at tremendous cost: when you upload data, you forfeit power over it. Individual websites compete to control your digital existence, offering you a false sense of privacy in exchange for unsolicited advertising. In an age when social sites are such a core part of everyday life, for many people, non-participation is simply not an option. This relationship between site and user is untenable at best, non-consensual at worst.
+Whether through direct participation or indirect interaction, it is essentially impossible to avoid leaving an internet footprint in today's world. This connectivity comes at a tremendous cost: when you upload data, you forfeit power over it. Individual websites *may* provide you some measure of external privacy, but this protection seldom applies to the service itself. In an age when the internet is such a core part of everyday life, for many people, non-participation is simply not an option, and this relationship between site and user is untenable at best, non-consensual at worst.
 
-This lack of inherent confidentiality is not just a personal concern. The absence of a universal privacy standard irreparably fractures development: it forces every site and every service to reconcile between the uncountable URLs and APIs that make up the modern web, and this hodgepodge is as woefully difficult to secure as it is to describe.
+The lack of inherent confidentiality is not just a personal concern. The absence of a universal privacy standard irreparably fractures development: it forces every site and every service to reconcile between the uncountable URLs and APIs that make up the modern web, and this hodgepodge is as woefully difficult to secure as it is to describe.
 
-We offer a new paradigm. It is the logical conclusion of "cloud architecture": a single, global data repository. All uploads are private and protected; they are shared only by explicit choice. Sites distribute data but do not control it. Information is found equally easily by human and machine, and API descriptions are uniform and programmatic.
+We offer a new paradigm. It is the logical conclusion of "cloud architecture": a single global data repository, unified by common protocol, but easily decentralized. All uploads are private and protected. Information is shared directly between actors, regardless of physical location, and only by explicit choice. Data is found equally easily by human and machine, and API descriptions are uniform and programmatic.
 
 This system turns the chaotic tangle of computers behind the web into a clear and coherent information vault. This is the mesh-made-muse.
 
 Web vs Muse
 ============
 
-Disclaimer: this is a metaphor with some huge simplifications. Like a book made into a movie, it isn't 100% technically accurate, but it gets the general idea and mood across effectively. **If you're looking for a technical explanation, [jump below](#the-technical-explanation), or read [our whitepaper](/whitepaper.md).**
+Disclaimer: this is a non-technical explanation with some huge simplifications. Like a book made into a movie, it isn't 100% accurate, but it hopes to capture the general idea of both the web and the muse. If you want a more detailed layman's explanation, take a look at our [Web/Muse 101](/web_muse_101.md) guide. **Continue [below](#the-technical-explanation) for a more technical explanation,** but we suggest starting here regardless.
 
 The web today
 --------------
 
-First, let's look at the web today. Pretend every website has a single ~~server~~ post office, and every client has a ~~computer~~ mailbox. For the sake of explanation, pretend this is the entire internet:
+The internet is a pretty fragmented place. Let's say you upload a picture of your dog, and a week later you can't find it. Is it on Facebook? Imgur? Dropbox? Everywhere you go, there's a different way to look. Can you imagine how hard it would be to keep your Dropbox synced with your Facebook photos? What about sharing write access to a Dropbox folder to a friends list on Facebook? When you're writing code for the web, you're faced with those kinds of problems all the time. When people talk about putting things "in the cloud", they're really talking about a thousand different clouds, each with their own special requirements and rules. Why isn't saving data *to the internet* as simple as saving it to your hard drive?
 
-+ Gmail's post office
-+ Facebook's post office
-+ Wikipedia's post office
-+ Your mailbox
-+ Your friend Alice's mailbox
-+ Your enemy Bob's mailbox
+Probably the most compelling cause for this complexity is privacy. Despite the common misconception that connections on the web are private and confidential, much of your internet traffic is left public. When you "talk" to a website, by default any communication to and from that site is a lot like putting a postcard in a mailbox shared by 3 billion people. *You* might only be looking at your own postcards, but there's absolutely nothing stopping *anyone else* from looking at them, too. When you first come online, you are sharing everything -- absolutely everything, email, browsing history, the whole works -- you're sharing everything you do with each and every other person online, and hoping that they don't read it. Sharing your bank password with 3 billion people is obviously a very bad idea, so because the [underlying technology](http://en.wikipedia.org/wiki/Application_layer) is missing any built-in privacy protection, we're forced to create this complicated system to keep your data safe.
 
-Let's say you want to send Alice a message in an unsecured environment. That looks like this:
-
-1. You write Alice a ~~message~~ postcard.
-2. You put the postcard in your home mailbox.
-3. ~~HTTP~~ The mailman picks up your postcard
-4. The mailman takes your postcard and dumps it in a big box *outside* the gmail post office.
-5. A worker from the gmail post office picks up the box. Your postcard gets sorted by destination, but HTTP is a really lousy mailcarrier and won't take it to Alice without a new stamp, so the post office does that for you. The post office worker drops your postcard in another outside-the-post-office box for outgoing mail.
-6. Another mailman takes your postcard to Alice's mailbox.
-
-This is insecure because of what Bob can do:
-
-1. Bob can read your postcards.
-2. Bob can create fake postcards, impersonating you.
-3. Bob can open his own post office and pretend to be Gmail
-
-and where he can do it:
-
-1. From your mailbox
-2. From the boxes outside the post office
-3. From Alice's mailbox
-
-It also requires you to trust gmail's post office to:
-
-1. Actually deliver the postcard to Alice
-2. Not read the postcard, despite needing the address from it
-3. Not alter the postcard in transit
-4. Not do any of the other bad things that Bob can do
-
-Okay, so this is... suboptimal. Really suboptimal. So we decide to shore it up a bit by ~~encrypting~~ putting the postcard in a pink security envelope. And we want to make sure Bob doesn't just open up his own (fake) post office, so we ask a ~~certificate authority~~ notary to sign every piece of mail that goes to and from gmail. Okay, so now, Bob can't claim to be gmail, and he can't read your postcard, and because he only has blue security envelopes (remember you have pink), he can't even send fakes. **However**, once you're out of pink envelopes, Bob can still impersonate you with the blue ones. To prevent that, you make an account with the gmail post office, and the two of you agree on a secret password. From then on, every time you send gmail a postcard, you'll include the password inside of the envelope. *Now we don't have to worry about Bob!* Okay, so now the whole process is:
-
-1. You ask the gmail post office for a notarized postcard with their address on it
-2. You write Alice a postcard.
-3. You put the postcard and a password in a special security envelope that Bob can't open or fake.
-4. You put the postcard in your mailbox, and the mailman takes the postcard to the gmail post office using the address from above.
-5. Gmail opens up your envelope, sees the password (and therefore knows it's you), reads the destination (Alice), puts it in a new security envelope addressed to Alice, notarizes that, and puts it in outgoing mail
-6. The postcard is delivered to Alice
-
-This is ~~http**s**~~ a much better mail service, and it's the current recommendation on the web. Do you see some issues here?
-
-1. What if someone impersonates the notary? (This is what Lenovo did with Superfish)
-2. The post office can still read your postcards.
-3. The post office can still create fake postcards, impersonating you.
-4. What if the post office sends your postcard (or a copy of it) to someone *other* than Alice?
-
-These are the privacy and security problems that the Muse seeks to address. But before we talk about the Muse, let's pretend that in our above scenario, you want to create an account to edit Wikipedia, using your Facebook profile picture, and using gmail for authentication. Under this scheme, the process goes:
-
-1. You start talking with the gmail, wikipedia, and facebook post offices, as discussed above.
-2. You send gmail a secure postcard, asking them to send wikipedia ~~a valet key~~ the last 4 characters of your password.
-3. You send Wikipedia a secure postcard, including only those last 4 characters with the message instead of the whole password. This creates an account with them. On this postcard, you write the ~~API endpoint~~ address of Facebook's post office and your ~~account identifier~~ name, telling Wikipedia to use that as a user picture.
-4. Wikipedia's post office sends Facebook's post office a secure postcard, asking them for the picture. If it's public, Facebook sends it right over. If it's private, Facebook (hopefully) sends you a postcard asking for permission to share it. Assuming you grant that,
-5. Wikipedia constructs your account.
-
-First of all, that *seems* very complicated, because it *is* very complicated. That aside, now we have a whole lot more problems:
-
-1. Everyone is at least a little confused! If I'm coding some software that uses all of these post offices, I have a lot to keep track of.
-2. What if Wikipedia, Facebook, or Gmail change their post office address?
-3. What if you change your gmail password?
-4. What if any of the post offices refuse to cooperate with the other ones?
-5. What if Facebook doesn't ask your permission to share your picture? What if it isn't Wikipedia asking for it, but one of Facebook's advertisers, and you never asked the advertiser to do anything?
-6. Why, exactly, is *Facebook* responsible for making decisions about my profile picture on my behalf?
-
-You can see there's a **lot** going on here. These are the systemic issues that the Muse helps alleviate.
+And yet, despite how important privacy and security are, they're still a technological afterthought. Arguably the biggest obstacle here is that any meaningful definition of privacy requires a robust way of knowing *exactly* who you're talking to. This isn't usually something you need to consider when you're talking in person, but imagine your spouse has a perfectly identical twin. Now you need some fundamental way to unambiguously differentiate between indistinguishable people. That's exactly the difficulty online: on the web, *every* computer looks the same. The easiest solution is to create a password-protected account, and because the fundamental protocols of the web don't support sharing your account "identity" between sites, you're forced to create a new one for every site you visit.
 
 The mesh, made a Muse
 ----------------
 
-The Muse changes pretty much all of that. Again, as a warning, this is an oversimplification, but with the Muse, the internet looks like this:
+The core thing we've done is to reverse all that. We started with the goal of making the *entire internet* behave as one very large, very simple hard drive. On this single global data repository, everything is private by default, which is made possible by universal identity definition. These universal identities are then used to readdress communications *directly* between people and things, largely eliminating the need for website intermediaries.
 
-+ A single, universal post office
-+ Gmail's mailbox
-+ Facebook's mailbox
-+ Wikipedia's mailbox
-+ Your mailbox
-+ Your friend Alice's mailbox
-+ Your enemy Bob's mailbox
+First and foremost, such a network needs persistence. In the future it may be possible to build this on a distributed, peer-to-peer system like [maidsafe](http://en.wikipedia.org/wiki/MaidSafe) or [BitTorrent](http://simple.wikipedia.org/wiki/BitTorrent), but for the time being, existing internet infrastructure can be used for this purpose. By separating storage into its own protocol, the muse makes it easy to implement new storage systems, either as a replacement for, or simultaneously with, existing "storage providers". One practical advantage of this paradigm is that the muse can be used *identically* at any scale: there is no difference between sharing data amongst users on a single machine, to computers on the same WiFi network, to websites on opposite sides of the planet.
 
-Here, there *is no concept of insecure transfer*. Every single ~~message~~ postcard is inside those special security envelopes. Let's walk through sending Alice another message, this time on the Muse:
+Since this kind of unified internet storage requires all information to start as private, it also needs a sharing mechanism: the "access provider". Access providers are built on the network persistence, and through them "public information" arises. Different access providers may offer advantages and disadvantages, and though the simplest access provider (which requires only storage) manages sharing directly and explicitly between people and things, *public* access providers function as a sort of digital publisher, allowing data to be shared with larger groups of people. Like storage providers, access providers are both scalable (you can share with one user or many) and modular (you can use one access provider or many).
 
-1. You and Alice agree on a notary (or multiple notaries). You can make them as easy or as hard to impersonate as you'd like. This time, the notary checks *your* ID, instead of just the post office's.
-2. You and Alice exchange addresses
-3. You write Alice a postcard, sealing it in your colored security envelope, signing the back of it, and using your agreed-upon notary to verify the signature
-4. You put the postcard in your mailbox, ~~metp~~ the mailman delivers it to Alice's mailbox.
+Finally, the muse defines an identity system. Identities, which are also built on network persistence, are the muse equivalent of a web account. Like access providers, the most basic identity provider is created naturally by the storage foundation, but more complex identity providers can supply arbitrarily complex forms of identity verification. For example, a biometric identity provider might require your fingerprint in part of its verification process. And once again, identity providers are scalable and modular.
 
-Not only is that a lot simpler, but now you only have to trust one thing:
-
-1. The post office delivers your message
-
-Nowhere does Bob even enter the picture. To illustrate the difference further, and how profound of an effect this has on developing services on top of the Muse, what about creating the wikipedia profile example from earlier?
-
-1. You create your account at the post office and get it notarized. Think of this as a PO box.
-2. You send the post office a notarized, secure message. Within it is your profile picture. You password protect the picture with a random number that is automatically stored in a special box at the post office that only you can open. *The post office does not have access to the picture, nor the password.*
-3. You send Facebook a notarized, secure postcard, requesting they use the profile picture at your PO box number, and send them a copy of the picture's password.
-4. You send Wikipedia the same request.
-5. They check with the notary, verifying your details.
-
-That's it. The universal post office never moves, so you don't have to worry about a changing address. None of the mailbox addresses matter to you, only to the post office. You don't even need gmail to create your account; the post office takes care of that for you. And Facebook *cannot* refuse to work with Wikipedia, because Facebook isn't responsible for your picture. Meanwhile, the post office doesn't have any say in what's going on -- it can't see your messages, it can't compromise your pictures, and all it does is deliver letters. Your data never leaves your control.
+These three components handle identity infrastructure, sharing management, and content storage, together forming the muse "service layer". It addresses three of the most complicated problems on today's web effectively and efficiently, and on top of it are built traditional internet applications.
 
 The technical explanation
 =====================
+
+This section is intended to offer a lot of technical clarifications to the above explanation. We *recommend* that you read the non-technical explanation first to get an overall understanding of the system, but it isn't necessarily required reading. This is just a mile-high overview of the muse; **if you'd like a more in-depth technical discussion, please read [our whitepaper](/whitepaper.md).**
 
 The web today
 -----------
