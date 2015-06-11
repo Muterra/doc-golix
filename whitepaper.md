@@ -3,9 +3,20 @@ A next-generation internet built around secure, private, scalable interactions b
 
 Today's web is public and centralized by default. DNS, HTTP, SMTP, and the rest of the internet's application layer negotiate conversations between *machines*, lacking any inherent awareness of the "agent" responsible for receiving and acting upon the transferred information. This network-oriented architecture, in contrast to an agent-oriented architecture, is one of the major limitations of the contemporary internet. 
 
-Network-oriented architecture is characterized by static machine addressing, regardless of agent identity: IP addresses talking to each other on behalf of unknown parties. From the agent's perspective, this fails to decouple agent interactions from network operations, hindering modularization and distribution of both network and services. Because of changing network configurations, it decreases the reliability of "persistent" data, and relies heavily upon third parties for information semantics. And because it is blind to the intended recipient of network traffic, network-oriented architecture makes robust end-to-end security exceptionally difficult, posing a significant burden to meaningful digital privacy.
+Network-oriented architecture is characterized by static machine addressing, regardless of agent identity: IP addresses talking to each other on behalf of unknown parties. This failure to separate inter-agent communication from network operations hinders modularization and distribution of both network and services. Changing network configurations can break existing data references, decreasing the dependability of "persistent" data. And because it is blind to the intended recipient of network traffic, network-oriented architecture makes robust end-to-end security exceptionally difficult, posing a significant burden to meaningful digital privacy.
 
-Agent-oriented architecture is characterized by static agent identity, regardless of machine addressing: agents conversing directly, regardless of their client machines. It requires a new abstraction layer to mediate between the network-oriented transport layer and the redefined, agent-oriented application layer. This new "service layer" is, both by design and necessity, "private by default": encrypted at rest and unshared upon creation. The service layer provides persistence to the network as a whole, and information is inherently semantic. This new internet protocol stack negotiates network-location-based data streams into action-based endpoints more effectively than the existing world wide web, making it far more suitable for the ever-growing world of internet-connected physical devices. Because its primary goal is to transform the loosely-connected tangle of internet services into a single amalgamated source of information, we've termed this new configuration the mesh-made-muse.
+Agent-oriented architecture, however, is characterized by static agent identity, regardless of machine addressing: direct conversation between individual parties, on any client machine or network topology. It requires a new abstraction layer to mediate between the network-oriented transport layer and the redefined, agent-oriented application layer. This new "service layer" is, both by design and necessity, "private by default": encrypted at rest, with information unshared upon creation. This service layer provides data persistence, agent identification, and information sharing to the network as a whole at the protocol level.
+
+This new internet protocol stack negotiates network-location-based data streams into action-based endpoints more effectively than the existing world wide web, making it far more suitable for the ever-growing world of internet-connected physical devices. Because its primary goal is to transform the loosely-connected tangle of internet services into a single amalgamated source of information, we've termed this new configuration the mesh-made-muse.
+
+
+------------
+
+Crucial information semantics -- like authorship or creation date -- exist only through third parties.
+
+and information is inherently semantic. 
+
+--------------
 
 Table of contents
 --------------
@@ -52,7 +63,9 @@ From these core requirements, we can then assert a few more:
 4. Addresses are static but the world is not; some mechanism to support data recontextualization, modification, etc is necessary.
 5. For logistical reasons, true dynamic communication must be supported. This is subtly different than sharing, but conversion from dynamic to static must be trivial.
 
---------------
+
+Scratchbook
+===============
 
 Caveat:
 ------
@@ -78,3 +91,7 @@ Provide the absolute lowest level of functionality necessary to implement such a
 -----------
 
 Absolute minimum level of intrusion; absolute minimum level of overhead.
+
+----------
+
+"Agent state consistency"

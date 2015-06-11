@@ -1,7 +1,7 @@
+[From Muterra](http://www.muterra.io). **Warning:** this repo is considered public pre-release information. It is in varying levels of completeness, but being provided as a glimpse into our development process. Understand that it may or may not meet our quality standards. If you have questions or comments, please [contact us](mailto:badg@muterra.io).
+
 Who owns your data?
 =========
-
-[From Muterra](http://www.muterra.io)
 
 Whether through direct participation or indirect interaction, it is essentially impossible to avoid leaving an internet footprint in today's world. This connectivity comes at a tremendous cost: when you upload data, you forfeit power over it. Individual websites *may* provide you some measure of external privacy, but this protection seldom applies to the service itself. In an age when the internet is such a core part of everyday life, for many people, non-participation is simply not an option, and this relationship between site and user is untenable at best, non-consensual at worst.
 
@@ -11,10 +11,10 @@ We offer a new paradigm. It is the logical conclusion of "cloud architecture": a
 
 This system turns the chaotic tangle of computers behind the web into a clear and coherent information vault. This is the mesh-made-muse.
 
-Web vs Muse
+Web vs Muse: the view from orbit
 ============
 
-Disclaimer: this is a non-technical explanation with some huge simplifications. Like a book made into a movie, it isn't 100% accurate, but it hopes to capture the general idea of both the web and the muse. If you want a more detailed layman's explanation, take a look at our [Web/Muse 101](/web_muse_101.md) guide. **Continue [below](#the-technical-explanation) for a more technical explanation,** but we suggest starting here regardless.
+Disclaimer: this is a non-technical explanation with some huge simplifications. Like a book made into a movie, it isn't 100% accurate, but it hopes to capture the general idea of both the web and the muse. If you want a more detailed layman's explanation, [we're working on it](/web_muse_101.md). **Continue [below](#the-one-mile-overview) for a more thorough exploration,** but we suggest starting here regardless. You can also read our [whitepaper](/whitepaper.md) or [yellowpaper](/yellowpaper.md), but they are significantly more involved.
 
 The web today
 --------------
@@ -38,13 +38,56 @@ Finally, the muse defines an identity system. Identities, which are also built o
 
 These three components handle identity infrastructure, sharing management, and content storage, together forming the muse "service layer". It addresses three of the most complicated problems on today's web effectively and efficiently, and on top of it are built traditional internet applications.
 
-The technical explanation
+The one-mile overview
 =====================
 
-This section is intended to offer a lot of technical clarifications to the above explanation. We *recommend* that you read the non-technical explanation first to get an overall understanding of the system, but it isn't necessarily required reading. This is just a mile-high overview of the muse; **if you'd like a more in-depth technical discussion, please read [our whitepaper](/whitepaper.md).**
+This section is intended to offer a slightly more detailed exploration of the muse. It builds on a basic understanding of the project, so we *recommend* that you read the above explanation first to get some context. Unfortunately, at this level, some technical language is unavoidable, but we'll try to offer wiki links for further reading. If you'd like an in-depth implementation discussion, check out [our whitepaper](/whitepaper.md).
 
-The web today
+Failures of the web today
 -----------
+
+It is very, very difficult to make informed decisions about data on the web. That's true for everyone: developers, companies, consumers. Even ignoring a growing number of security concerns, given current architecture, information can only be compartmentalized within an individual service. Since most services don't share their methodologies, much less their source code, participation becomes all or nothing: trust the service with too much information, or don't use it at all. When the forfeiture of sovereignty and autonomy is a systemic condition of use, then the system is broken. It's one thing to abstain from social network sites out of privacy concerns, but good luck avoiding your hospital's internet-connected electronic records system. Make no mistake: this is a problem of dire importance.
+
+It is absolutely vital for *any* individual -- developer, company, consumer -- to be capable of making granular decisions about data sharing. That kind of information [agency](http://en.wikipedia.org/wiki/Agency_%28philosophy%29) requires a meaningful protection of privacy, but so long as it continues to be market-driven, software will always be developed to the lowest denominator. And security, which is a necessary but insufficient condition for privacy, has been consistently treated as a secondary market concern. If we're to have any hope of information empowerment, these hard privacy controls **must** be implemented at the protocol level, and **must not** be optional. Let there be no illusion here: [https does not ensure privacy](https://www.facebook.com); an internet privacy protocol simply does not exist. Furthermore, the prevailing market winds suggest that such a thing would only be adopted if it provided significant economic benefit beyond privacy protection.
+
+At the same time, the development 
+
+-----------------
+
+This is the current edit point. Everything below this is pre-draft.
+
+What I most care about is being able to make decisions. We as developers have an overwhelming tendency to prescribe our pet abstractions to everyone who uses our software. Some people might call this "designing with the worst developer in mind", and there's a lot of evidence that this makes for shit software. So instead of trusting the server to keep our data safe, since they won't, we should be able to secure it ourselves. A *decision* to share should be just that: a conscious, informed choice that I'm saying exactly X piece of information to exactly Y third party. But to say that, we need hard, algorithmically guaranteed privacy.
+
+Most of the confusion online today can be blamed on poor addressing schemes. Addressing is inconsistent at best. The existence of the search engine market is a testament to how poor our use of URLs has become. Entire businesses, like IFTTT, have sprung up around the task of API unification. The point of a URL is to be human-readable, and yet services like Imgur are a testament that the age of URL legibility is long past. So why are we using them? If our URLs aren't understandable, what advantage do they have over IP addresses?
+
+At this point, the real utility of DNS is in assuring [authenticity](http://en.wikipedia.org/wiki/Information_security#Basic_principles). But is it the best way of doing so? Without TLS, using a domain to assure authenticity is a very false security. DNS has outlived is usefulness as a way for humans to find things; it would be a much stronger authenticity "notary" if it were explicitly redesigned for that purpose.
+
+Of course, it isn't possible to authenticate something without having a concept of identity. CA's do this already: they provide varying levels of investigation into the actual identity of the organization registering an SSL certificate. CA's are by far the most prolific, successful example of "single sign-on". But other than scale, there's very little conceptual difference between a CA intended for businesses, a CA intended for persons, or a CA intended for internet-connected devices: all of them offer some kind of mechanism by which Alice can verify that this computer claiming to be Bob is, in fact, Bob.
+
+
+
+No way of forcing https, and no way to ensure security.  You aren't always the person making that decision -- think your network admin, healthcare provider, etc.
+
+You can't fix privacy without eliminating client/server architecture, and you can't eliminate client/server without fixing privacy.
+
+Primary concerns:
+
++ Fucking... agency, dude
++ Fucking... privacy, mate
++ How do humans find information, vs how do computers find information
++ Unification of services and experience
++ Division of concerns
+
+Possible discussion points:
+
++ Structure: DNS, HTTP/S, URLs mixing human-meaningful and machine-meaningful content, etc
++ APIs: very simply concept, incredibly complicated execution.
++ SOAP, REST, etc
++ Addressing: persistence fails, mirrors fail, URLs fail, everything fails
++ No state
++ No meaningful protections of creation rights
 
 The mesh, made a Muse
 ------------
+
+The muse is designed from the ground up around data [agency](http://en.wikipedia.org/wiki/Agency_%28philosophy%29). We won't hold your hand through security. You are free to securely make insecure decisions: nothing will stop you from sharing your bank account with a scammer. We will, however, give you the tools to make your own decisions, and guarantee that the starting state is secure.
