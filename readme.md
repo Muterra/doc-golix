@@ -61,12 +61,11 @@ At this point, the only real utility of DNS is to assure [authenticity](https://
 Throw out the rundown, bring on the Muse
 ------------------
 
-The muse is designed from the ground for scalable performance and security built on a foundation of data [agency](http://en.wikipedia.org/wiki/Agency_%28philosophy%29). 
+The muse is designed from the ground to answer these challenges with a scalable, performant alternative. It is built on a foundation of data [agency](http://en.wikipedia.org/wiki/Agency_%28philosophy%29) and minimizes forced abstractions.
 
 
------------------
+#**This is the current edit point. Everything below this is pre-draft.**
 
-**This is the current edit point. Everything below this is pre-draft.**
 Primary concerns:
 
 + Fucking... agency, dude
