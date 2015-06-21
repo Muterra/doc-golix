@@ -12,7 +12,7 @@ This system turns the chaotic tangle of computers behind the web into a clear an
 Web vs Muse: the view from orbit
 ============
 
-Disclaimer: this starts with a non-technical explanation with some huge simplifications. Like a book made into a movie, it isn't 100% accurate, but it hopes to capture the general idea of both the web and the muse. If you want a more detailed layman's explanation, we're (slowly) [working on it](/web_muse_101.md). We suggest reading this section regardless of technical aptitude, but **skip [below](#the-one-mile-overview) if you want to jump straight to the point.** If you get the idea and you'd like to more deeply explore the guts of the project, or if you're your own implementation, check out the [yellowpaper](/yellowpaper.md).
+Disclaimer: this starts with a non-technical explanation with some huge simplifications. Like a book made into a movie, it isn't 100% accurate, but it hopes to capture the general idea of both the web and the muse. If you want a more detailed layman's explanation, we're (slowly) [working on it](/web_muse_101.md). We suggest reading this section regardless of technical aptitude, but **skip [below](#the-one-mile-overview) if you want to jump straight to the point.** If you get the idea and you'd like to more deeply explore the guts of the project, or if you're writing your own implementation, check out the [yellowpaper](/yellowpaper.md).
 
 The web today
 --------------
@@ -39,7 +39,7 @@ These three components together form the muse "service layer". It allows develop
 The one-mile overview
 =====================
 
-This section is intended to offer a slightly more detailed exploration of the muse. It builds on a basic understanding of the project, so we *recommend* that you read the above explanation first to get some context. Unfortunately, at this level, some technical language is unavoidable, but we'll try to offer wiki links for further reading. If you'd like an in-depth implementation discussion, check out [our whitepaper](/whitepaper.md); if you want implementation *instructions*, check out [our yellowpaper](/yellowpaper.md).
+This section is intended to offer a more detailed exploration of the muse. It builds on a basic understanding of the project; we recommend the above explanation as a primer. Unfortunately, at this level, some technical language is unavoidable. Various links have been provided for further reading or clarification. If you'd like an in-depth implementation discussion, check out [our yellowpaper](/yellowpaper.md).
 
 Failures of the web today
 -----------
