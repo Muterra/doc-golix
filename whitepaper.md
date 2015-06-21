@@ -1,97 +1,76 @@
-A next-generation internet built around secure, private, scalable interactions between people and things 
+Who owns your data?
 =========
 
-Today's web is public and centralized by default. DNS, HTTP, SMTP, and the rest of the internet's application layer negotiate conversations between *machines*, lacking any inherent awareness of the "agent" responsible for receiving and acting upon the transferred information. This network-oriented architecture, in contrast to an agent-oriented architecture, is one of the major limitations of the contemporary internet. 
+Whether through direct participation or indirect interaction, it is essentially impossible to avoid leaving an internet footprint in today's world. This connectivity comes at a tremendous cost: when you upload data, you forfeit power over it. Individual websites *may* provide you some measure of external privacy, but this protection seldom applies to the service itself. In an age when the internet is such a core part of everyday life, for many people, non-participation is simply not an option, and this relationship between site and user is untenable at best, non-consensual at worst.
 
-Network-oriented architecture is characterized by static machine addressing, regardless of agent identity: IP addresses talking to each other on behalf of unknown parties. This failure to separate inter-agent communication from network operations hinders modularization and distribution of both network and services. Changing network configurations can break existing data references, decreasing the dependability of "persistent" data. And because it is blind to the intended recipient of network traffic, network-oriented architecture makes robust end-to-end security exceptionally difficult, posing a significant burden to meaningful digital privacy.
+The lack of inherent confidentiality is not just a personal concern. The absence of a universal privacy standard irreparably fractures development: it forces every site and every service to reconcile between the uncountable URLs and APIs that make up the modern web, and this hodgepodge is as woefully difficult to secure as it is to describe.
 
-Agent-oriented architecture, however, is characterized by static agent identity, regardless of machine addressing: direct conversation between individual parties, on any client machine or network topology. It requires a new abstraction layer to mediate between the network-oriented transport layer and the redefined, agent-oriented application layer. This new "service layer" is, both by design and necessity, "private by default": encrypted at rest, with information unshared upon creation. This service layer provides data persistence, agent identification, and information sharing to the network as a whole at the protocol level.
+We offer a new paradigm. It is the logical conclusion of "cloud architecture": a single global data repository, unified by common protocol, but easily decentralized. All uploads are private and protected. Information is shared directly between actors, regardless of physical location, and only by explicit choice. Data is found equally easily by human and machine, and API descriptions are uniform and programmatic.
 
-This new internet protocol stack negotiates network-location-based data streams into action-based endpoints more effectively than the existing world wide web, making it far more suitable for the ever-growing world of internet-connected physical devices. Because its primary goal is to transform the loosely-connected tangle of internet services into a single amalgamated source of information, we've termed this new configuration the mesh-made-muse.
+This system turns the chaotic tangle of computers behind the web into a clear and coherent information vault. This is the mesh-made-muse.
 
+Web vs Muse: the view from orbit
+============
 
-------------
+Disclaimer: this starts with a non-technical explanation with some huge simplifications. Like a book made into a movie, it isn't 100% accurate, but it hopes to capture the general idea of both the web and the muse. If you want a more detailed layman's explanation, we're (slowly) [working on it](/web_muse_101.md). We suggest reading this section regardless of technical aptitude, but **skip [below](#the-one-mile-overview) if you want to jump straight to the point.** If you get the idea and you'd like to more deeply explore the guts of the project, or if you're your own implementation, check out the [yellowpaper](/yellowpaper.md).
 
-Crucial information semantics -- like authorship or creation date -- exist only through third parties.
-
-and information is inherently semantic. 
-
+The web today
 --------------
 
-Table of contents
---------------
+The internet is a pretty fragmented place. Let's say you upload a picture of your dog, and a week later you can't find it. Is it on Facebook? Imgur? Dropbox? Everywhere you go, there's a different way to look. Can you imagine how hard it would be to keep your Dropbox synced with your Facebook photos? What about sharing write access to a Dropbox folder to a friends list on Facebook? When you're writing code for the web, you're faced with those kinds of problems all the time. When people talk about putting things "in the cloud", they're really talking about a thousand different clouds, each with their own special requirements and rules. Why isn't saving data *to the internet* as simple as saving it to your hard drive?
 
-asdf
+Probably the most compelling cause for this complexity is privacy. Despite the common misconception that connections on the web are private and confidential, much of your internet traffic is left public. When you "talk" to a website, by default any communication to and from that site is a lot like putting a postcard in a mailbox shared by 3 billion people. *You* might only be looking at your own postcards, but there's absolutely nothing stopping *anyone else* from looking at them, too. When you first come online, you are sharing everything -- absolutely everything, email, browsing history, the whole works -- you're sharing everything you do with each and every other person online, and hoping that they don't read it. Sharing your bank password with 3 billion people is obviously a very bad idea, so because the [underlying technology](http://en.wikipedia.org/wiki/Application_layer) is missing any built-in privacy protection, we're forced to create this complicated system to keep your data safe.
 
-Inseparable privacy
+And yet, despite how important privacy and security are, they're still severely lacking. Arguably the biggest obstacle here is that any meaningful definition of privacy requires a robust way of knowing *exactly* who you're talking to. This isn't usually something you need to consider when you're talking in person, but imagine your spouse has a perfectly identical twin. Now you need some fundamental way to unambiguously differentiate between indistinguishable people. That's exactly the difficulty online: on the web, *every* computer looks the same. The easiest solution is to create a password-protected account, and because the fundamental protocols of the web don't support sharing your account "identity" between sites, you're forced to create a new one for every site you visit.
+
+The muse
+----------------
+
+The core thing we've done is to reverse all that. We started with the goal of making the *entire internet* behave as one very large, very simple hard drive. On this global data repository, everything is private by default. Instead of addressing communications between individual computers, they are routed explicitly between people, things, and services.
+
+To make such a network independent of the location of the computers it's running on requires storage persistence; without it, even a distributed peer-to-peer system will fail when, for example, a phone switches from a mobile to WiFi connection. This universal data "cloud" is the foundation of the muse, and it's designed to be easily improved and grown without affecting the rest of the network. One practical advantage of this paradigm is that the muse can be used *identically* at any scale: there is no difference between sharing on a single computer, over a WiFi connection, or across the whole internet.
+
+This kind of unified internet storage *requires* all information to start as private. Since networks are mostly only useful through collaboration, it also needs a sharing mechanism. These data "access providers" are built on the unified storage cloud. Different providers offer different kinds of access; simple ones negotiate sharing directly between between people and things, but more complex providers function as a sort of digital publisher. Through these providers, sharing is given a universal language.
+
+Once it's possible to share information, it's important to know *exactly who* you're sharing it with. To that end, the muse defines an identity system: they're the muse equivalent of a website account. Additional muse identities can be created to provide anonymity or pseudonymity, but unlike on the web, all identities are global and reusable. Simple identity providers may not provide any identity verification, but anything, from fingerprints to face recognition and beyond, is possible.
+
+These three components together form the muse "service layer". It allows developers to treat the internet as a single coherent cloud, and answers three of the most complicated problems on today's web effectively and efficiently. On top of it are built traditional internet sites and services.
+
+The one-mile overview
+=====================
+
+This section is intended to offer a slightly more detailed exploration of the muse. It builds on a basic understanding of the project, so we *recommend* that you read the above explanation first to get some context. Unfortunately, at this level, some technical language is unavoidable, but we'll try to offer wiki links for further reading. If you'd like an in-depth implementation discussion, check out [our whitepaper](/whitepaper.md); if you want implementation *instructions*, check out [our yellowpaper](/yellowpaper.md).
+
+Failures of the web today
+-----------
+
+It is very, very difficult to make informed decisions about data on the web. That's true for everyone: developers, companies, consumers. Even ignoring a growing number of security concerns, given current architecture, information can only be compartmentalized within an individual service. Since most services don't share their methodologies, much less their source code, participation becomes all or nothing: trust the service with too much information, or don't use it at all. When the forfeiture of sovereignty and autonomy is a systemic condition of use, then the system is broken. It's one thing to abstain from social network sites out of privacy concerns, but good luck avoiding your hospital's internet-connected electronic records system. Make no mistake: this is a problem of dire importance.
+
+It is absolutely vital for *any* individual -- developer, company, consumer -- to be capable of making granular decisions about data sharing. That kind of information [agency](http://en.wikipedia.org/wiki/Agency_%28philosophy%29) requires a meaningful protection of privacy, for which security is a necessary but insufficient condition. And since the market drives software development to the lowest common denominator, the industry has consistently treated security as an expensive afterthought; if we're to have any hope of widespread use, these hard privacy controls **must not** be optional. But the limited success of [PGP](http://en.wikipedia.org/wiki/Pretty_Good_Privacy) indicates that a universal privacy protocol would only be competitively viable if it provided significant economic benefit beyond data protection.
+
+(Un)fortunately, the internet is so tremendously messy that creating market incentives for new protocols isn't all that difficult. And though security is often a lamentably minor consideration, it is eventually and unavoidably demanded. So clearly, there *is* money to be made by streamlining development and emphasizing interoperability. The rapid emergence of [RESTful](http://en.wikipedia.org/wiki/Representational_state_transfer) APIs as a *de facto* standard is exactly such an effort, but commercial API aggregators like [IFTTT](http://en.wikipedia.org/wiki/IFTTT) suggest that RESTful architectures are an incomplete solution. This is especially true in the [IoT](http://en.wikipedia.org/wiki/Internet_of_Things) arena, where integrating a thermostat with tens or hundreds of smart grid APIs is a truly daunting task. RESTful endpoints notwithstanding, there are just too many URLs to manage easily, and developers are left to put band-aids on a broken address system. In the end, the familiar combination of DNS, domains, and file paths just doesn't scale to the billions of devices and services coming online by the day.
+
+We shouldn't be so afraid, so hesitant, to question web addressing. URLs were standardized in [December 1994](https://en.wikipedia.org/wiki/Uniform_resource_locator#History), at a time when the total number of websites had [just passed 10000](https://en.wikipedia.org/wiki/List_of_websites_founded_before_1995#1994). Since then, the web has grown by [several million times](http://www.worldwidewebsize.com/), but the ```http://www.domain.com/file/path/here``` scheme has remained essentially unchanged. URLs, together with DNS, are meant to reconcile computer-required [topological](https://en.wikipedia.org/wiki/Network_topology) data locations with human-required [semantic](https://en.wikipedia.org/wiki/Semantic_memory) locations. Put simply: a web address is intended to correlate data's physical address with its conceptual address. Now, with decades of hindsight, we can say with conviction that a URL is inappropriate for this purpose: popular services like Imgur eschew URL legibility entirely, and 404 errors are so common that the term has [entered conversational English](http://www.webster-dictionary.org/definition/404). If our URLs are incomprehensible to both human *and* machine, why are we still using them?
+
+At this point, URLs serve only two basic purposes: first, as an "entry point" for the user, and second, to assure [authenticity](https://en.wikipedia.org/wiki/Information_security#Basic_principles). But an increasing number of people are using [search engines](http://www.google.com/trends/explore#q=google) or [social networks](http://qz.com/333313/milliions-of-facebook-users-have-no-idea-theyre-using-the-internet/) as entry points, and without [SSL/TLS](https://www.google.com/search?q=band+aids&tbm=isch) and their accompanying [certificate authorities](https://en.wikipedia.org/wiki/Certificate_authority), domain-based verification is easily spoofed. Domains, DNS, and certificate authorities have failed to keep pace with the changing landscape of the internet.
+
+And as messy and convoluted as it is now, the coming Internet of Things will utterly upend existing architecture. A [recent Forbes meta-analysis](http://www.forbes.com/sites/gilpress/2014/08/22/internet-of-things-by-the-numbers-market-estimates-and-forecasts/) conservatively predicts a doubling of internet-connected devices by 2020, with 75% of the over 20 *billion* new connections coming from "sensor nodes and accessories". These kinds of "things" have very different infrastructure requirements: they are more far more likely to operate as servers, and far less likely to require user-defined entry points. If even 1% of those sensors and accessories are webfacing servers, securing them would require issuing roughly 50 times the [total number of SSL certificates ever issued](http://news.netcraft.com/archives/2015/05/13/counting-ssl-certificates.html). These numbers are unsustainable, and the time to act is now.
+
+Throw out the rundown, bring on the Muse
 ------------------
 
-Much of the benefit to agent-oriented architecture is contained in the ability to treat the internet as a global asynchronous communications system. Agents directly address other agents, and the muse itself is treated as a single coherent information repository. As such, it replaces the website as a medium for data storage, which, by extension, eliminates the notion of site-specific privacy. This arrangement **requires** *all* confidential data to be private end-to-end, or it would be immediately exposed to every other agent. We are then left with a choice: have no explicit security requirement, allowing individual applications to develop their own information controls; or, make the muse private by default, thereby implementing a new standard for universal data privacy. The proliferation of both generic security solutions like SSL, and of the astoundingly important privacy questions now regularly raised, strongly indicates that the latter option is the clear choice.
+If the existing web is public, messy, and rigid, the muse is a private, simple, flexible alternative. Information is encrypted by the end user, application, or service prior to upload. This [end-to-end encryption](https://en.wikipedia.org/wiki/End-to-end_encryption) ensures that content is secure, but since public metadata [leaks confidential information](http://gizmodo.com/why-the-metadata-the-nsa-has-on-you-matters-512103968), any truly private data must be self-contained.
 
-Having spelled out a privacy requirement, we need to define its scope. Since we're discussing information that already exists, and information isn't known to spontaneously appear, we can assume it has an author. We see privacy as an absence of information, and therefore to be "private by default", information must be known to *only and exactly* its author at the time it is created. This is intuitive in the physical world, and it's our firm belief that this paradigm should also apply to digital data. With current technology, we can then say that a functional definition of "private by default" requires data to be encrypted from pre-upload to post-download. This is known as [end-to-end encryption](http://en.wikipedia.org/wiki/End-to-end_encryption).
+Three "encrypted information container" (EIC) formats are specified for this purpose. Static (EICs) and dynamic (EICd) containers are [symmetrically](https://simple.wikipedia.org/wiki/Symmetric-key_algorithm) encrypted; access (EICa) containers are encrypted [asymmetrically](http://simple.wikipedia.org/wiki/Public-key_cryptography). EICs files are [fully-persistent](https://en.wikipedia.org/wiki/Persistence_%28computer_science%29), [heritable](https://en.wikipedia.org/wiki/Inheritance_%28object-oriented_programming%29) [key: value stores](https://en.wikipedia.org/wiki/Associative_array) supporting arbitrary binary content. EICd files are semi-persistent, bufferable binary [blobs](https://en.wikipedia.org/wiki/Binary_large_object). EICa files are temporary, rigidly-formatted containers used for API session handshakes. EICs and EICd files have public authors and EICa files have public recipients. All other metadata is encrypted within the container.
 
-However, 100% private information isn't particularly useful. The web derives most of its utility from the *collective* knowledge that is stored there; without the ability to share information, the internet would be little different from an exceptionally large paper notebook. Sharing is clearly a practical necessity, but for the "private by default" requirement to have any meaning, we have to set some ground rules:
+As human-readable URLs are, by definition, a kind of public metadata, they are then incompatible with EIC files. The muse embraces this, explicitly separating the way your computer finds data from the way your brain finds it. The machine searches a simple [flat](https://en.wikipedia.org/wiki/File_system#Flat_file_systems) repository, using a [zero-knowledge](https://en.wikipedia.org/wiki/Zero-knowledge_proof), [content-based](https://en.wikipedia.org/wiki/Content-addressable_storage) unique identifier. This creates a secure, reliable, unbreakable link: an muid. Search engines and social sites are used as entry points, and once content is unencrypted, internal hyperlinks navigate between muids. URLs are wholly eliminated, along with the web's existing address problem.
 
-1. **Sharing requires agency.** An agent must be capable of independent action. Agency implies the ability to intentionally create, share, and receive information and cannot be directly restricted by other agents. Agents can be influenced but not controlled. Agents may be non-human, but all agents are equal of opportunity.
-2. **Sharing requires consent.** An agent must make a deliberate choice to share information. Consent is informed: an agent must know exactly and exhaustively what is being shared and recipients must be explicitly known by the agent before consent. Informed consent requires limited consent; past sharing does not imply future sharing. To be voluntary, consent must also be deniable: the agent *must* see non-sharing as a viable option. [Vendor lock-in](en.wikipedia.org/wiki/Vendor_lock-in) is non-consensual, and manifests itself in a myriad of ways.
-3. **Sharing requires receivability.** A tree falling in an empty forest definitely makes a sound, but nobody cares unless someone hears it. Though the act of sharing itself does not require consent from the recipient, receipt is wholly voluntary: the recipient has every right to wholly ignore a share. Receipt is also stateful: a recipient must know who shared the information with them.
-4. **Sharing requires an author.** An agent must claim provable authorship of information before sharing it, though authorship need not be meaningful, and an author may be anonymously, pseudonymously, or explicitly named. Authorship is not ownership, and information, once created, cannot be directly controlled. All authorship is equivalent; no author can be inherently valued over another. Sharing is an egalitarian exchange.
+Furthermore, any muid may be used as a self-describing API endpoint. API requirements are specified in a standardized schema, which is then published to the network. API consumers upload EICa files with the schema's muid as a recipient. These are decrypted by the API producer and used to access an EICd session definition, which must fulfill the schema's specification. All information on the network is transmitted via API; if EIC files form the Muse's skeleton, APIs are its arteries and veins.
 
-From this point we can start to see some rhyme to the reason. Between the requirement to be private by default and the philosophical limitations we're placing on sharing, we can start to spell out some technical requirements of such a system:
+By ensuring end-to-end privacy and meaninglessness of addressing, the muse network is made fully content agnostic. Forced end-to-end encryption ensures that privacy is host-independent, and so long as the user can decrypt the data in question, muids assure accessibility. With these concerns rendered obsolete, data hosting decisions have no architectural considerations. The muse builds on this technical homogeneity and fully standardizes data hosting with a universal "storage provider" API. This is a vital step towards *self-enforcing* net neutrality, but it also has tremendously beneficial development ramifications. Not only can users and services effortlessly switch between data hosts, they can also freely move between delivery architectures: the storage provider API is dependent only upon a reliable bytestream. Once an API channel has been established, information will propagate identically over any link (WiFi, Bluetooth, etc) or any transport protocol (TCP, UDP, etc). The storage provider API creates a strong division of concerns between network and application operations.
 
-1. Data must be encrypted end-to-end, and sharing should not be connectible through metadata.
-2. Data must have exactly one agent-author, and the author must digitally sign the data.
-3. Data must be explicitly shared by one agent to another agent through the recipient's public key.
-4. Data must have a common, open, definite interface.
-5. Agents are distinguished only by the existence of a public/private keypair.
+Networks derive their utility from transmission. With the muse built on a private-by-default data store, the network needs a sharing mechanism. As rigid sharing mechanisms (for example, the explicit key distribution used by PGP) very quickly run into practical scalability limits, the muse similarly defines a global "access provider" API, allowing multiple key distribution systems to coexist. Access is requested by muid, and a provider responds with an encryption key if one is available. Trusted third parties are *possible*, but not *required*: the API is identical for both client-based and server-based services. Data authors share encryption keys with these "access providers", who then distribute access according to the author's prearranged wishes. A client-based access provider might share content privately, directly and specifically between exactly two people. Another provider, in contrast, might use a centralized server middleman to share content publicly, with anyone who requests it.
 
-That's a good start, but there are also a few inherent caveats to sharing that should be made explicit:
+A trusted sharing mechanism requires a trusted definition of "identity". Once again, the muse refrains from explicit definition, opting instead for an identity API. This "identity provider" API is an especially powerful system: it allows webs-of-trust to seamlessly coexist with both trusted third-party identity verification *and* direct exchange of identity between individuals. It even allows users to construct their own trust mechanisms, through (for example) profile pictures and account longevity.
 
-1. **The past is immutable.** You cannot change history. We consider digital data to be an extension of physical memory; once you've shared something, there's no going back. It has entered the functional memory of the recipient.
-2. **The future is indeterminate.** You cannot predict the future. The past isn't always relevant; the past may be immutable but our understanding of it isn't. Life is inherently dynamic.
-3. **The ephemerality of the present is unenforceable.** Absolute control over persistence, whether digital *or* physical, is impossible. Data, once created, cannot be reliably destroyed. Nor, in many cases, should it be.
-
-This introduces a bit of a paradox for shared digital data. On the one hand, data is definitely and exactly created; the digital medium has a "perfect" memory, so long as that memory exists -- and remember, it cannot be forcibly expired -- so long as that memory exists, it is exact. That implies a unique and static address system 
-
-4. Data must be uniquely and statically addressed. This is required for static consent, irrevocable receipt, and static receipt.
-
-From these core requirements, we can then assert a few more:
-
-1. Data must be self-sufficient; every piece of data must be capable of standalone "operation" on the network, because any other arrangement would require third-party knowledge of encrypted data.
-2. Private keys must be know only to the agent associated with its public key, and any entity operating with that private key must be considered one and the same as the agent. Otherwise, that "agent" doesn't really have agency.
-3. Since data must be self-sufficient and metadata cannot be publicly exposed, for receipt to be stateful, the sharing agent must be identified within the share container.
-4. Addresses are static but the world is not; some mechanism to support data recontextualization, modification, etc is necessary.
-5. For logistical reasons, true dynamic communication must be supported. This is subtly different than sharing, but conversion from dynamic to static must be trivial.
-
-
-Scratchbook
-===============
-
-Caveat:
-------
-
-+ Ephemerality is unenforceable
-
----------------
-
-This is a *digital* information network. Until humans are capable of directly processing digital data, human-addressability is outside the scope of the framework. Human meaning should be layered on top of machine meaning; anything else is an improper forced abstraction.
-
----------------
-
-Sharing privacy is a different scope; in general, we have to rely upon social norms to control that.
-
------------
-
-Decouple http://en.wikipedia.org/wiki/Zooko%27s_triangle
-
------------
-
-Provide the absolute lowest level of functionality necessary to implement such a system, even the most common higher level functions are outside the scope of the file format.
-
------------
-
-Absolute minimum level of intrusion; absolute minimum level of overhead.
-
-----------
-
-"Agent state consistency"
+The existence of native and location-independent content, identity, and sharing persistence represents a shift from the *network-oriented architecture* of the web to the *agent-oriented architecture* of the muse. This profoundly simplifies internet application production: new services define only their identities, their API requirements, and their code. User account support is offered by the network *as a whole*, not by individual sites. Development resources can be devoted to the product itself, instead of getting bogged down in network operations and privacy engineering. The muse is designed to make creation as easy as possible; it's the internet, but as you always wanted it: the sum total of human information, just a few clicks away.
