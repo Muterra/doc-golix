@@ -61,4 +61,12 @@ Examples
 
 Arbitrary octets: ASCII 'hello world' (length of 11)
 
-```3A 01 0b 68 65 6c 6c 6f 20 77 6f 72 6c 64 ```
+```3A 01 0b 68 65 6c 6c 6f 20 77 6f 72 6c 64```
+
+Arbitrary octets: two consecutive big-endian 32-bit unsigned integers, 1 and 2:
+
+```3A 01 08 00 00 00 01 00 00 00 02```
+
+List of two big-endian 32-bit unsigned integers, 1 and 2:
+
+```6C 3A 01 04 00 00 00 01 3A 01 04 00 00 00 02 65```
