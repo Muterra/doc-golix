@@ -9,7 +9,11 @@ Network-oriented architecture is characterized by static machine addressing, reg
 
 Agent-oriented architecture, however, is characterized by static agent identity, regardless of machine addressing: direct conversation between individual parties, on any client machine or network topology. It requires a new abstraction layer to mediate between the network-oriented transport layer and the redefined, agent-oriented application layer. This new "service layer" is, both by design and necessity, "private by default": encrypted at rest, with information unshared upon creation. This service layer provides data persistence, agent identification, and information sharing to the network as a whole at the protocol level.
 
-This new internet protocol stack negotiates network-location-based data streams into action-based endpoints more effectively than the existing world wide web, making it far more suitable for the ever-growing world of internet-connected physical devices. Because its primary goal is to transform the loosely-connected tangle of internet services into a single amalgamated source of information, we've termed this new configuration the mesh-made-muse.
+This new internet protocol stack negotiates network-location-based data streams into action-based endpoints more effectively than the existing world wide web, making it far more suitable for the ever-growing world of internet-connected physical devices. 
+
+-------
+
+Because its primary goal is to transform the loosely-connected tangle of internet services into a single amalgamated source of information, we've termed this new configuration the mesh-made-muse.
 
 
 ------------
@@ -104,8 +108,7 @@ Absolute minimum level of intrusion; absolute minimum level of overhead.
 Pending changes
 -----------
 
-+ Elimination of linearization algorithm from EIC spec; treat inheritance and anteheritance as simple ordered lists. Will be moved to conventional implementation details.
-+ Elimination of class from access records in EIC spec. Will be moved to API specifications and conventional implementation details.
+None at this time.
 
 Rejected changes
 -------
@@ -140,12 +143,12 @@ If the cipher suite uses a nonce or IV, **it will be prepended to the payload ci
 
 Cipher suites, by integer representation:
 
-+ **0x00000001:** SHA512/AES256/RSA4096. **Addressing:** SHA-512. **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537. **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537. **Symmetric encryption:** AES-256 CTR SHA512/AES256/RSA4096.
++ **0x00000001:** SHA512/AES256/RSA4096. **Addressing:** SHA-512. **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537. **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537. **Symmetric encryption:** AES-256 CTR SHA512/AES256/RSA4096. **Deniable exchange:** 2048-bit [Group #14](http://www.ietf.org/rfc/rfc3526.txt) with a generator of 2.
 
 Author signature
 ----------
 
-Provides assurances of integrity, authenticity, and non-repudiation from the author of the file. It is an asymmetric cryptographic signature, generally of the file hash / muid. *For access files, this is a signature of the concatenation file hash + inner hash*. This is to preserve the security of the author's identity to an outside observer with a dictionary of public keys.
+Provides assurances of integrity, authenticity, and non-repudiation from the author of the file. It is an asymmetric cryptographic signature, generally of the file hash / muid. *For access files, this is a signature of the bitwise XOR of the file hash + inner hash*. This is to preserve the security of the author's identity to an outside observer with a dictionary of public keys.
 
 File hash / muid
 ----------
@@ -195,7 +198,7 @@ Total length 652B | 28C
 2. Cipher suite, see above
 3. Author signature: note atypcal signature, explained above
 4. File hash
-5. eica version: **currently 0.0.5.** 
+5. eica version: **currently 0.0.6.** 
 6. Recipient muid: the single recipient of the file.
 
 Inner container:
@@ -206,18 +209,14 @@ Inner container:
 | 0      | 64B       | Inner hash           | Bytes       |
 | 64     | 64B       | Author               | Bytes       |
 | 128    | 64B       | Symmetric target     | Bytes       |
-| 192    | 64B       | Class                | Bytes       |
-| 256    | 32B       | Target symmetric key | Bytes       |
+| 192    | 32B       | Target symmetric key | Bytes       |
 
-Total size: 288B (encrypted size 512B) | 3A8
+Total size: 224B (encrypted size 512B) | 3A8
 
 1. The inner hash: Digest of all remaining bytes in the inner container. It is included as an integrity assurance.
 2. The author's muid
 3. Target muid: points at the muid of the .eics/.eicd resource that the symmetric key unlocks. By keeping this encrypted, there is no public link between the author and the recipient.
-4. Class (see below)
-5. Target symmetric key: encryption key for the .eics/.eicd resource.
-
-**EICa classes** describe how the author intends for the recipient to use the target. Note that the recipient is free to use the file however she may choose; this field only indicates intent. It likewise facilitates interpretation of shares relative to APIs, since a great many different types of entities could be passed to many different recipients with many different goals.
+4. Target symmetric key: encryption key for the .eics/.eicd resource.
 
 **As a quick note:** the maximum size of an RSA-4096 container is around 440 bytes, depending on the algo. In the future, a second symmetric 32B HMAC key may be added for verification speed on the EICs file. That said, I cannot currently think of a good way to include an HMAC for the EICa, even though it would benefit from being able to more cheaply verify content compared to post-unlocking verification. Note that this also means that only the intended consumer (the recipient) can verify the file.
 
@@ -464,7 +463,7 @@ Carol corrects her link's title by anteheriting. Meanwhile, a competing anteheri
 A note on the determinism and ordering of heritage
 -----------------------
 
-For any consumer, at any given time, with access to a given set of eics, the final eics mapping (after heritage resolution) should be consistent. That is to say, so long as the consumer's information exposure remains constant, her net eics should always be the same, regardless of software framework, device, etc. In this sense, all heritage is determinate. And in a hypothetical world where every consumer has access to the sum total of eicnet information, heritage would be very straightforward.
+For any consumer, at any given time, with access to a given set of eics, the final eics mapping (after heritage resolution) would (ideally) be consistent. That is to say, so long as the consumer's information exposure remains constant, her net eics should (ideally) always be the same, regardless of software framework, device, etc. The problem here is that defining a specific search order is inherently limiting. While we can make recommendations, we really cannot assert a single linearization process for the network as a whole. Instead, we'll just say: both inheritance and anteheritance should be treated as ordered lists, searched from left to right. But, when using the same linearization algorithm for those lists, all heritage is determinate. And in a hypothetical world where every consumer has access to the sum total of eicnet information, heritage would be very straightforward to implement.
 
 However, not every consumer has access to the same information. Even if two consumers are accessing the same inheriting child, if one consumer can't open a parent eics, the two consumers will have different mappings. Similarly, if their anteheritance preferences differ, so might their mappings. A consumer might also opt to change her resolution preferences over time, resulting in a differing final product even for the same consumer. So in this sense, it is very important to gracefully handle resolution failure. Use the best available information at all times (even old information is better than inaccessible information), and notify consumers of full failure when possible.
 
@@ -475,7 +474,4 @@ Using A#, Ref, I# to denote anteherited, referenced, and inherited eics respecti
 3. Consumer linearizes that multiple inheritance tree
 4. Perform key lookup against the linearized tree.
 
-Some notes:
-
-+ With multiple anteheritance, the order of prepending is entirely determined by the consumer. In the future, there will likely be a suite of possible algorithmic possibilities depending on content. At the moment, this is well beyond the scope of this paper.
-+ Linearization of the tree proceeds with a slightly modified [C3 linearization](http://en.wikipedia.org/wiki/C3_linearization) algorithm that aims to robustly "best guess" the circular dependency problem when C3 fails. It's likely that this will also eventually be an option presented to consumers. In general, since authors cannot control anteheritance, the linearization algorithm must err very heavily on the side of "attempt to resolve at all costs" to prevent clever content declarations from inducing load failures via anteheritance.
+Now, as for our recommendation: we suggest linearizing with a slightly modified [C3](http://en.wikipedia.org/wiki/C3_linearization) algorithm that aims to robustly "best guess" the circular dependency problem when C3 fails. In general, since authors cannot control anteheritance, the linearization algorithm must err very heavily on the side of "attempt to resolve at all costs" to prevent clever content declarations from inducing load failures via anteheritance.
