@@ -1,20 +1,37 @@
-**Warning:** this repo is considered public pre-release information. It is in varying levels of completeness, but being provided as a glimpse into our development process. Understand that it may or may not meet our quality standards. If you have questions or comments, please [contact us](mailto:badg@muterra.io).
+**Warning:** this repo is considered public pre-release information and is in varying levels of completeness. If you have questions or comments, please [contact us](mailto:badg@muterra.io).
 
-This document is an *exceptionally* brief overview of the Muse project. If you'd like to know details, you should read our [whitepaper](/whitepaper.md). If you'd like to understand the guts of the project, or to write your own implementation, check out the [yellowpaper](/yellowpaper.md).
+The Muse is a new internet abstraction layer that securely mediates between the network-oriented transport layer and the agent-oriented application layer, giving the latter an inherent definition of privacy, identity, and sharing. **What the hell does that mean?**
 
----------------
+We use the internet like this:
 
-In philosophy, the term "agency" describes the ability of an individual "agent" to take independent action -- roughly speaking, it's self-determinacy. And when you and I go online, we have woefully little agency. The second we upload data we forfeit its control; our only other choice is non-participation, and for a lot of people around the world, abstention really isn't an option. Digital agency is something I really, really care about, and the point of the Muse project is to make an economically compelling argument for its importance.
+    1. Bob sends Alice a message that they're out of toilet paper
+    2. Alice tells Paypal to withdraw money from her bank account
+    3. Paypal asks Alice's bank for money
+    4. Alice's orders TP from Amazon
+    
+Let's call Alice, Bob, Paypal, Amazon, etc all "agents" (they can independently manipulate data). The way we actually *use* the internet, then, is *agent-oriented*. However, networks only know how to talk like this: 
 
-The web today is network-oriented: information flows from machine to machine with no regard to user identity. Websites devote tremendous amounts of resources on implementing user accounts in an attempt to accommodate the reality that, at the end of the day, it's not about what *computer* is connected, but what *person* is. The Muse, in contrast, is agent-oriented: the network itself provides an inherent, universal user account system to allow development to focus directly on creation. This is made possible by a robust privacy protocol and powerful content, identity, and sharing management systems.
+    1. 73.36.202.142 sends 88.41.145.167 "we're out of toilet paper"
+    2. 88.41.145.167 sends (wwww.paypal.com = 66.211.169.66) "withdraw money from Alice's bank account"
+    3. (wwww.paypal.com = 66.211.169.66) sends (www.wellsfargo.com = 159.45.2.145) "withdraw money from Alice's account"
+    4. 88.41.145.167 sends (www.amazon.com = 72.21.206.6) "Alice orders TP"
 
-In short, the Muse project:
+Which we'll call *network-oriented*. And in reality it's even more convoluted, because Alice and Bob both have a bunch of barriers (firewalls, NATs, ISPs, dynamic IP addresses, etc) preventing them from directly talking to each other. So then in practice, the first step actually works like this:
 
-* Uses strong privacy to give people back control over their data
-* Helps you always know exactly what you're uploading, who you're sharing it with, and who shared it with you
-* Uses a single account for each identity on the network, and optionally supports anonymity through disposable identities
-* Behaves consistently and seamlessly for each user, regardless of what device they're using
-* Reduces internet operations costs by making hardware truly location-independent
-* Reduces application development costs by eliminating site-specific user accounts
-* Provides simple, effective, and cheap information security to all Muse applications
-* Is designed to meet the 40-billion-plus device scaling demands of the coming Internet of Things
+    1. 73.36.202.142 sends (www.gmail.com = 173.194.33.149) "Alice: we're out of toilet paper"
+    2. 88.41.145.167 asks (www.gmail.com = 173.194.33.149) for new messages
+    3. (www.gmail.com = 173.194.33.149) responds with "From Bob: we're out of toilet paper"
+
+The Muse sits on top of the transport layer (that's the part responsible for actually delivering messages), and below the application layer (Alice's email client, Paypal, Amazon, etc). It translates Bob's application-level "send Alice a message" command into a format that the transport layer can deliver to Alice, regardless of what ```123.123.123.123``` location she's at (and therefore regardless of what computer she's on). It does this by universally defining:
+
+1. How to keep data private
+2. What, exactly, Bob means by "Alice"
+3. How Bob shares something with Alice
+
+Now, I can say that this is a big problem on the existing web, but why should you care? 
+
+Well first, this network vs agent disconnect is one of the most fundamental reasons you have no control over your data: you're forced to use sites like ```(www.gmail.com = 173.194.33.149)``` to talk to someone, but then Google can (and does!) read all of your messages. If you don't want to share with Google, you can't share with Alice, either. Even worse, many of those middleman websites aren't secured, meaning anyone else can eavesdrop on those conversations. 
+
+Second, if you're a developer, it's a huge pain in the ass: the process of converting ```Alice``` into ```88.41.145.167``` is **tremendously** time-consuming and doesn't always work well. You get bogged down defining accounts, securely storing passwords, dealing with the little details about how ```(wwww.paypal.com = 66.211.169.66)``` talks to ```(www.wellsfargo.com = 159.45.2.145)```, etc.
+
+The Muse fixes that. It makes development as simple as ```Bob sends Alice a message```, and privacy as simple as ```Bob sends Alice a message, but since he didn't CC Google, Google can't see it.``` It's built to digitally complement the social expectations humans have evolved over millennia. If you'd like to know more, the project's [whitepaper](/whitepaper.md) is a good place to start.

@@ -2,7 +2,7 @@
 
 # Introduction
 
-The web is a messy place. Like many complex evolutionary systems, it suffers from "dorm door" syndrome: we've added layer upon layer of paint to cover our past mistakes. With every new internet-connected refrigerator, watch, and phone, that door gets harder and harder to close; we're on the cusp of a dramatic increase in networked devices, and we need a better approach. The Muse Project is exactly such an effort. We've taken a long look at the web and identified three key problems:
+Like many complex evolutionary systems, the web suffers from "dorm door" syndrome: we've added layer upon layer of paint to cover our past mistakes. We're on the cusp of a dramatic increase in networked devices, and we need a better approach. We've taken a long look at the web and identified three key problems:
 
 1. Privacy is hard to provide and harder to demand
 2. It's very difficult to locate things and people
@@ -17,7 +17,7 @@ while satisfying one assumption:
 
 1. The above proposal is economically compelling.
 
-Put simply: information on the web is hard to protect, hard to find, and hard to use. Solving these problems requires a single system that everyone can use. Such a solution should (and must!) be financially beneficial to the internet community. Our proposal entails:
+Put simply: information on the web is hard to protect, hard to find, and hard to use. Solving these problems requires a single system that everyone can use. Such a solution should (and must!) be financially beneficial to the internet community. The Muse addresses them with:
 
 1. A universal data persistence system;
 2. "Privacy by default" for that system, using three encrypted container files;
@@ -31,7 +31,7 @@ It's easy to conceptualize the web as a single coherent entity. We upload to "th
 
 The internet -- the *inter-network*, a "network of networks" -- was developed in the 70's and 80's to unify separate computer groups with a common language. It allowed any two online computers to talk to each other in a consistent way. By the early 90's, the internet needed a way to manage and share documents between these connected machines, and so the "world wide web" was born. Most of the core architecture of the web (DNS, domains, URLs, websites) was established in those first few years, and hasn't changed much since.
 
-Like any other promising new technology, the web quickly outgrew its cradle. As simple communication between *computers* became complex sharing between *people*, new internet applications were forced to adapt that core architecture to demands it was never intended to serve. No matter how clever these workarounds were, they were still just a pile of band-aids on an inadequate foundation. With [20 billion devices online already, and another 20 billion projected in the next five years](http://www.forbes.com/sites/gilpress/2014/08/22/internet-of-things-by-the-numbers-market-estimates-and-forecasts/), we have reached the tipping point. The longer we wait, the bigger these problems become, and the band-aids just aren't stopping the bleeding anymore.
+Like any other promising new technology, the web quickly outgrew its cradle. As simple communication between computers became complex sharing between persons, things, and services, new internet applications were forced to adapt that core architecture to demands it was never intended to serve. With [20 billion devices online already, and another 20 billion projected in the next five years](http://www.forbes.com/sites/gilpress/2014/08/22/internet-of-things-by-the-numbers-market-estimates-and-forecasts/), we have reached the tipping point. The longer we wait, the bigger these problems become, and the band-aids just aren't stopping the bleeding anymore.
 
 ### 1. Information control requires privacy
 

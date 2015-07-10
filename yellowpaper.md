@@ -1,42 +1,50 @@
-**DANGER ZONE:** This document is under review and is absolutely **not considered final!**
+**DANGER ZONE:** This is a draft document in-process and under review and is absolutely **not considered final!**
 
-A next-generation internet built around secure, private, scalable interactions between people and things 
-=========
+# Abstract
 
-Today's web is public and centralized by default. DNS, HTTP, SMTP, and the rest of the internet's application layer negotiate conversations between *machines*, lacking any inherent awareness of the "agent" responsible for receiving and acting upon the transferred information. This network-oriented architecture, in contrast to an agent-oriented architecture, is one of the major limitations of the contemporary internet. 
+... Concise abstracts about complex topics are really hard to write; it's going to be a hot minute.
 
-Network-oriented architecture is characterized by static machine addressing, regardless of agent identity: IP addresses talking to each other on behalf of unknown parties. This failure to separate inter-agent communication from network operations hinders modularization and distribution of both network and services. Changing network configurations can break existing data references, decreasing the dependability of "persistent" data. And because it is blind to the intended recipient of network traffic, network-oriented architecture makes robust end-to-end security exceptionally difficult, posing a significant burden to meaningful digital privacy.
+"Preservation of agent state"
 
-Agent-oriented architecture, however, is characterized by static agent identity, regardless of machine addressing: direct conversation between individual parties, on any client machine or network topology. It requires a new abstraction layer to mediate between the network-oriented transport layer and the redefined, agent-oriented application layer. This new "service layer" is, both by design and necessity, "private by default": encrypted at rest, with information unshared upon creation. This service layer provides data persistence, agent identification, and information sharing to the network as a whole at the protocol level.
+# Table of contents
 
-This new internet protocol stack negotiates network-location-based data streams into action-based endpoints more effectively than the existing world wide web, making it far more suitable for the ever-growing world of internet-connected physical devices. 
+... coming sooner or **later**.
 
--------
+# Philosophical and technical motivations
 
-Because its primary goal is to transform the loosely-connected tangle of internet services into a single amalgamated source of information, we've termed this new configuration the mesh-made-muse.
+## The future requires agency
 
+Murphy's law: anything that can happen, will. 3+ billion people on the internet and growing. Need to be able to make our own decisions about data; you can't trust a system with billions of people. One-in-a-million odds are happening every day.
 
-------------
+internet footprints are essentially unavoidable. No other medium has so profoundly capitalized on collective learning. This connectivity comes at a tremendous cost: when you upload data, you forfeit power over it. Individual websites *may* provide you some measure of external privacy, but this protection seldom applies to the service itself. In an age when the internet is such a core part of everyday life, for many people, non-participation is simply not an option, and this relationship between site and user is untenable at best, non-consensual at worst.
 
-Crucial information semantics -- like authorship or creation date -- exist only through third parties.
+Digital disempowerment is not just a personal concern. The absence of data agency irreparably fractures development: it forces every site and every service to make assumptions about desired behavior of their entire userbase, which simply isn't possible.
 
-and information is inherently semantic. 
-
---------------
-
-Table of contents
---------------
-
-asdf
-
-Inseparable privacy
-------------------
+In the physical world, personal agency is the defining characteristic of animate existence. Without it, digital interactions will be unavoidably and inescapably reluctant. In this way, historic answers to consumer concerns like privacy have been predominantly secondary considerations and localized solutions.
+ 
+## Agency requires privacy
 
 Much of the benefit to agent-oriented architecture is contained in the ability to treat the internet as a global asynchronous communications system. Agents directly address other agents, and the muse itself is treated as a single coherent information repository. As such, it replaces the website as a medium for data storage, which, by extension, eliminates the notion of site-specific privacy. This arrangement **requires** *all* confidential data to be private end-to-end, or it would be immediately exposed to every other agent. We are then left with a choice: have no explicit security requirement, allowing individual applications to develop their own information controls; or, make the muse private by default, thereby implementing a new standard for universal data privacy. The proliferation of both generic security solutions like SSL, and of the astoundingly important privacy questions now regularly raised, strongly indicates that the latter option is the clear choice.
 
 Having spelled out a privacy requirement, we need to define its scope. Since we're discussing information that already exists, and information isn't known to spontaneously appear, we can assume it has an author. We see privacy as an absence of information, and therefore to be "private by default", information must be known to *only and exactly* its author at the time it is created. This is intuitive in the physical world, and it's our firm belief that this paradigm should also apply to digital data. With current technology, we can then say that a functional definition of "private by default" requires data to be encrypted from pre-upload to post-download. This is known as [end-to-end encryption](http://en.wikipedia.org/wiki/End-to-end_encryption).
 
-However, 100% private information isn't particularly useful. The web derives most of its utility from the *collective* knowledge that is stored there; without the ability to share information, the internet would be little different from an exceptionally large paper notebook. Sharing is clearly a practical necessity, but for the "private by default" requirement to have any meaning, we have to set some ground rules:
+### Privacy is only possible with security
+
+### Rigorous protection of privacy breaks the web as we know it
+
+obscures the public information we currently use to make the web work
+
+How to find information? Re: humans, and re: computers
+
+How to establish relationships between information?
+
+### Separate concerns, remove URLs, refactor the internet
+
+Make development work better!
+
+## Agency *on a network* means sharing
+
+100% private information isn't particularly useful. The web derives most of its utility from the *collective* knowledge that is stored there; without the ability to share information, the internet would be little different from an exceptionally large paper notebook. Sharing is clearly a practical necessity, but for the "private by default" requirement to have any meaning, we have to set some ground rules:
 
 1. **Sharing requires agency.** An agent must be capable of independent action. Agency implies the ability to intentionally create, share, and receive information and cannot be directly restricted by other agents. Agents can be influenced but not controlled. Agents may be non-human, but all agents are equal of opportunity.
 2. **Sharing requires consent.** An agent must make a deliberate choice to share information. Consent is informed: an agent must know exactly and exhaustively what is being shared and recipients must be explicitly known by the agent before consent. Informed consent requires limited consent; past sharing does not imply future sharing. To be voluntary, consent must also be deniable: the agent *must* see non-sharing as a viable option. [Vendor lock-in](en.wikipedia.org/wiki/Vendor_lock-in) is non-consensual, and manifests itself in a myriad of ways.
@@ -69,55 +77,43 @@ From these core requirements, we can then assert a few more:
 4. Addresses are static but the world is not; some mechanism to support data recontextualization, modification, etc is necessary.
 5. For logistical reasons, true dynamic communication must be supported. This is subtly different than sharing, but conversion from dynamic to static must be trivial.
 
+## Sharing requires identity
 
-Scratchbook
-===============
+"You do not have a right to retroactive anonymity! You cannot disown your statements. They are a part of your past and will remain that way. You can, however, expound upon them, give them context, or revise them. Nothing is immutable except the past." That said, that's only because you can't change the past. You're more than welcome to preemptive anonymity.
 
-Caveat:
-------
+# Technical requirements
 
-+ Ephemerality is unenforceable
+## Static content
 
----------------
+Everything is static and the past is immutable. 
 
-This is a *digital* information network. Until humans are capable of directly processing digital data, human-addressability is outside the scope of the framework. Human meaning should be layered on top of machine meaning; anything else is an improper forced abstraction.
+Ephemerality is unenforceable.
 
----------------
+## Mutable context
 
-Sharing privacy is a different scope; in general, we have to rely upon social norms to control that.
+*Content* on the eicnet is static, but *concepts* are not. The fundamental idea behind heritage in the eicnet is to support *conceptual addressing*. Heritage provides a way for a newer eics object to reference or update an older eics object while preserving both the history and accessibility of the original object. In short, heritage affects the concept without affecting the content.
 
------------
+Inheritance is a familiar concept, and we'll use it to explain the mechanics of eicnet heritage. It is a one-way transaction: though both the parent and child remain addressable via their respective muids, the child inherits attributes from the parent while the parent remains unchanged. There are two steps to the process when referencing the child. First, the consumer (not the author) adds all of the hash-addressed binary blobs from the parent to her content map for the child. Then, the manifest mapping of the child is chained on top of the parent. At this point, the eics is "resolved".
 
-Decouple http://en.wikipedia.org/wiki/Zooko%27s_triangle
+Anteheritance is similar to inheritance, but reverses the relationship between parent and child. Referencing the parent yields a modification, while the child remains unchanged by the parent. Note that because the static parent was written before the static child, the parent contains no explicit link to the child. Therefore the eics consumer *must already be aware of the child* to apply the anteheritance.
 
------------
-
-Provide the absolute lowest level of functionality necessary to implement such a system, even the most common higher level functions are outside the scope of the file format.
-
------------
-
-Absolute minimum level of intrusion; absolute minimum level of overhead.
-
-----------
-
-"Agent state consistency"
+Note that heritage is completely unrestricted in terms of authorship and key reuse. In other words, a child eics may be authored by a different muid than a parent, and the child may or may not reuse the parent key (though they should never reuse a nonce!). When reusing keys, new eicas may or may not be generated, and lacking an explicit access file, consumers should always try the parent key. But, just because someone has anteherited or inherited an eics, does **not** mean that everyone will agree to that heritage. It is up to the consumer to allow or disallow a child to anteherit, and accessing a parent does not automatically imply that the consumer will likewise access an inheriting child.
 
 
-#Technical implementation
 
-Pending changes
------------
 
-None at this time.
+You can't use the dynamic address strategy (static address for dynamic content based on original address) in place of anteheritance, because other people anteheriting (which should be a normal thing) needs to be behind the container wall, or metadata is publicly available.
 
-Rejected changes
--------
 
-+ "Nonce/IV will be moved *after* the payload, and the payload length field will exclude the nonce/IV. File hash will then use the payload length to exclude the nonce/IV from the muid." This doesn't actually help any. A different nonce/IV will always, always result in a different muid, unless the hash is of pre-encrypted content, which is a security vulnerability.
-+ "Heritage linearization algorithm (modified C3) will be fully defined. This is an enhancement that will not affect the binary representation of EIC objects." This will be moved to a different level of abstraction. It doesn't fit the "bare minimum intrusion" philosophy. Leave it to convention/contract, not to the base definition.
+## Universal (but potentially meaningless) identities
 
-.eic filetype 
-========
+Messages themselves are non-repudiable, but identities are not. So, for deniable secure communications, just create a fresh identity (register a new public key). All messages from that new key will be provably owned, but the person or thing behind the fresh identity itself will not be connectible with the identity.
+
+This presents a vulnerability in that the fresh identity, by virtue of that relationship, cannot assure its conversation partner of its real identity. That functionality, however, *can* be accomplished by deniably linking the fresh identity with the old, permanent identity through a DHE. More concretely: Sam wants to leak something to Chris; Sam's usual public identity is S1 and creates a disposable identity S2. She then starts talking to Chris' normal public identity from S2 and, from within that context, shares a DHE with Chris **based on S1**. Since Chris knows he didn't create the DHE, this proves to Chris that S2 has access to S1's private key, but to an outside observer Chris could just as simply have created S2 and conducted the DHE with his own private key. The trick is that it has to be forgeable by either party, thereby making it "my word against theirs".
+
+# Technical implementation
+
+## .eic 
 
 "Encrypted Information Container". Wholly big endian.
 
@@ -126,16 +122,14 @@ Preferred file extensions are .eic, or, if specificity is desired, .eics for sta
 Every .eic file has an muid, or muse UID, that serves as a unique identifier for the content. Regardless of stored location (hard drive, URL, p2p network...), an .eic file will be capable of unambiguous referencing by its muid. It is deterministically created from the content (aka EIC is content-addressed) from a SHA-512 hash ("file hash", see below). The muid is therefore 64B long.
 
 Additionally, dynamic EIC files support a secondary (static) address, based upon their original content (in a forward-verifiable manner). It is also a SHA512 hash (see below).
-Common fields
-===========
 
-Magic number
-----------
+### Common fields
+
+#### Magic number
 
 For the usual purpose.
 
-Cipher suites
-------------
+#### Cipher suites
 
 EIC will eventually offer support for multiple cipher suites. They are represented as a 32-bit integer immediately following the magic number.
 
@@ -143,22 +137,19 @@ If the cipher suite uses a nonce or IV, **it will be prepended to the payload ci
 
 Cipher suites, by integer representation:
 
-+ **0x00000001:** SHA512/AES256/RSA4096. **Addressing:** SHA-512. **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537. **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537. **Symmetric encryption:** AES-256 CTR SHA512/AES256/RSA4096. **Deniable exchange:** 2048-bit [Group #14](http://www.ietf.org/rfc/rfc3526.txt) with a generator of 2.
+1. **0x00000001:** SHA512/AES256/RSA4096. **Addressing:** SHA-512. **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537. **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537. **Symmetric encryption:** AES-256 CTR SHA512/AES256/RSA4096. **Deniable exchange:** 2048-bit [Group #14](http://www.ietf.org/rfc/rfc3526.txt) with a generator of 2.
 
-Author signature
-----------
+#### Author signature
 
 Provides assurances of integrity, authenticity, and non-repudiation from the author of the file. It is an asymmetric cryptographic signature, generally of the file hash / muid. *For access files, this is a signature of the bitwise XOR of the file hash + inner hash*. This is to preserve the security of the author's identity to an outside observer with a dictionary of public keys.
 
-File hash / muid
-----------
+#### File hash / muid
 
 The SHA-512 digest of the entire remaining .eic. This is used as the unique content identifier for each file. Note that it excludes the magic number and signature (and therefore starts at byte 580)
 
-Version numbers
--------------
+#### Version numbers
 
-The version number is a semantic version number (ex. 1.2.3, where 1 is the major, 2 is the minor, 3 is the patch) encoded as an unsigned 32-bit integer as follows:
+The version number is a semantic version number (ex. 1.2.3, where 1 is the major, 2 is the minor, 3 is the patch) encoded as unsigned integers as follows:
 
 | Name  | Bit length | Offset |
 | ---   | ---        | ---    |
@@ -168,20 +159,17 @@ The version number is a semantic version number (ex. 1.2.3, where 1 is the major
 
 Therefore, the maximum version is 255.255.65535. Version needs to be after the file hash so that the author signature verifies the correct version is applied when opening.
 
-Recipients and authors
----------
+#### Recipients and authors
 
 EICs files make the backbone of the eicnet. Any persistent network objects are built from them. "Identities" -- at a minimum, the public half of a public/private keypair -- are no exception. As such, instead of encasing the public key in each file (or some other nonsense), every file makes reference to the muid of its author. For access files, they also target a specific identity.
 
 Within the EICs corresponding to that author, the public key should be defined under the dictionary key "pubkey". This will probably change in the process of dealing with multiple cipher suites.
 
-Access files
-==========
+### Access files
 
-Access files exist solely for access control to static and dynamic files. They may (or may not, we'll see) support deletion for forward security. They are encrypted asymmetrically against the public key of the target.
+Access files exist to initiate API connections. They support deletion for forward secrecy. They are encrypted asymmetrically against the public key of the recipient.
 
-Outer header fields:
--------------------
+#### Outer header fields:
 
 | Offset | Length    | Name                  | Format              | Hex off |
 | ------ | --------- | -------------------   | -----------         | ---     |
@@ -201,8 +189,7 @@ Total length 652B | 28C
 5. eica version: **currently 0.0.6.** 
 6. Recipient muid: the single recipient of the file.
 
-Inner container:
-----------
+#### Inner container:
 
 | Offset | Length    | Name                 | Format      |
 | ------ | --------- | -------------------  | ----------- |
@@ -220,8 +207,7 @@ Total size: 224B (encrypted size 512B) | 3A8
 
 **As a quick note:** the maximum size of an RSA-4096 container is around 440 bytes, depending on the algo. In the future, a second symmetric 32B HMAC key may be added for verification speed on the EICs file. That said, I cannot currently think of a good way to include an HMAC for the EICa, even though it would benefit from being able to more cheaply verify content compared to post-unlocking verification. Note that this also means that only the intended consumer (the recipient) can verify the file.
 
-Dynamic
-==========
+### Dynamic
 
 Dynamic EIC files are a specialized symmetrically-encrypted container file. They are intended to retain static content-addressability with truly mutable content. They are **not** meant to be a mutable form of an EICs file, and EICd files support *only a single binary blob*. There are some tradeoffs involved with these files, and generally speaking they are not intended to be widely shared, but instead be reserved for the few situations in which maintaining a full set of anteherited static files would be impractical, impossible, or expensive. There is also additional overhead associated with the initial creation of dynamic files, as they involve more hash operations. However, they need not resolve inheritance/anteheritance chains, so bandwidth requirements may be lower.
 
@@ -250,8 +236,7 @@ Specific EICd goals:
     + Problem: efficient 'delete' notification
     + Solution: transmit header with no payload and 0 buffer request
 
-Outer header:
-------------------
+#### Outer header:
 
 | Offset | Length    | Name                | Format              | Dynamic updates? | Hexoff |
 | ------ | --------- | ------------------- | -----------         | ------------     | ----   |
@@ -281,18 +266,15 @@ Total length 856B | 358
 10. Author muid: note that this will always remain constant, and another author wishing to "fork" the object must create a new EICd object, as this is included in the header hash. By definition the fork therefore loses downwards referencing.
 11. Zeroth payload hash: The hash of the payload (byte 852:end) of the original dynamic object (after encryption). This is necessary to be able to request eicd files based on their headers alone (otherwise, every file from the same author would be identical).
 
-The payload
--------------
+#### The payload
 
 The encrypted portion of the EICd file, once unlocked, is a single binary blob. Again, EICd files are not meant to encompass the self-descriptive property of EICs files. They are a very specific type of asymmetric, semi-persistent communication. Yes, because the payload is arbitrary binary data, it can contain literally anything, but it is not meant to serve as a mutable replacement for EICs files in any way. If, for example, you wanted to construct a dropbox-like folder sync mechanism using binary files, you would first need a base object for the directory, and then a number of individual dynamic objects for the individual files.
 
-Static
-==========
+### Static
 
 Static EIC files are, abstractly speaking, a symmetrically-encrypted, network-aware key: value store with a sophisticated form of semantic metadata. Each eics is a composition of its keys, and, were the eics to be destroyed, those keys would be lost. However, it might also be an aggregation of other eics. These aggregations are handled by the object's heritage (see below).
 
-Outer header:
-------------------
+#### Outer header:
 
 | Offset | Length    | Name                | Format              | Hexoff |
 | ------ | --------- | ------------------- | -----------         | ---    |
@@ -318,8 +300,7 @@ Total length 660B | 294
 
 There is a particular type of forward *security* offered here, is it is impossible (for all practical purposes) to reconstruct a new payload for a given muid, even if a malicious attacker had both the symmetric key for the resource and the private key of the author. However, forward *secrecy* is a much more complicated topic.
 
-Inner header:
-------------
+#### Inner header:
 
 | Offset   | Length | Name                     | Format              |
 | ------   | ------ | ------------             | -----------         |
@@ -343,23 +324,13 @@ Total length: ?
 
 **Manifest:** every fully-resolved EICs file can be thought of as two combined structures: a series of content-addressed binary blobs, and a dictionary describing their contents. The keys, loosely speaking, constitute a local namespace within the container. Multiple keys may address a single piece of content, but there should be no duplicate keys (even after resolving inheritance/anteheritance; see Heritage). The file should be formatted as a single toplevel zbg dictionary. It should not be treated as a standalone file and should *not* include its own magic number or header. Keys may be arbitrary binary values, but keep in mind that non-text encodings may introduce compatibility issues with certain implementations. Values may be either arrays, dictionaries, or a ToC address. References to addresses in inherited or anteherited ToC's are also valid. Values **must** be addresses for content, not the content itself. This is inefficient for blobs smaller than a few hundred bytes, but it is necessary to support heritage. If the manifest allowed values in addition to hash references, those values would be unreachable by inherited or anteherited eics files. By forcing the manifest to use content references, a performance compromise is made to encourage deduplication and ease of use.
 
-Heritage
-===============
-
-*Content* on the eicnet is static, but *concepts* are not. The fundamental idea behind heritage in the eicnet is to support *conceptual addressing*. Heritage provides a way for a newer eics object to reference or update an older eics object while preserving both the history and accessibility of the original object. In short, heritage affects the concept without affecting the content.
-
-Inheritance is a familiar concept, and we'll use it to explain the mechanics of eicnet heritage. It is a one-way transaction: though both the parent and child remain addressable via their respective muids, the child inherits attributes from the parent while the parent remains unchanged. There are two steps to the process when referencing the child. First, the consumer (not the author) adds all of the hash-addressed binary blobs from the parent to her content map for the child. Then, the manifest mapping of the child is chained on top of the parent. At this point, the eics is "resolved".
-
-Anteheritance is similar to inheritance, but reverses the relationship between parent and child. Referencing the parent yields a modification, while the child remains unchanged by the parent. Note that because the static parent was written before the static child, the parent contains no explicit link to the child. Therefore the eics consumer *must already be aware of the child* to apply the anteheritance.
-
-Note that heritage is completely unrestricted in terms of authorship and key reuse. In other words, a child eics may be authored by a different muid than a parent, and the child may or may not reuse the parent key (though they should never reuse a nonce!). When reusing keys, new eicas may or may not be generated, and lacking an explicit access file, consumers should always try the parent key. But, just because someone has anteherited or inherited an eics, does **not** mean that everyone will agree to that heritage. It is up to the consumer to allow or disallow a child to anteherit, and accessing a parent does not automatically imply that the consumer will likewise access an inheriting child.
+### Heritage
 
 Since pure anteheritance leaves the child unmodified by the parent, it renders the child incapable of making manifest references to content stored within the parent. This is easily remedied: if the child both inherits and anteherits the parent, both eics will have identical states (provided the anteheritance is accepted by the consumer). This is generally not recommended for use with multiple anteheritance, as each successive inheritance/anteheritance pair increases the likelihood of unpredictable namespace collisions in the manifest mapping. They also may make your anteheritance significantly less likely to be honored.
 
 Finally, particularly in light of the above, it bears mentioning that circular referencing is possible, but meaningless. Keep in mind that the heritage of a file simply describes the search order for manifest mappings. If we've already searched a static file for a given key, there is no need to re-search the same file. Circular references therefore terminate when they point to an muid that has already been searched.
 
-Some examples
---------------
+#### Some heritage examples
 
 **A very simple email clone:**
 
@@ -460,8 +431,7 @@ Carol corrects her link's title by anteheriting. Meanwhile, a competing anteheri
 3. 'user' 'carol' submits 'https://www.duckduckgo.com' with 'title' 'Google is a cool search engine', updated by 'editor' 'david'
 4. 'user' 'carol' submits 'http://www.google.com' with 'title' 'DuckDuckGo is a cool search engine'
 
-A note on the determinism and ordering of heritage
------------------------
+#### A note on the determinism and ordering of heritage
 
 For any consumer, at any given time, with access to a given set of eics, the final eics mapping (after heritage resolution) would (ideally) be consistent. That is to say, so long as the consumer's information exposure remains constant, her net eics should (ideally) always be the same, regardless of software framework, device, etc. The problem here is that defining a specific search order is inherently limiting. While we can make recommendations, we really cannot assert a single linearization process for the network as a whole. Instead, we'll just say: both inheritance and anteheritance should be treated as ordered lists, searched from left to right. But, when using the same linearization algorithm for those lists, all heritage is determinate. And in a hypothetical world where every consumer has access to the sum total of eicnet information, heritage would be very straightforward to implement.
 
@@ -475,3 +445,131 @@ Using A#, Ref, I# to denote anteherited, referenced, and inherited eics respecti
 4. Perform key lookup against the linearized tree.
 
 Now, as for our recommendation: we suggest linearizing with a slightly modified [C3](http://en.wikipedia.org/wiki/C3_linearization) algorithm that aims to robustly "best guess" the circular dependency problem when C3 fails. In general, since authors cannot control anteheritance, the linearization algorithm must err very heavily on the side of "attempt to resolve at all costs" to prevent clever content declarations from inducing load failures via anteheritance.
+
+## Service layer
+
+### Storage providers
+
+### Access providers
+
+### Identity providers
+
+## Application layer
+
+### API definitions
+
+### Best practices
+
+# Applications and implications
+
+## Scalable network deployment
+
+Treat networks of any size as the same kind of entity. Every network just supplies whichever service layer components it wants.
+
+## Decentralized systems
+
++ Distributed consensus storing (use something like maidsafe as the storage provider for the whole internet). Use proof of storage as a cryptocurrency?
++ Distributed consensus computing (add another primitive to the service layer: like maidsafe, except instead of distributed storage, it's distributed computing -- but offers similar guarantees). Could use this for network architecture, servers, etc. Use proof of execution as a cryptocurrency?
++ Proof of storage + proof of execution = proof of contract fulfillment.
++ Secure nested routing (like TOR) on an underlying P2P storage provider is very easy
+
+## Egalitarianism
+
+This is a vital step towards *self-enforcing* net neutrality. The storage provider API creates a strong division of concerns between network and application operations.
+
+## Digital statehood
+
+Meaningful social contracts with the services we use.
+
+Could be cool.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Scratchbook
+
+**"Test post, please ignore"**
+
+
+
+
+## Caveats:
+
++ Ephemerality is unenforceable
+
+---------------
+
+This is a *digital* information network. Until humans are capable of directly processing digital data, human-addressability is outside the scope of the framework. Human meaning should be layered on top of machine meaning; anything else is an improper forced abstraction.
+
+---------------
+
+Sharing privacy is a different scope; in general, we have to rely upon social norms to control that.
+
+-----------
+
+Decouple http://en.wikipedia.org/wiki/Zooko%27s_triangle
+
+-----------
+
+Provide the absolute lowest level of functionality necessary to implement such a system, even the most common higher level functions are outside the scope of the file format.
+
+-----------
+
+Absolute minimum level of intrusion; absolute minimum level of overhead.
+
+----------
+
+"Agent state consistency"
+
+
+## A next-generation internet built around secure, private, scalable interactions between equal agents
+
+Today's web is public and centralized by default. DNS, HTTP, SMTP, and the rest of the internet's application layer negotiate conversations between *machines*, lacking any inherent awareness of the "agent" responsible for receiving and acting upon the transferred information. This network-oriented architecture, in contrast to an agent-oriented architecture, is one of the major limitations of the contemporary internet. 
+
+Network-oriented architecture is characterized by static machine addressing, regardless of agent identity: IP addresses talking to each other on behalf of unknown parties. This failure to separate inter-agent communication from network operations hinders modularization and distribution of both network and services. Changing network configurations can break existing data references, decreasing the dependability of "persistent" data. And because it is blind to the intended recipient of network traffic, network-oriented architecture makes robust end-to-end security exceptionally difficult, posing a significant burden to meaningful digital privacy.
+
+Agent-oriented architecture, however, is characterized by static agent identity, regardless of machine addressing: direct conversation between individual parties, on any client machine or network topology. It requires a new abstraction layer to mediate between the network-oriented transport layer and the redefined, agent-oriented application layer. This new "service layer" is, both by design and necessity, "private by default": encrypted at rest, with information unshared upon creation. This service layer provides data persistence, agent identification, and information sharing to the network as a whole at the protocol level.
+
+This new internet protocol stack negotiates network-location-based data streams into action-based endpoints more effectively than the existing world wide web, making it far more suitable for the ever-growing world of internet-connected physical devices. 
+
+-------
+
+Because its primary goal is to transform the loosely-connected tangle of internet services into a single amalgamated source of information, we've termed this new configuration the mesh-made-muse.
+
+
+------------
+
+Crucial information semantics -- like authorship or creation date -- exist only through third parties.
+
+and information is inherently semantic. 
+
+--------------
