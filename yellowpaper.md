@@ -2,13 +2,59 @@
 
 # Abstract
 
-... Concise abstracts about complex topics are really hard to write; it's going to be a hot minute.
+... Concise abstracts about complex topics are really hard to write; it's going to be a hot minute. Expect this sooner or (probably) **later**.
 
 "Preservation of agent state"
 
+Text-based links should be represented as muid://base64URLsafeencodedMUID
+
 # Table of contents
 
-... coming sooner or **later**.
+*Apologies for any broken links while we're still writing...* If you find one, feel free to [submit an issue](https://github.com/Muterra/muse-doc/issues/new) to let us know.
+
++ [Philosophical and technical motivations](#Philosophical-and-technical-motivations)
+    + [The future requires agency](#The-future-requires-agency)
+        + [Agency requires privacy](#Agency-requires-privacy)
+        + [Privacy requires security](#Privacy-requires-security)
+        + [Privacy breaks existing architecture](#Privacy-breaks-existing-architecture)
+    + [Agency implies sharing](#Agency-requires-sharing)
+    + [Sharing requires identity](#Sharing-requires-identity)
++ [Technical requirements](#Technical-requirements)
+    + [Separation of concerns](#Separation-of-concerns)
+    + [Static content](#Static-content)
+    + [Mutable context](#Mutable-context)
+    + [Universal identities](#Universal-identities)
++ [Technical implementation](#Technical-implementation)
+    + [EIC filetype](#EIC-filetype)
+        + [Pending changes](#Pending-changes)
+        + [Common fields](#Common-fields)
+            + [Magic number](#Magic-number)
+            + [Cipher suites](#Cipher-suites)
+            + [Author signature](#Author-signature)
+            + [File hash](#File-hash)
+            + [Version numbers](#Version-numbers)
+            + [Recipients and authors](#Recipients-and-authors)
+        + [Access files](#Access-files)
+            + [Outer header fields](#Outer-header-fields)
+            + [Inner container](#Inner-container)
+        + [Dynamic](#Dynamic)
+            + [Outer header](#Outer-header)
+            + [The payload](#The-payload)
+        + [Static](#Static)
+            + [Outer header](#Outer-header)
+            + [Inner header](#Inner-header)
+    + [Service layer](#Service-layer)
+        + [Storage providers](#Storage-providers)
+        + [Access providers](#Access-providers)
+        + [Identity providers](#Identity-providers)
+    + [Application layer](#Application-layer)
+        + [API definitions](#API-definitions)
+        + [Best practices](#Best-practices)
++ [Applications and implications](#Applications-and-implications)
+    + [Scalable network deployment](#Scalable-network-deployment)
+    + [Decentralized systems](#Decentralized-systems)
+    + [Egalitarianism](#Egalitarianism)
+    + [Digital statehood](#Digital-statehood)
 
 # Philosophical and technical motivations
 
@@ -22,15 +68,15 @@ Digital disempowerment is not just a personal concern. The absence of data agenc
 
 In the physical world, personal agency is the defining characteristic of animate existence. Without it, digital interactions will be unavoidably and inescapably reluctant. In this way, historic answers to consumer concerns like privacy have been predominantly secondary considerations and localized solutions.
  
-## Agency requires privacy
+### Agency requires privacy
 
 Much of the benefit to agent-oriented architecture is contained in the ability to treat the internet as a global asynchronous communications system. Agents directly address other agents, and the muse itself is treated as a single coherent information repository. As such, it replaces the website as a medium for data storage, which, by extension, eliminates the notion of site-specific privacy. This arrangement **requires** *all* confidential data to be private end-to-end, or it would be immediately exposed to every other agent. We are then left with a choice: have no explicit security requirement, allowing individual applications to develop their own information controls; or, make the muse private by default, thereby implementing a new standard for universal data privacy. The proliferation of both generic security solutions like SSL, and of the astoundingly important privacy questions now regularly raised, strongly indicates that the latter option is the clear choice.
 
 Having spelled out a privacy requirement, we need to define its scope. Since we're discussing information that already exists, and information isn't known to spontaneously appear, we can assume it has an author. We see privacy as an absence of information, and therefore to be "private by default", information must be known to *only and exactly* its author at the time it is created. This is intuitive in the physical world, and it's our firm belief that this paradigm should also apply to digital data. With current technology, we can then say that a functional definition of "private by default" requires data to be encrypted from pre-upload to post-download. This is known as [end-to-end encryption](http://en.wikipedia.org/wiki/End-to-end_encryption).
 
-### Privacy is only possible with security
+### Privacy requires security
 
-### Rigorous protection of privacy breaks the web as we know it
+### Privacy breaks existing architecture
 
 obscures the public information we currently use to make the web work
 
@@ -38,11 +84,7 @@ How to find information? Re: humans, and re: computers
 
 How to establish relationships between information?
 
-### Separate concerns, remove URLs, refactor the internet
-
-Make development work better!
-
-## Agency *on a network* means sharing
+## Agency implies sharing
 
 100% private information isn't particularly useful. The web derives most of its utility from the *collective* knowledge that is stored there; without the ability to share information, the internet would be little different from an exceptionally large paper notebook. Sharing is clearly a practical necessity, but for the "private by default" requirement to have any meaning, we have to set some ground rules:
 
@@ -83,6 +125,10 @@ From these core requirements, we can then assert a few more:
 
 # Technical requirements
 
+## Separation of concerns
+
+Make development work better!
+
 ## Static content
 
 Everything is static and the past is immutable. 
@@ -105,17 +151,15 @@ Note that heritage is completely unrestricted in terms of authorship and key reu
 You can't use the dynamic address strategy (static address for dynamic content based on original address) in place of anteheritance, because other people anteheriting (which should be a normal thing) needs to be behind the container wall, or metadata is publicly available.
 
 
-## Universal (but potentially meaningless) identities
+## Universal identities
 
-Messages themselves are non-repudiable, but identities are not. So, for deniable secure communications, just create a fresh identity (register a new public key). All messages from that new key will be provably owned, but the person or thing behind the fresh identity itself will not be connectible with the identity.
+Messages themselves are authenticated, but identities are not. So, for deniable secure communications, just create a fresh identity (register a new public key). All messages from that new key will be provably owned, but the person or thing behind the fresh identity itself will not be connectible with the identity.
 
 This presents a vulnerability in that the fresh identity, by virtue of that relationship, cannot assure its conversation partner of its real identity. That functionality, however, *can* be accomplished by deniably linking the fresh identity with the old, permanent identity through a DHE. More concretely: Sam wants to leak something to Chris; Sam's usual public identity is S1 and creates a disposable identity S2. She then starts talking to Chris' normal public identity from S2 and, from within that context, shares a DHE with Chris **based on S1**. Since Chris knows he didn't create the DHE, this proves to Chris that S2 has access to S1's private key, but to an outside observer Chris could just as simply have created S2 and conducted the DHE with his own private key. The trick is that it has to be forgeable by either party, thereby making it "my word against theirs".
 
-# Technical implementation
+# Encrypted information container network
 
-## .eic 
-
-"Encrypted Information Container". Wholly big endian.
+EIC files: "Encrypted Information Container". Wholly big endian.
 
 Preferred file extensions are .eic, or, if specificity is desired, .eics for static files, .eicd for dynamic files, and .eica for access files.
 
@@ -123,13 +167,66 @@ Every .eic file has an muid, or muse UID, that serves as a unique identifier for
 
 Additionally, dynamic EIC files support a secondary (static) address, based upon their original content (in a forward-verifiable manner). It is also a SHA512 hash (see below).
 
-### Common fields
+## Pending changes
 
-#### Magic number
++ Will consider changing several length fields to ZBG-style ```[1-byte length size *n*][*n*-byte length]```
++ Change EICa signature to file hash XOR author XOR target?
 
-For the usual purpose.
+## EIC Objects
 
-#### Cipher suites
+EIC object files are the fundamental basis of the Muse network. Their goal is to
+
+1. be easily, unambiguously referenceable,
+2. keep data private until shared, and
+3. have a verifiable origin.
+
+Specifically, they are a 
+
+1. content-addressed
+2. encrypted container
+3. with a public-record author.
+
+and more specifically, they are
+
+1. referenced via "muse unique identifier" or muid;
+2. symmetrically encrypted, with keys exchanged through author-to-author APIs; and
+3. include their author's muid within their unencrypted header.
+
+On a technical level, they are built from two parts:
+
+1. Public header
+2. Private payload
+
+and offer the following security assurances:
+
+1. Confidentiality,
+2. Integrity,
+3. Authenticity of authorship
+
+**However**, it is important to note that authors can be anything or anyone -- a server, a person, a sensor, any data producer/consumer -- and that the identity associated with that author's muid may be named, pseudonymous, or anonymous. As such, though the authorship is authenticated, it may not be meaningful; its physical origin is repudiable. It is also possible to deniably authenticate a disposable identity against an existing author, but that is handled and discussed in the service layer.
+
+### Format
+
+**Public header:**
+
+| Offset | Length    | Name                | Format              | Hexoff |
+| ------ | --------- | ------------------- | -----------         | ---    |
+| 0      | 4B        | Magic number        | x65x69x63x6F        | 0      |
+| 4      | 4B        | Cipher suite        | Unsigned 32-bit int | 4      |
+| 8      | 512B      | Author signature    | Bytes               | 8      |
+| 520    | 64B       | File hash (muid)    | Bytes               | 208    |
+| 584    | 4B        | .eic spec version   | Unsigned 32-bit int | 248    |
+| 588    | 64B       | Author muid         | Bytes               | 24C    |
+| 652    | 8B        | Payload length, *N* | Unsigned 64-bit int | 28C    |
+| 660    | *N*       | Private payload     | Encrypted blob      | 294    |
+
+Total public length 660B | 294
+
+#### 1. Magic number
+
+EIC object magic number: ASCII "eico" (65 69 63 6F).
+
+#### 2. Cipher suite
 
 EIC will eventually offer support for multiple cipher suites. They are represented as a 32-bit integer immediately following the magic number.
 
@@ -139,15 +236,15 @@ Cipher suites, by integer representation:
 
 1. **0x00000001:** SHA512/AES256/RSA4096. **Addressing:** SHA-512. **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537. **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537. **Symmetric encryption:** AES-256 CTR SHA512/AES256/RSA4096. **Deniable exchange:** 2048-bit [Group #14](http://www.ietf.org/rfc/rfc3526.txt) with a generator of 2.
 
-#### Author signature
+#### 3. Author signature
 
-Provides assurances of integrity, authenticity, and non-repudiation from the author of the file. It is an asymmetric cryptographic signature, generally of the file hash / muid. *For access files, this is a signature of the bitwise XOR of the file hash + inner hash*. This is to preserve the security of the author's identity to an outside observer with a dictionary of public keys.
+Provides assurances of integrity, authenticity, and non-repudiation from the author of the file. An asymmetric cryptographic signature of the file hash / muid.
 
-#### File hash / muid
+#### 4. File hash / muid
 
-The SHA-512 digest of the entire remaining .eic. This is used as the unique content identifier for each file. Note that it excludes the magic number and signature (and therefore starts at byte 580)
+The SHA-512 digest of the entire remaining .eic. This is used as the unique content identifier for each file (the muid). Note that it excludes the magic number, cipher suite, signature, and of course itself (and therefore starts at byte 584).
 
-#### Version numbers
+#### 5. Version numbers
 
 The version number is a semantic version number (ex. 1.2.3, where 1 is the major, 2 is the minor, 3 is the patch) encoded as unsigned integers as follows:
 
@@ -159,296 +256,513 @@ The version number is a semantic version number (ex. 1.2.3, where 1 is the major
 
 Therefore, the maximum version is 255.255.65535. Version needs to be after the file hash so that the author signature verifies the correct version is applied when opening.
 
-#### Recipients and authors
+**The current EICO version is 0.0.9.**
 
-EICs files make the backbone of the eicnet. Any persistent network objects are built from them. "Identities" -- at a minimum, the public half of a public/private keypair -- are no exception. As such, instead of encasing the public key in each file (or some other nonsense), every file makes reference to the muid of its author. For access files, they also target a specific identity.
+#### 6. Author muid
+
+EIC objects make the backbone of the eicnet. Any persistent network objects are built from them. "Identities" -- at a minimum, the public half of a public/private keypair -- are no exception. As such, instead of encasing the public key in each file (or some other nonsense), every file makes reference to the muid of its author. For access files, they also target a specific identity.
 
 Within the EICs corresponding to that author, the public key should be defined under the dictionary key "pubkey". This will probably change in the process of dealing with multiple cipher suites.
 
-### Access files
+Note that the author muid must be used in the file hash to prevent a potential storage provider attacker from altering the author field. With the author not included in the file hash, this would not result in a different muid; with it contained, an attacker is prevented from retroactively claiming authorship over *existing* resources.
 
-Access files exist to initiate API connections. They support deletion for forward secrecy. They are encrypted asymmetrically against the public key of the recipient.
+#### 7. Payload length
 
-#### Outer header fields:
+A 64-bit integer representation *N* of the length of the binary blob associated with the payload. If the cipher suite prepends the nonce to the ciphertext, this length will include the nonce. The total length of the file should therefore be (660 + *N*) bytes.
 
-| Offset | Length    | Name                  | Format              | Hex off |
-| ------ | --------- | -------------------   | -----------         | ---     |
-| 0      | 4B        | Magic number          | x65x69x63x61        | 0       |
-| 4      | 4B        | Cipher suite          | Unsigned 32-bit int | 4       |
-| 8      | 512B      | Author signature      | Bytes               | 8       |
-| 520    | 64B       | File hash             | Bytes               | 208     |
-| 584    | 4B        | .eica spec version    | Unsigned 32-bit int | 248     |
-| 588    | 64B       | Recipient muid (eics) | Bytes               | 24C     |
+#### 8. Private payload
+
+The payload follows the public header immediately, with no padding. It is encrypted according to the cipher suite definition, as described in the public header. It may therefore begin with a nonce. The file terminates with the end of the payload, with no end flags.
+
+## Static bindings
+
+Static bindings allow storage providers to effectively answer the question "when am I allowed to delete this resource?" They are a public record of data retention -- a formal declaration of information use -- and prevent compliant storage providers from garbage collecting their referenced EIC objects. They directly and publicly reference the bound EICO muid and contain a public record of the author that created the binding. They do not create a secondary address for content.
+
+There is no concept of individual copies of information on the Muse; identical content encrypted identically will always be referenced identically, regardless of storage location. Therefore sharing content does not create copies; if Alice authors content and shares it with Bob, he has no inherent way of preserving access to that information. Static bindings create exactly such a mechanism: Bob may now place a hold on the data. The caveat is that, as public information, Alice will know that Bob is the person preventing erasure.
+
+### Format
+
+| Offset | Length    | Name                | Format              | Hexoff |
+| ------ | --------- | ------------------- | -----------         | ---    |
+| 0      | 4B        | Magic number        | x65x69x73x62        | 0      |
+| 4      | 4B        | Cipher suite        | Unsigned 32-bit int | x      |
+| 8      | 512B      | Binder signature    | Bytes               | x      |
+| 520    | 64B       | File hash           | Bytes               | x      |
+| 584    | 4B        | .eic spec version   | Unsigned 32-bit int | x      |
+| 588    | 64B       | Binder muid         | Bytes               | x      |
+| 652    | 64B       | Target muid         | Bytes               | x      |
+
+Total length 716B | 28C
+
+#### 1. Magic number
+
+Static binding magic number: ASCII "eisb" (65 69 62 73)
+
+#### 2. Cipher suite
+
+See above (identical to EICO and necessary for signature generation / verification)
+
+#### 3. Binder signature
+
+The signature of the request's file hash by the binder. Prevents (in the above example) a third party, Eve, from binding to the EICO while pretending to be Bob. Also prevents a third party from constructing a re-binding of the author's original binding after the author debinds.
+
+#### 4. File hash
+
+As usual, the hash of bytes 584 onwards.
+
+#### 5. eisb version
+
+**Currently 0.0.1.**
+
+#### 6. Binder muid 
+
+The muid of the identity requesting the binding.
+
+#### 7. Target muid
+
+The muid of the resource to bind to.
+
+## Dynamic bindings
+
+Dynamic bindings, like static bindings, formally declare data use and block data removal. However, unlike static bindings, they allocate a secondary dynamic content address to existing static muids, and may be updated by the binding party. In other words, they bind a static muid to potentially dynamic content.
+
+Note that dynamic bindings *must* be implemented in this abstraction layer to allow for state-preserving APIs (including, for example, sessions) to exist. They are the most primitive form of reconciling immutable content (like a single temperature reading) with mutable concepts (what's the temperature).
+
+### Format
+
+| Offset | Length    | Name                    | Format              | Hexoff |
+| ------ | --------- | -------------------     | -----------         | ---    |
+| 0      | 4B        | Magic number            | x65x69x64x62        | 0      |
+| 4      | 4B        | Cipher suite            | Unsigned 32-bit int | x      |
+| 8      | 512B      | Binder signature        | Bytes               | x      |
+| 520    | 64B       | File hash               | Bytes               | x      |
+| 584    | 4B        | .eic spec version       | Unsigned 32-bit int | x      |
+| 588    | 64B       | Binder muid             | Bytes               | x      |
+| 652    | 64B       | Dynamic muid            | Bytes               | x      |
+| 716    | 32        | Nonce                   | Bytes               | x      |
+| 748    | 4B        | Dynamic frame count *n* | Unsigned 32-bit int | x      |
+| 752    | 64B * *n* | Bound muids             | Bytes               | x      |
+
+Minimum length (header + 1 muid) 752B | 2F0
+
+#### 1. Magic number
+
+Dynamic binding magic number: ASCII "eidb" (65 69 64 62)
+
+#### 2. Cipher suite
+
+See above.
+
+#### 3. Binder signature
+
+The signature of the muid requesting the dynamic binding. This is the signature of the local file hash, **not** the dynamic muid (or any individual bound muid).
+
+#### 4. File hash
+
+The hash of this binding request, starting immediately after the hash (ie starting with byte 584, as with EICOs).
+
+#### 5. EIDB version
+
+**Currently 0.0.5.**
+
+#### 6. Binder muid
+
+The muid for the entity creating the dynamic binding.
+
+#### 7. Dynamic muid
+
+The secondary address for the dynamic object. This is generated from the hash of the concatenated nonce, binder muid, buffer frame count, and bound muids of the first frame in the binding. That is, the binder takes bytes 652 and onwards of the binding, hashes the result, and is left with the dynamic muid. From that point forward, the dynamic muid does not change, regardless of updates to the binding.
+
+#### 8. Nonce
+
+32 bits of random, non-reusable noise, used to generate and verify the dynamic muid. The nonce requirement is created to allow the same author to create two divergent dynamic bindings from the same start point. It is included in the header to allow future verification, guarding against spoofing dynamic muids.
+
+#### 9. Dynamic frame count
+
+The count of the bound muids. Buffered objects may be natively created by binding to more than one EICO. The byte length of the remaining binding (the bound muids) can be calculated by the frame count * 64 (the length, in bytes, of a single muid).
+
+#### 10. Bound muids
+
+An ordered list of the muids for each frame. This should be used as a FIFO queue, ie, the leftmost (first) muid is the most recent frame.
+
+## API requesters
+
+API requesters (EIARs, which I pronounce "ears") serve as signaling mechanism for an API handshake. They are encrypted asymmetrically against the public key of the recipient. Remember that all EICOs are single author, (potentially) multiple consumer -- in other words, unidirectional. Any bidirectional API therefore requires both a client/consumer pipe and a server/producer pipe, even just to issue an ACK. An eiar is generated by the API client/consumer, signaling both the muid and access key for the consumer's "pipe" to the API. In response, the API producer generates a response eiar, signaling the muid and key to its response pipe.
+
+APIs themselves may be self-describing: the pipe may describe its intended purpose internally, but such a description cannot be contained within the eiar. 
+
+An eiar is removed by the *recipient*, through a debind request against the file hash of the eiar.
+
+### Format
+
+**Public header:**
+
+| Offset | Length    | Name                | Format              | Hex off |
+| ------ | --------- | ------------------- | -----------         | ---     |
+| 0      | 4B        | Magic number        | x65x69x61x72        | 0       |
+| 4      | 4B        | Cipher suite        | Unsigned 32-bit int | 4       |
+| 8      | 512B      | Author signature    | Bytes               | 8       |
+| 520    | 64B       | File hash           | Bytes               | 208     |
+| 584    | 4B        | .eica spec version  | Unsigned 32-bit int | 248     |
+| 588    | 64B       | Recipient muid      | Bytes               | 24C     |
 
 Total length 652B | 28C
 
-1. Magic number: "eica" (65 69 63 61) for an asymmetric .eic.
-2. Cipher suite, see above
-3. Author signature: note atypcal signature, explained above
-4. File hash
-5. eica version: **currently 0.0.6.** 
-6. Recipient muid: the single recipient of the file.
-
-#### Inner container:
+**Inner container:**
 
 | Offset | Length    | Name                 | Format      |
 | ------ | --------- | -------------------  | ----------- |
 | 0      | 64B       | Inner hash           | Bytes       |
 | 64     | 64B       | Author               | Bytes       |
-| 128    | 64B       | Symmetric target     | Bytes       |
+| 128    | 64B       | Target muid          | Bytes       |
 | 192    | 32B       | Target symmetric key | Bytes       |
 
 Total size: 224B (encrypted size 512B) | 3A8
 
-1. The inner hash: Digest of all remaining bytes in the inner container. It is included as an integrity assurance.
-2. The author's muid
-3. Target muid: points at the muid of the .eics/.eicd resource that the symmetric key unlocks. By keeping this encrypted, there is no public link between the author and the recipient.
-4. Target symmetric key: encryption key for the .eics/.eicd resource.
+#### 1. Magic number
 
-**As a quick note:** the maximum size of an RSA-4096 container is around 440 bytes, depending on the algo. In the future, a second symmetric 32B HMAC key may be added for verification speed on the EICs file. That said, I cannot currently think of a good way to include an HMAC for the EICa, even though it would benefit from being able to more cheaply verify content compared to post-unlocking verification. Note that this also means that only the intended consumer (the recipient) can verify the file.
+API requester magic number: ASCII "eiar" (65 69 61 72)
 
-### Dynamic
+#### 2. Cipher suite
 
-Dynamic EIC files are a specialized symmetrically-encrypted container file. They are intended to retain static content-addressability with truly mutable content. They are **not** meant to be a mutable form of an EICs file, and EICd files support *only a single binary blob*. There are some tradeoffs involved with these files, and generally speaking they are not intended to be widely shared, but instead be reserved for the few situations in which maintaining a full set of anteherited static files would be impractical, impossible, or expensive. There is also additional overhead associated with the initial creation of dynamic files, as they involve more hash operations. However, they need not resolve inheritance/anteheritance chains, so bandwidth requirements may be lower.
+See above.
 
-Keep in mind that even here, the ephemerality of these files is still unenforceable. Dynamic files are ones in which the storage layer is *permitted*, but not *required* to remove previous versions. Similarly, they are *expected*, but might not *guarantee*, that the buffer *request* is fulfilled.  Neither removal nor complete buffering are enforceable by storage layer consumers -- though that does not prevent consumers from changing storage providers. Presumably you should not be charged in the event that data persists beyond its requested lifetime.
+#### 3. Author signature
 
-It is also important that, from square one, dynamic files be declared as such, so that if they're shared, users would be aware that the contents of the file may be especially short-lived.
+The author's signature. Unlike other EIC objects, EIAR signatures are constructed from the bitwise XOR of the file hash and inner hash. This is to preserve the security of the author's identity to an outside observer with a dictionary of public keys.
 
-Specific EICd goals:
+#### 4. File hash
 
-1. Can be searched for by header hash (returns a list of all muids associated with that header hash)
-    + Problem: header must be deterministically unique for each file
-    + Solution: use a zeroth hash in the header
-    + Problem: build order -- zeroth hash cannot be a file hash, as the file is unbuilt when it is calculated
-    + Solution: use a zeroth payload hash
-2. Supports buffered frames
-    + Problem: content addressing for specific frames
-    + Solution: requestable through muid as always
-    + Problem: knowing how many buffer frames to maintain
-    + Solution: buffer length flag
-3. Buffered frames have a determinate order
-    + Problem: zero-knowledge, self-contained sequence
-    + Solution: hash chain (include the previous muid in the header)
-    + Problem: muid must always be verifiably correct for the content, and replacing the zeroth hash with a hash chain prevents this
-    + Solution: hash chain must be separate field
-4. Termination
-    + Problem: efficient 'delete' notification
-    + Solution: transmit header with no payload and 0 buffer request
+The hash of this API request, starting immediately after the hash (ie starting with byte 584, as with EICOs).
 
-#### Outer header:
+#### 5. EIAR version
 
-| Offset | Length    | Name                | Format              | Dynamic updates? | Hexoff |
-| ------ | --------- | ------------------- | -----------         | ------------     | ----   |
-| 0      | 4B        | Magic number        | x65x69x63x64        | No               | 0      |
-| 4      | 4B        | Cipher suite        | Unsigned 32-bit int | No               | 4      |
-| 8      | 512B      | Author signature    | Bytes               | Must             | 8      |
-| 520    | 64B       | File hash           | Bytes               | Must             | 208    |
-| 584    | 64B       | Header hash         | Bytes               | No               | 248    |
-| 648    | 4B        | .eic spec version   | Unsigned 32-bit int | No               | 288    |
-| 652    | 4B        | Buffer request      | Unsigned 32-bit int | May              | 28C    |
-| 656    | 64B       | Previous file hash  | Bytes               | Must             | 290    |
-| 720    | 8B        | Payload length      | Unsigned 64-bit int | May              | 2D0    |
-| 728    | 64B       | Author muid         | Bytes               | No               | 2D8    |
-| 792    | 64B       | Zeroth payload hash | Bytes               | No               | 318    |
+**Currently 0.0.6.** 
 
-Total length 856B | 358
+#### 6. Recipient muid
 
-1. Magic number: "eicd" (65 69 63 64).
-2. Cipher suite, see above.
-3. Author signature
-4. File hash
-5. Header hash: calculated once, at the original creation of the dynamic file. It is static for every eicd. It is included for integrity verification and ease of lookup and is calculated from the concatenation of the eicd version, author muid, and zeroth payload hash, in that order.
-6. eicd spec version: **currently 0.0.4.**
-7. Buffer request: An unsigned 32-bit integer representing the maximum number of requested buffer frames. Again, this is a request, and it may or may not be honored by the storage provider.
-8. Previous file hash: the file hash/muid for the previous file in the buffer. For the first frame, it is initialized with a copy of the header hash. This hash forms a secure chain preserving eicd buffer frame order.
-9. Payload length
-10. Author muid: note that this will always remain constant, and another author wishing to "fork" the object must create a new EICd object, as this is included in the header hash. By definition the fork therefore loses downwards referencing.
-11. Zeroth payload hash: The hash of the payload (byte 852:end) of the original dynamic object (after encryption). This is necessary to be able to request eicd files based on their headers alone (otherwise, every file from the same author would be identical).
+The muid for the recipient.
 
-#### The payload
+#### 7. Inner hash
 
-The encrypted portion of the EICd file, once unlocked, is a single binary blob. Again, EICd files are not meant to encompass the self-descriptive property of EICs files. They are a very specific type of asymmetric, semi-persistent communication. Yes, because the payload is arbitrary binary data, it can contain literally anything, but it is not meant to serve as a mutable replacement for EICs files in any way. If, for example, you wanted to construct a dropbox-like folder sync mechanism using binary files, you would first need a base object for the directory, and then a number of individual dynamic objects for the individual files.
+Digest of all remaining bytes in the inner container. It is included as an integrity assurance and to ease signature verification.
 
-### Static
+#### 8. Author
 
-Static EIC files are, abstractly speaking, a symmetrically-encrypted, network-aware key: value store with a sophisticated form of semantic metadata. Each eics is a composition of its keys, and, were the eics to be destroyed, those keys would be lost. However, it might also be an aggregation of other eics. These aggregations are handled by the object's heritage (see below).
+The muid of the identity creating the request.
 
-#### Outer header:
+#### 9. Target muid
+
+The muid of the dynamic binding to use for the API pipe. By keeping this encrypted, there is no public link between the author and the recipient.
+
+#### 10. Target symmetric key
+
+The encryption key for the API pipe.
+
+### Known vulnerabilities
+
+EIAR files have one design tradeoff that justifies explicit discussion. To prevent an observer from inferring a connection between the API consumer and the API provider, the signature can only be verified **after** decrypting the request. Though this *does* prevent a malicious party from successfully initiating an API pipe on someone else's behalf, because the signature verification requires the recipient's private key, it cannot be performed by the network. This opens a potential DoS attack vulnerability: an API provider could be overwhelmed by spoofed EIARs with invalid signatures from invalid muids. Such an attack would compromise the API provider's ability to initiate new API pipes, but presumably leave its ability to handle existing APIs intact.
+
+However, EIARs have no hard response requirement, so two attack mitigation strategies are immediately apparent:
+
+1. For in-progress attack mitigation from EIAR "cold calls", trusted third-party verification of request origin using the EIAR file hash. The requestor registers the request with the third party, and the API provider verifies the author's signature using the identity acquired from the third party. Exposes the API consumer/provider relationship to the third party.
+2. For attack prevention, adding an extra API channel to existing API consumers, allowing them to initiate EIARs on others' behalf. This is a decentralized version of (1) above that requires prior planning.
+
+## API handshake NAKs
+
+API NAKs are a single-purpose denial of an API request. They should **not** be used for API problems; they should only be used during initial API handshake negotiation. They acknowledge (not necessarily successful) receipt of the API request, combined with either unsuccessful operation or outright refusal of the request.
+
+Most internal NAK information is optional, to allow a single NAK to be built, cached, and reused in the case of DoS attack mitigation.
+
+API NAKs are removed by the *recipient*, through a debind request against the file hash of the NAK.
+
+### Format
+
+**Public header:**
+
+| Offset | Length    | Name                | Format              | Hex off |
+| ------ | --------- | ------------------- | -----------         | ---     |
+| 0      | 4B        | Magic number        | x65x69x4Ex4B        | 0       |
+| 4      | 4B        | Cipher suite        | Unsigned 32-bit int | 4       |
+| 8      | 512B      | Author signature    | Bytes               | 8       |
+| 520    | 64B       | File hash           | Bytes               | 208     |
+| 584    | 4B        | .eica spec version  | Unsigned 32-bit int | 248     |
+| 588    | 64B       | Recipient muid      | Bytes               | 24C     |
+
+Total length 652B | 28C
+
+**Inner container:**
+
+| Offset | Length    | Name                       | Format              |
+| ------ | --------- | -------------------        | -----------         |
+| 0      | 32B       | Inner nonce                | Bytes               |
+| 32     | 64B       | Author                     | Bytes               |
+| x      | 64B       | Requesting muid (optional) | Bytes               |
+| x      | 32B       | Error code (optional)      | Unsigned 32-bit int |
+
+Total size: 224B (encrypted size 512B) | 3A8
+
+#### 1. Magic number
+
+API NAK magic number: ASCII "eiNK" (65 69 4E 4B)
+
+#### 2. Cipher suite
+
+See above.
+
+#### 3. Author signature
+
+The author's signature. Unlike other EIC objects, EINO signatures are constructed from the bitwise XOR of the file hash and inner nonce. This is to preserve the security of the author's identity to an outside observer with a dictionary of public keys.
+
+#### 4. File hash
+
+The hash of this binding request, starting immediately after the hash (ie starting with byte 584, as with EICOs).
+
+#### 5. EINK version
+
+**Currently 0.0.1.** 
+
+#### 6. Recipient muid
+
+The muid for the recipient (the identity requesting the API that is currently being denied).
+
+#### 7. Inner nonce
+
+Random noise. This preserves verifiability of the signature, while still protecting the author from a public key dictionary attack, even if all optional arguments are omitted.
+
+#### 8. Author
+
+The entity denying the EIAR.
+
+#### 9. Requesting muid
+
+The file hash of the EIAR request that this NAK is denying. May be omitted to reuse the built NAK for subsequent requests from the same recipient. Best practice is to send at least one NAK including this field, falling back on a cached, generic NAK for subsequent denied requests from the same source in times of heavy traffic.
+
+#### 10. Error code
+
+An API-specific error code. Should be defined by the API itself, and entirely optional. If one is available, best practices should follow similar fallback-to-generic behavior as the requesting EIAR file hash.
+
+## API disconnect ACKs
+
+API ACKs are a single-purpose API "farewell". They should **not** be used for ACKs within an actual Muse API; they should only be used during final API disconnection, after all parties have cleaned up their API pipes. They acknowledge successful closure of the API.
+
+Most internal ACK information is optional, to allow a single NAK to be built, cached, and reused in the case of DoS attack mitigation.
+
+API ACKs are removed by the *recipient*, through a debind request against the file hash of the ACK.
+
+### Format
+
+**Public header:**
+
+| Offset | Length    | Name                | Format              | Hex off |
+| ------ | --------- | ------------------- | -----------         | ---     |
+| 0      | 4B        | Magic number        | x65x69x41x4B        | 0       |
+| 4      | 4B        | Cipher suite        | Unsigned 32-bit int | 4       |
+| 8      | 512B      | Author signature    | Bytes               | 8       |
+| 520    | 64B       | File hash           | Bytes               | 208     |
+| 584    | 4B        | .eica spec version  | Unsigned 32-bit int | 248     |
+| 588    | 64B       | Recipient muid      | Bytes               | 24C     |
+
+Total length 652B | 28C
+
+**Inner container:**
+
+| Offset | Length    | Name                    | Format              |
+| ------ | --------- | -------------------     | -----------         |
+| 0      | 32B       | Inner nonce             | Bytes               |
+| 32     | 64B       | Author                  | Bytes               |
+| x      | 64B       | Closing muid (optional) | Bytes               |
+| x      | 32B       | Exit code (optional)    | Unsigned 32-bit int |
+
+Total size: 224B (encrypted size 512B) | 3A8
+
+#### 1. Magic number
+
+API requestor magic number: ASCII "eiAK" (65 69 41 4B)
+
+#### 2. Cipher suite
+
+See above.
+
+#### 3. Author signature
+
+The author's signature. Unlike other EIC objects, EINO signatures are constructed from the bitwise XOR of the file hash and inner nonce. This is to preserve the security of the author's identity to an outside observer with a dictionary of public keys.
+
+#### 4. File hash
+
+The hash of this binding request, starting immediately after the hash (ie starting with byte 584, as with EICOs).
+
+#### 5. EIAK version
+
+**Currently 0.0.1.** 
+
+#### 6. Recipient muid
+
+The muid for the recipient (the identity requesting the API that is currently being denied).
+
+#### 7. Inner nonce
+
+Random noise. This preserves verifiability of the signature, while still protecting the author from a public key dictionary attack, even if all optional arguments are omitted.
+
+#### 8. Author
+
+The entity denying the EIAR.
+
+#### 9. Closing muid
+
+The muid of the dynamic API pipe that this ACK is recognizing the closure of. May be omitted to reuse the built ACK for subsequent requests from the same recipient. EIAKs should be very rare compared to other EIC traffic: the represent both successful creation and removal of an API. As such, best practice is to always include this field. However, a cached, generic ACK may be used as a fallback for subsequent denied requests from the same source in times of heavy traffic.
+
+#### 10. Exit code
+
+An API-specific exit code. Should be defined by the API itself, and entirely optional. If one is available, best practices should follow similar fallback-to-generic behavior as the closing muid.
+
+## Debind requestors
+
+Debind requestors remove
+
+1. Static bindings,
+2. Dynamic bindings, or
+3. API requestors.
+
+They will only be accepted from the muid that created the binding (or the recipient of the API requestor).
+
+### Format
 
 | Offset | Length    | Name                | Format              | Hexoff |
 | ------ | --------- | ------------------- | -----------         | ---    |
-| 0      | 4B        | Magic number        | x65x69x63x73        | 0      |
-| 4      | 4B        | Cipher suite        | Unsigned 32-bit int | 4      |
-| 8      | 512B      | Author signature    | Bytes               | 8      |
-| 520    | 64B       | File hash           | Bytes               | 208    |
-| 584    | 4B        | .eic spec version   | Unsigned 32-bit int | 248    |
-| 588    | 64B       | Author muid         | Bytes               | 24C    |
-| 652    | 8B        | Payload length      | Unsigned 64-bit int | 28C    |
+| 0      | 4B        | Magic number        | x65x69x64x62        | 0      |
+| 4      | 4B        | Cipher suite        | Unsigned 32-bit int | x      |
+| 8      | 512B      | Debinder signature  | Bytes               | x      |
+| 520    | 64B       | File hash           | Bytes               | x      |
+| 584    | 4B        | .eic spec version   | Unsigned 32-bit int | x      |
+| 588    | 64B       | Debinder muid       | Bytes               | x      |
+| x      | 64B       | Target              | Bytes               | x      |
+| x      | 32B       | Nonce               | Bytes               | x      |
 
-Total length 660B | 294
+#### 1. Magic number
 
-1. EICs magic number: "eics" (65 69 63 73).
-2. Cipher suite, see above
-3. Author signature
-4. File hash
-5. eic spec version: **currently 0.0.7.**
-6. Author muid
-7. Payload length
+Debind requestor magic number: ASCII "eiXX" (65 69 58 58)
 
-**Notes:**
+#### 2. Cipher suite
 
-There is a particular type of forward *security* offered here, is it is impossible (for all practical purposes) to reconstruct a new payload for a given muid, even if a malicious attacker had both the symmetric key for the resource and the private key of the author. However, forward *secrecy* is a much more complicated topic.
+See above.
 
-#### Inner header:
+#### 3. Debinder signature
 
-| Offset   | Length | Name                     | Format              |
-| ------   | ------ | ------------             | -----------         |
-| 0        | 4B     | Inheritance length *i*   | Unsigned 32-bit int |
-| 4        | 4B     | Anteheritance length *a* | Unsigned 32-bit int |
-| 8        | 4B     | Manifest byte length *m* | Unsigned 32-bit int |
-| 12       | 4B     | ToC length *c*           | Unsigned 32-bit int |
-| 16       | *i*    | Inheritance              | See above           |
-| 16 + *i* | *a*    | Anteheritance            | See above           |
-| ...      | *m*    | Manifest                 | See below           |
-| ...      | *c*    | Table of contents        | See above           |
-| ...      | ?      | Content                  | See above           |
+#### 4. File hash
 
-Total length: ?
+#### 5. eiXX version
 
-1. Inheritance: an array of muids. There is no padding nor delimiter between muids, so the inheritance length must be a multiple of 64B. If no inheritance is needed, the length will be zero, and the field omitted. **Order is important.** See the Heritage section.
-2. Anteheritance: same format as inheritance. See the Heritage section.
-3. Manifest: controls implementation of the EICs key: value store. ZBG encoded, see below.
-4. Table of contents: describes the inner archive. Each blob contained within the archive gets a line in the ToC consisting of: SHA-512 hash, 64-bit unsigned int offset, 64-bit unsigned int length. May be empty (ToC length 0; field is then skipped.) Offsets are currently from the first byte after the ToC (at least for now). To enforce EICs deterministic reproduceability, should be ordered ascending by the address hash.
-5. Content: as described in the ToC, a flat, un padded, un delimited archive containing an arbitrary number of binary blobs. May be empty (but that would be atypical).
+#### 6. Debinder muid
 
-**Manifest:** every fully-resolved EICs file can be thought of as two combined structures: a series of content-addressed binary blobs, and a dictionary describing their contents. The keys, loosely speaking, constitute a local namespace within the container. Multiple keys may address a single piece of content, but there should be no duplicate keys (even after resolving inheritance/anteheritance; see Heritage). The file should be formatted as a single toplevel zbg dictionary. It should not be treated as a standalone file and should *not* include its own magic number or header. Keys may be arbitrary binary values, but keep in mind that non-text encodings may introduce compatibility issues with certain implementations. Values may be either arrays, dictionaries, or a ToC address. References to addresses in inherited or anteherited ToC's are also valid. Values **must** be addresses for content, not the content itself. This is inefficient for blobs smaller than a few hundred bytes, but it is necessary to support heritage. If the manifest allowed values in addition to hash references, those values would be unreachable by inherited or anteherited eics files. By forcing the manifest to use content references, a performance compromise is made to encourage deduplication and ease of use.
+#### 7. Target
 
-### Heritage
+#### 8. Nonce 
 
-Since pure anteheritance leaves the child unmodified by the parent, it renders the child incapable of making manifest references to content stored within the parent. This is easily remedied: if the child both inherits and anteherits the parent, both eics will have identical states (provided the anteheritance is accepted by the consumer). This is generally not recommended for use with multiple anteheritance, as each successive inheritance/anteheritance pair increases the likelihood of unpredictable namespace collisions in the manifest mapping. They also may make your anteheritance significantly less likely to be honored.
-
-Finally, particularly in light of the above, it bears mentioning that circular referencing is possible, but meaningless. Keep in mind that the heritage of a file simply describes the search order for manifest mappings. If we've already searched a static file for a given key, there is no need to re-search the same file. Circular references therefore terminate when they point to an muid that has already been searched.
-
-#### Some heritage examples
-
-**A very simple email clone:**
-
-*Parent eics*
-
-ToC:
-
-| Blob        | Hash/address |
-| ---         | ---          |
-| 'anna'      | hashblob1    |
-| 'bob'       | hashblob2    |
-| 'hello'     | hashblob3    |
-| messageblob | hashblob4    |
-
-Manifest:
-
-| Manifest key | Content address |
-| -------      | ---------       |
-| 'subject'    | hashblob3       |
-| 'from'       | hashblob1       |
-| 'to'         | hashblob2       |
-| 'message'    | hashblob4       |
-
-*Child eics*
-
-ToC:
-
-| Blob          | Hash/address |
-| ---           | ---          |
-| 'Re: hello'   | hashblob5    |
-| messageblob_2 | hashblob6    |
-
-Manifest:
-
-| Manifest key | Content address |
-| -------      | ---------       |
-| 'subject'    | hashblob5       |
-| 'from'       | hashblob2       |
-| 'to'         | hashblob1       |
-| 'message'    | hashblob6       |
-
-The child inherits the parent, adding two more pieces of content (addressed by hashblob5 and hashblob6). The child still has access to all of the previous 4 hash blobs and need not redefine them within the ToC. The child updates only the necessary manifest keys to point to the correct content.
-
-**A link posted to a Reddit clone:**
-
-*Parent eics*
-
-ToC:
-
-| Blob                                 | Hash/address |
-| ---                                  | ---          |
-| 'carol'                              | hashblob1    |
-| 'http://www.google.com'              | hashblob2    |
-| 'DuckDuckGo is a cool search engine' | hashblob3    |
-
-Manifest:
-
-| Manifest key | Content address |
-| -------      | ---------       |
-| 'user'       | hashblob1       |
-| 'link'       | hashblob2       |
-| 'title'      | hashblob3       |
-
-*Child eics*
-
-ToC:
-
-| Blob                             | Hash/address |
-| ---                              | ---          |
-| 'Google is a cool search engine' | hashblob4    |
-
-Manifest:
-
-| Manifest key | Content address |
-| -------      | ---------       |
-| 'title'      | hashblob4       |
-
-*Competing child eics*
-
-ToC:
-
-| Blob                     | Hash/address |
-| ---                      | ---          |
-| 'https://duckduckgo.com' | hashblob5    |
-| 'david'                  | hashblob6    |
-
-Manifest:
-
-| Manifest key | Content address |
-| -------      | ---------       |
-| 'link'       | hashblob5       |
-| 'editor'     | hashblob6       |
-
-Carol corrects her link's title by anteheriting. Meanwhile, a competing anteheritor updates her link instead -- and note the manifest key addition. Consumers may, on an individual basis, choose to honor either, both, or neither anteheritances. Respectively, this could result in:
-
-1. 'user' 'carol' submits 'http://www.google.com' with 'title' 'Google is a cool search engine'
-2. 'user' 'carol' submits 'https://www.duckduckgo.com' with 'title' 'DuckDuckGo is a cool search engine', updated by 'editor' 'david'
-3. 'user' 'carol' submits 'https://www.duckduckgo.com' with 'title' 'Google is a cool search engine', updated by 'editor' 'david'
-4. 'user' 'carol' submits 'http://www.google.com' with 'title' 'DuckDuckGo is a cool search engine'
-
-#### A note on the determinism and ordering of heritage
-
-For any consumer, at any given time, with access to a given set of eics, the final eics mapping (after heritage resolution) would (ideally) be consistent. That is to say, so long as the consumer's information exposure remains constant, her net eics should (ideally) always be the same, regardless of software framework, device, etc. The problem here is that defining a specific search order is inherently limiting. While we can make recommendations, we really cannot assert a single linearization process for the network as a whole. Instead, we'll just say: both inheritance and anteheritance should be treated as ordered lists, searched from left to right. But, when using the same linearization algorithm for those lists, all heritage is determinate. And in a hypothetical world where every consumer has access to the sum total of eicnet information, heritage would be very straightforward to implement.
-
-However, not every consumer has access to the same information. Even if two consumers are accessing the same inheriting child, if one consumer can't open a parent eics, the two consumers will have different mappings. Similarly, if their anteheritance preferences differ, so might their mappings. A consumer might also opt to change her resolution preferences over time, resulting in a differing final product even for the same consumer. So in this sense, it is very important to gracefully handle resolution failure. Use the best available information at all times (even old information is better than inaccessible information), and notify consumers of full failure when possible.
-
-Using A#, Ref, I# to denote anteherited, referenced, and inherited eics respectively, resolution proceeds as:
-
-1. Start with the ordered inheritance list as defined in the Ref eics: [Ref, I1, I2, I3]
-2. Consumer prepends anteherited eics: [A1, A2, A3, Ref, I1, I2, I3]
-3. Consumer linearizes that multiple inheritance tree
-4. Perform key lookup against the linearized tree.
-
-Now, as for our recommendation: we suggest linearizing with a slightly modified [C3](http://en.wikipedia.org/wiki/C3_linearization) algorithm that aims to robustly "best guess" the circular dependency problem when C3 fails. In general, since authors cannot control anteheritance, the linearization algorithm must err very heavily on the side of "attempt to resolve at all costs" to prevent clever content declarations from inducing load failures via anteheritance.
+Random noise. Prevents spoofing a static binding into a static debind request.
 
 ## Service layer
 
+During handshake negotiation, Muse APIs create two unidirectional pipes. These two pipes may then be used to create an arbitrary number of secondary pipes between the two parties.
+
+**Generic API handshake:**
+
+1. Client creates 'hello' eico for upload pipe
+2. Client creates dynamic binding for 'hello' eico as upstream API pipe
+3. Client create EIAR for dynamic pipe
+4. Client pushes dynamic pipe, EICO over transport *as a single message*
+5. Client pushes EIAR as *separate* message (for security reasons)
+6. Server creates 'hello' eico for download pipe
+7. Server creates dynamic binding for 'hello' eico as downstream API pipe
+8. Server creates EIAR for dynamic pipe
+9. Server pushes dynamic pipe, EICO over transport *as a single message*
+10. Server pushes EIAR as *separate* message (for security reasons)
+
+Note that in most cases, it's a good idea for the client to **immediately** update the upstream pipe with an ACK to signify successful completion of 10. However, this is *not* a requirement and will vary from API to API.
+
+**Handshake excerpt where something goes wrong:**
+
+5. Client pushes EIAR
+6. Server pushes EINK
+
+**Updating dynamic API pipe:**
+
+1. Client creates new EICO frame
+2. Client updates dynamic binding
+3. Client pushes both over transport as single message
+4. Server responds with ACK
+
+**Closing the API session:**
+
+1. Client pushes debind for upstream API pipe
+2. Server acknowledges with debind request for downstream API pipe
+3. Client responds with ACK 
+
 ### Storage providers
+
+As the mediator between the transport layer and the Muse service layer, storage providers can expose both a physical and EIC API. The physical API requires a single bidirectional pipe and is a simple, unprotected pub/sub bytestream.
+
+**Prerequisites:**
+
+1. Establish transport mechanism. Should be single-purpose (ex: specific TCP/IP socket, single URL for http support, etc) and support messages (or otherwise-delimited transmissions)
+
+**Storage providers are unique on the Muse network in that they *must* at some level operate outside of an EIC pipe.** However, for increased security, the storage provider API may be nested within an EIC pipe. This allows onion routing protocols to exist natively (and coexist with traditional point-to-point routing as well).
+
+
+Required commands & messages:
+
++ Publish
++ Get
++ Subscribe
++ Unsub
++ Ack
++ Nak
++ List subscriptions
++ List bindings for muid
+
+Subscribe behavior: let's say I subscribe to MUID123. The subscriber should expect the following behavior:
+
+1. SP will send client the muid of any available resource with MUID123 as the public recipient;
+2. SP will send client the muid of any available resource with MUID123 as the public author;
+3. SP will send client MUID123 of any modified dynamic binding address MUID123;
+4. Except if MUID123 was received from client, in which case, send nothing.
+
+These three cases should be differentiated in their return by a 1-byte ASCII control string prefix.
+
+
+
+
+
+**Notes:**
+
++ (At some point there will need to be an SP discovery protocol)
++ (At some point there will need to be a definition of the transport interface -- aka what criteria a transport mechanism must satisfy to support the muse)
++ SP "peering" agreements are handled independently of the protocol.
++ This works on an unsecured bytestream, including those with relays.
+
+**EIC API:**
+
+Note that the EIC API uses eic-formatted debind, bind, and EIAR requests so that a storage provider can broadcast the message to a mesh storage system.
+
+
+
+Storage providers are a bidirectional API. Both endpoints are treated by the other as a storage provider.
+
+USE WEBSOCKETS WHEN USING THE INTERNET AS A TRANSPORT MECHANISM.
+
+Only APIs that require "on-the-wire" (as opposed to purely EIC-based) commands.
+
+Everything should be signed, even query/head/get requests, to mitigate (d)dos attacks. If you're looking for blazing performance, use a lower-level pipe. Service providers may very well provide this, using high-level muse for session handshakes. That would also allow specific low-level holes to be punched in firewalls at runtime for high-performance throughput; meanwhile, all high-level muse traffic would be verified by the network. Firewalls vs performance -- best of both worlds.
+
+Put is implicit. If an object arrives, it's a put request. Put should (?) be complemented by an ack/nak?
+
+Get 
+
+Ack/Nak is important. Query is unnecessary; simply "get" or "head", then if NAK, it's unavailable. Head is useful for 'lightweight' clients, as well as (potentially) some buffering situations, plus as a shortform for query. Use a single ack/nak though; if more detail is desired it can be defined by an individual storage provider and transmitted within the api pipe.
+
+Put, Get, Head, Ack, Nak?
+
+Get, head, ack, nak: can (and should be!) all be contained within the API pipe. The question is, what do you need to be able to perform the initial handshake?
 
 ### Access providers
 
@@ -518,6 +832,37 @@ Could be cool.
 # Scratchbook
 
 **"Test post, please ignore"**
+
+
+
+
+
+Dynamic EIC files are a specialized symmetrically-encrypted container file. They are intended to retain static content-addressability with truly mutable content. They are **not** meant to be a mutable form of an EICs file, and EICd files support *only a single binary blob*. There are some tradeoffs involved with these files, and generally speaking they are not intended to be widely shared, but instead be reserved for the few situations in which maintaining a full set of anteherited static files would be impractical, impossible, or expensive. There is also additional overhead associated with the initial creation of dynamic files, as they involve more hash operations. However, they need not resolve inheritance/anteheritance chains, so bandwidth requirements may be lower.
+
+Keep in mind that even here, the ephemerality of these files is still unenforceable. Dynamic files are ones in which the storage layer is *permitted*, but not *required* to remove previous versions. Similarly, they are *expected*, but might not *guarantee*, that the buffer *request* is fulfilled.  Neither removal nor complete buffering are enforceable by storage layer consumers -- though that does not prevent consumers from changing storage providers. Presumably you should not be charged in the event that data persists beyond its requested lifetime.
+
+It is also important that, from square one, dynamic files be declared as such, so that if they're shared, users would be aware that the contents of the file may be especially short-lived.
+
+Specific EICd goals:
+
+1. Can be searched for by header hash (returns a list of all muids associated with that header hash)
+    + Problem: header must be deterministically unique for each file
+    + Solution: use a zeroth hash in the header
+    + Problem: build order -- zeroth hash cannot be a file hash, as the file is unbuilt when it is calculated
+    + Solution: use a zeroth payload hash
+2. Supports buffered frames
+    + Problem: content addressing for specific frames
+    + Solution: requestable through muid as always
+    + Problem: knowing how many buffer frames to maintain
+    + Solution: buffer length flag
+3. Buffered frames have a determinate order
+    + Problem: zero-knowledge, self-contained sequence
+    + Solution: hash chain (include the previous muid in the header)
+    + Problem: muid must always be verifiably correct for the content, and replacing the zeroth hash with a hash chain prevents this
+    + Solution: hash chain must be separate field
+4. Termination
+    + Problem: efficient 'delete' notification
+    + Solution: transmit header with no payload and 0 buffer request
 
 
 
