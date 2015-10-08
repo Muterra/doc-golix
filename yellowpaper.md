@@ -26,23 +26,6 @@ Text-based links should be represented as muid://base64URLsafeencodedMUID
     + [Universal identities](#Universal-identities)
 + [Technical implementation](#Technical-implementation)
     + [EIC filetype](#EIC-filetype)
-        + [Pending changes](#Pending-changes)
-        + [Common fields](#Common-fields)
-            + [Magic number](#Magic-number)
-            + [Cipher suites](#Cipher-suites)
-            + [Author signature](#Author-signature)
-            + [File hash](#File-hash)
-            + [Version numbers](#Version-numbers)
-            + [Recipients and authors](#Recipients-and-authors)
-        + [Access files](#Access-files)
-            + [Outer header fields](#Outer-header-fields)
-            + [Inner container](#Inner-container)
-        + [Dynamic](#Dynamic)
-            + [Outer header](#Outer-header)
-            + [The payload](#The-payload)
-        + [Static](#Static)
-            + [Outer header](#Outer-header)
-            + [Inner header](#Inner-header)
     + [Service layer](#Service-layer)
         + [Storage providers](#Storage-providers)
         + [Access providers](#Access-providers)
@@ -70,7 +53,7 @@ In the physical world, personal agency is the defining characteristic of animate
  
 ### Agency requires privacy
 
-Much of the benefit to agent-oriented architecture is contained in the ability to treat the internet as a global asynchronous communications system. Agents directly address other agents, and the muse itself is treated as a single coherent information repository. As such, it replaces the website as a medium for data storage, which, by extension, eliminates the notion of site-specific privacy. This arrangement **requires** *all* confidential data to be private end-to-end, or it would be immediately exposed to every other agent. We are then left with a choice: have no explicit security requirement, allowing individual applications to develop their own information controls; or, make the muse private by default, thereby implementing a new standard for universal data privacy. The proliferation of both generic security solutions like SSL, and of the astoundingly important privacy questions now regularly raised, strongly indicates that the latter option is the clear choice.
+Much of the benefit to agent-oriented architecture is contained in the ability to treat the internet as a global asynchronous communications system. Agents directly address other agents, and the muse-implementing network is treated as a single coherent information repository. As such, it replaces the website as a medium for data storage, which, by extension, eliminates the notion of site-specific privacy. This arrangement **requires** *all* confidential data to be private end-to-end, or it would be immediately exposed to every other agent. We are then left with a choice: have no explicit security requirement, allowing individual applications to develop their own information controls; or, make Muse private by default, thereby implementing a new standard for universal data privacy. The proliferation of both generic security solutions like SSL, and of the astoundingly important privacy questions now regularly raised, strongly indicates that the latter option is the clear choice.
 
 Having spelled out a privacy requirement, we need to define its scope. Since we're discussing information that already exists, and information isn't known to spontaneously appear, we can assume it has an author. We see privacy as an absence of information, and therefore to be "private by default", information must be known to *only and exactly* its author at the time it is created. This is intuitive in the physical world, and it's our firm belief that this paradigm should also apply to digital data. With current technology, we can then say that a functional definition of "private by default" requires data to be encrypted from pre-upload to post-download. This is known as [end-to-end encryption](http://en.wikipedia.org/wiki/End-to-end_encryption).
 
@@ -174,7 +157,7 @@ Additionally, dynamic EIC files support a secondary (static) address, based upon
 
 ## EIC Objects
 
-EIC object files are the fundamental basis of the Muse network. Their goal is to
+EIC object files are the fundamental basis of a Muse network. Their goal is to
 
 1. be easily, unambiguously referenceable,
 2. keep data private until shared, and
@@ -207,44 +190,45 @@ and offer the following security assurances:
 
 ### Format
 
+Note: optimized for faster reading than writing
+
 **Public header:**
 
 | Offset | Length    | Name                | Format              | Hexoff |
 | ------ | --------- | ------------------- | -----------         | ---    |
 | 0      | 4B        | Magic number        | x65x69x63x6F        | 0      |
-| 4      | 4B        | Cipher suite        | Unsigned 32-bit int | 4      |
-| 8      | 512B      | Author signature    | Bytes               | 8      |
-| 520    | 64B       | File hash (muid)    | Bytes               | 208    |
-| 584    | 4B        | .eic spec version   | Unsigned 32-bit int | 248    |
-| 588    | 64B       | Author muid         | Bytes               | 24C    |
-| 652    | 8B        | Payload length, *N* | Unsigned 64-bit int | 28C    |
-| 660    | *N*       | Private payload     | Encrypted blob      | 294    |
+| 4      | 4B        | Version             | Unsigned 32-bit int | x      |
+| 8      | 2B        | Address algo        | Unsigned 16-bit int | x      |
+| 10     | 64B       | File hash           | Bytes               | x      |
+| 74     | 2B        | Cipher suite        | Unsigned 16-bit int | x      |
+| 76     | 66B       | Author muid         | Bytes               | x      |
+| 142    | 512B      | Author signature    | Bytes               | x      |
+| 654    | 8B        | Payload length, *N* | Unsigned 64-bit int | x      |
+| 662    | *N*       | Private payload     | Encrypted blob      | x      |
 
-Total public length 660B | 294
+Total public length 662B | 294
+
+
+
+Adding an hmac would prove that the author had access to the symmetric encryption key *before* consumer decryption.
+
+1. corollary: how would a consumer decrypt the resource without the author sharing the key?
+2. allow the network to police naive, unprivileged attempts to steal authorship (except how would the attacker distribute the key?)
+
+it cannot:
+
+1. offer any assurance of a relationship between plaintext and author (beyond first-come-first-serve)
+
+
+
+
+
 
 #### 1. Magic number
 
 EIC object magic number: ASCII "eico" (65 69 63 6F).
 
-#### 2. Cipher suite
-
-EIC will eventually offer support for multiple cipher suites. They are represented as a 32-bit integer immediately following the magic number.
-
-If the cipher suite uses a nonce or IV, **it will be prepended to the payload ciphertext**. As such, any implementations should be aware of the cipher suite while unpacking the payload.
-
-Cipher suites, by integer representation:
-
-1. **0x00000001:** SHA512/AES256/RSA4096. **Addressing:** SHA-512. **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537. **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537. **Symmetric encryption:** AES-256 CTR SHA512/AES256/RSA4096. **Deniable exchange:** 2048-bit [Group #14](http://www.ietf.org/rfc/rfc3526.txt) with a generator of 2.
-
-#### 3. Author signature
-
-Provides assurances of integrity, authenticity, and non-repudiation from the author of the file. An asymmetric cryptographic signature of the file hash / muid.
-
-#### 4. File hash / muid
-
-The SHA-512 digest of the entire remaining .eic. This is used as the unique content identifier for each file (the muid). Note that it excludes the magic number, cipher suite, signature, and of course itself (and therefore starts at byte 584).
-
-#### 5. Version numbers
+#### 2. Version numbers
 
 The version number is a semantic version number (ex. 1.2.3, where 1 is the major, 2 is the minor, 3 is the patch) encoded as unsigned integers as follows:
 
@@ -256,9 +240,37 @@ The version number is a semantic version number (ex. 1.2.3, where 1 is the major
 
 Therefore, the maximum version is 255.255.65535. Version needs to be after the file hash so that the author signature verifies the correct version is applied when opening.
 
-**The current EICO version is 0.0.9.**
+**The current EICO version is 0.0.11.**
 
-#### 6. Author muid
+#### 3. Address algo
+
+EIC will eventually need multiple hash algorithms. They are represented as a 16-bit integer immediately following the magic number.
+
+Address hash algorithms, by integer representation:
+
+1. **0x1:** SHA-512.
+
+#### 4. File hash
+
+The hash digest of the file. It is constructed from the concatenation of magic number, version bytes, author/recipient muid, and all bytes following the signature. In other words, it is (Magic = [0, 3] + version = [4, 7] + author/recipient = [76, 141] + rest = [654, EOF]). This, together with the integer representation of the algorithm used (see "Address algo" above), is used as the unique content identifier (the muid) for each file, which is therefore (for hash algo #1) 66 bytes long, and can be directly read from any EIC file as bytes [8, 73]. 
+
+Note that the file hash excludes the address algorithm, cipher suite, signature, and of course the file hash itself. Omitting or modifying any of these fields is synonymous with denial of access. Magic number is included to minimize exposure to filetype spoofing between EIC filetypes (though it should be noted that in its current version, no eic file can be properly parsed with a mismatched version). The version number is included to decrease exposure to version spoofing and increase flexibility of future versions. Author/recipient muid *must* be included to prevent spoofing the author + signature combination -- by including the muid in the file hash, though a different identity could claim authorship, it would create a second muid for the contested author. The remainder of the file must also be included (for hopefully obvious reasons).
+
+#### 5. Cipher suite
+
+EIC will eventually offer support for multiple cipher suites. They are represented as a 16-bit integer immediately following the address hash algorithm declaration.
+
+Cipher suites, by integer representation:
+
+1. **0x1:** SHA512/AES256/RSA4096. **Address algorithm:** 0x1 = SHA-512. **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537. **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537. **Symmetric encryption:** AES-256 in CTR mode with nonce prepended to payload ciphertext. Nonce generation is described below. **Diffie-Hellman deniable exchange:** 2048-bit [Group #14](http://www.ietf.org/rfc/rfc3526.txt) with a generator of 2.
+
+Note on the redundancy of the address algorithm: in a slightly more ideal world, it might be possible to separate out the function of content addressing from the question of the underlying cipher suite. However, since the file hash is used for signature generation, it is an inherent component of the security for the file. Therefore, though it is redundant and perhaps not an ideal division of concerns, we are including it redundantly within the cipher suite.
+
+#### 6. Author signature
+
+Provides assurances of integrity, authenticity, and non-repudiation from the author of the file. An asymmetric cryptographic signature of the file hash / muid.
+
+#### 7. Author muid
 
 EIC objects make the backbone of the eicnet. Any persistent network objects are built from them. "Identities" -- at a minimum, the public half of a public/private keypair -- are no exception. As such, instead of encasing the public key in each file (or some other nonsense), every file makes reference to the muid of its author. For access files, they also target a specific identity.
 
@@ -266,11 +278,11 @@ Within the EICs corresponding to that author, the public key should be defined u
 
 Note that the author muid must be used in the file hash to prevent a potential storage provider attacker from altering the author field. With the author not included in the file hash, this would not result in a different muid; with it contained, an attacker is prevented from retroactively claiming authorship over *existing* resources.
 
-#### 7. Payload length
+#### 8. Payload length
 
 A 64-bit integer representation *N* of the length of the binary blob associated with the payload. If the cipher suite prepends the nonce to the ciphertext, this length will include the nonce. The total length of the file should therefore be (660 + *N*) bytes.
 
-#### 8. Private payload
+#### 9. Private payload
 
 The payload follows the public header immediately, with no padding. It is encrypted according to the cipher suite definition, as described in the public header. It may therefore begin with a nonce. The file terminates with the end of the payload, with no end flags.
 
@@ -278,25 +290,26 @@ The payload follows the public header immediately, with no padding. It is encryp
 
 Static bindings allow storage providers to effectively answer the question "when am I allowed to delete this resource?" They are a public record of data retention -- a formal declaration of information use -- and prevent compliant storage providers from garbage collecting their referenced EIC objects. They directly and publicly reference the bound EICO muid and contain a public record of the author that created the binding. They do not create a secondary address for content.
 
-There is no concept of individual copies of information on the Muse; identical content encrypted identically will always be referenced identically, regardless of storage location. Therefore sharing content does not create copies; if Alice authors content and shares it with Bob, he has no inherent way of preserving access to that information. Static bindings create exactly such a mechanism: Bob may now place a hold on the data. The caveat is that, as public information, Alice will know that Bob is the person preventing erasure.
+There is no concept of individual copies of information with Muse; identical content encrypted identically will always be referenced identically, regardless of storage location. Therefore sharing content does not create copies; if Alice authors content and shares it with Bob, he has no inherent way of preserving access to that information. Static bindings create exactly such a mechanism: Bob may now place a hold on the data. The caveat is that, as public information, Alice will know that Bob is the person preventing erasure.
 
 ### Format
 
 | Offset | Length    | Name                | Format              | Hexoff |
 | ------ | --------- | ------------------- | -----------         | ---    |
 | 0      | 4B        | Magic number        | x65x69x73x62        | 0      |
-| 4      | 4B        | Cipher suite        | Unsigned 32-bit int | x      |
-| 8      | 512B      | Binder signature    | Bytes               | x      |
-| 520    | 64B       | File hash           | Bytes               | x      |
-| 584    | 4B        | .eic spec version   | Unsigned 32-bit int | x      |
-| 588    | 64B       | Binder muid         | Bytes               | x      |
-| 652    | 64B       | Target muid         | Bytes               | x      |
+| 4      | 4B        | Version             | Unsigned 32-bit int | x      |
+| 8      | 2B        | Address algo        | Unsigned 16-bit int | x      |
+| 10     | 64B       | File hash           | Bytes               | x      |
+| 74     | 2B        | Cipher suite        | Unsigned 16-bit int | x      |
+| 76     | 66B       | Binder muid         | Bytes               | x      |
+| 142    | 512B      | Binder signature    | Bytes               | x      |
+| 654    | 66B       | Target muid         | Bytes               | x      |
 
-Total length 716B | 28C
+Total length 720B | x
 
 #### 1. Magic number
 
-Static binding magic number: ASCII "eisb" (65 69 62 73)
+Static binding magic number: ASCII "eisb" (65 69 73 62)
 
 #### 2. Cipher suite
 
@@ -312,7 +325,7 @@ As usual, the hash of bytes 584 onwards.
 
 #### 5. eisb version
 
-**Currently 0.0.1.**
+**Currently 0.0.3.**
 
 #### 6. Binder muid 
 
@@ -333,17 +346,18 @@ Note that dynamic bindings *must* be implemented in this abstraction layer to al
 | Offset | Length    | Name                    | Format              | Hexoff |
 | ------ | --------- | -------------------     | -----------         | ---    |
 | 0      | 4B        | Magic number            | x65x69x64x62        | 0      |
-| 4      | 4B        | Cipher suite            | Unsigned 32-bit int | x      |
-| 8      | 512B      | Binder signature        | Bytes               | x      |
-| 520    | 64B       | File hash               | Bytes               | x      |
-| 584    | 4B        | .eic spec version       | Unsigned 32-bit int | x      |
-| 588    | 64B       | Binder muid             | Bytes               | x      |
-| 652    | 64B       | Dynamic muid            | Bytes               | x      |
-| 716    | 32        | Nonce                   | Bytes               | x      |
-| 748    | 4B        | Dynamic frame count *n* | Unsigned 32-bit int | x      |
-| 752    | 64B * *n* | Bound muids             | Bytes               | x      |
+| 4      | 4B        | Version                 | Unsigned 32-bit int | x      |
+| 8      | 2B        | Address algo            | Unsigned 16-bit int | x      |
+| 10     | 64B       | File hash               | Bytes               | x      |
+| 74     | 2B        | Cipher suite            | Unsigned 16-bit int | x      |
+| 76     | 66B       | Binder muid             | Bytes               | x      |
+| 142    | 512B      | Binder signature        | Bytes               | x      |
+| 654    | 64B       | Dynamic hash            | Bytes               | x      |
+| 718    | 32        | Nonce                   | Bytes               | x      |
+| 750    | 4B        | Dynamic frame count *n* | Unsigned 32-bit int | x      |
+| 754    | 66B * *n* | Bound muids             | Bytes               | x      |
 
-Minimum length (header + 1 muid) 752B | 2F0
+Minimum length (header + 1 muid) xB | x
 
 #### 1. Magic number
 
@@ -363,15 +377,15 @@ The hash of this binding request, starting immediately after the hash (ie starti
 
 #### 5. EIDB version
 
-**Currently 0.0.5.**
+**Currently 0.0.7.**
 
 #### 6. Binder muid
 
 The muid for the entity creating the dynamic binding.
 
-#### 7. Dynamic muid
+#### 7. Dynamic hash
 
-The secondary address for the dynamic object. This is generated from the hash of the concatenated nonce, binder muid, buffer frame count, and bound muids of the first frame in the binding. That is, the binder takes bytes 652 and onwards of the binding, hashes the result, and is left with the dynamic muid. From that point forward, the dynamic muid does not change, regardless of updates to the binding.
+The muid hash for the secondary address for the dynamic object. This is generated from the hash of the concatenated nonce, binder muid, buffer frame count, and bound muids of the first frame in the binding. That is, the binder takes bytes 652 and onwards of the binding, hashes the result, and is left with the dynamic muid. From that point forward, the dynamic muid does not change, regardless of updates to the binding.
 
 #### 8. Nonce
 
@@ -400,24 +414,30 @@ An eiar is removed by the *recipient*, through a debind request against the file
 | Offset | Length    | Name                | Format              | Hex off |
 | ------ | --------- | ------------------- | -----------         | ---     |
 | 0      | 4B        | Magic number        | x65x69x61x72        | 0       |
-| 4      | 4B        | Cipher suite        | Unsigned 32-bit int | 4       |
-| 8      | 512B      | Author signature    | Bytes               | 8       |
-| 520    | 64B       | File hash           | Bytes               | 208     |
-| 584    | 4B        | .eica spec version  | Unsigned 32-bit int | 248     |
-| 588    | 64B       | Recipient muid      | Bytes               | 24C     |
+| 4      | 4B        | Version             | Unsigned 32-bit int | x       |
+| 8      | 2B        | Address algo        | Unsigned 16-bit int | x       |
+| 10     | 64B       | File hash           | Bytes               | x       |
+| 74     | 2B        | Cipher suite        | Unsigned 16-bit int | x       |
+| 76     | 66B       | Recipient muid      | Bytes               | x       |
 
-Total length 652B | 28C
+Total length 654B | x
 
 **Inner container:**
 
 | Offset | Length    | Name                 | Format      |
 | ------ | --------- | -------------------  | ----------- |
-| 0      | 64B       | Inner hash           | Bytes       |
-| 64     | 64B       | Author               | Bytes       |
-| 128    | 64B       | Target muid          | Bytes       |
-| 192    | 32B       | Target symmetric key | Bytes       |
+| 0      | 32B       | Inner nonce          | Bytes       |
+| 64     | 66B       | Author               | Bytes       |
+| 130    | 66B       | Target muid          | Bytes       |
+| 196    | 32B       | Target symmetric key | Bytes       |
 
-Total size: 224B (encrypted size 512B) | 3A8
+Total size: 228B (encrypted size 512B) | x
+
+**Public footer:**
+
+| Offset | Length    | Name                | Format      | Hex off |
+| ------ | --------- | ------------------- | ----------- | ---     |
+| 142    | 64B       | Author HMAC         | Bytes       | x       |
 
 #### 1. Magic number
 
@@ -437,7 +457,7 @@ The hash of this API request, starting immediately after the hash (ie starting w
 
 #### 5. EIAR version
 
-**Currently 0.0.6.** 
+**Currently 0.0.8.** 
 
 #### 6. Recipient muid
 
@@ -483,24 +503,25 @@ API NAKs are removed by the *recipient*, through a debind request against the fi
 | Offset | Length    | Name                | Format              | Hex off |
 | ------ | --------- | ------------------- | -----------         | ---     |
 | 0      | 4B        | Magic number        | x65x69x4Ex4B        | 0       |
-| 4      | 4B        | Cipher suite        | Unsigned 32-bit int | 4       |
-| 8      | 512B      | Author signature    | Bytes               | 8       |
-| 520    | 64B       | File hash           | Bytes               | 208     |
-| 584    | 4B        | .eica spec version  | Unsigned 32-bit int | 248     |
-| 588    | 64B       | Recipient muid      | Bytes               | 24C     |
+| 4      | 4B        | Version             | Unsigned 32-bit int | x       |
+| 8      | 2B        | Address algo        | Unsigned 16-bit int | x       |
+| 10     | 64B       | File hash           | Bytes               | x       |
+| 74     | 2B        | Cipher suite        | Unsigned 16-bit int | x       |
+| 76     | 66B       | Recipient muid      | Bytes               | x       |
+| 142    | 512B      | Author signature    | Bytes               | x       |
 
-Total length 652B | 28C
+Total length 654B | x
 
 **Inner container:**
 
 | Offset | Length    | Name                       | Format              |
 | ------ | --------- | -------------------        | -----------         |
 | 0      | 32B       | Inner nonce                | Bytes               |
-| 32     | 64B       | Author                     | Bytes               |
-| x      | 64B       | Requesting muid (optional) | Bytes               |
+| 32     | 66B       | Author                     | Bytes               |
+| x      | 66B       | Requesting muid (optional) | Bytes               |
 | x      | 32B       | Error code (optional)      | Unsigned 32-bit int |
 
-Total size: 224B (encrypted size 512B) | 3A8
+Total size: xB (encrypted size 512B) | x
 
 #### 1. Magic number
 
@@ -520,7 +541,7 @@ The hash of this binding request, starting immediately after the hash (ie starti
 
 #### 5. EINK version
 
-**Currently 0.0.1.** 
+**Currently 0.0.3.** 
 
 #### 6. Recipient muid
 
@@ -557,24 +578,25 @@ API ACKs are removed by the *recipient*, through a debind request against the fi
 | Offset | Length    | Name                | Format              | Hex off |
 | ------ | --------- | ------------------- | -----------         | ---     |
 | 0      | 4B        | Magic number        | x65x69x41x4B        | 0       |
-| 4      | 4B        | Cipher suite        | Unsigned 32-bit int | 4       |
-| 8      | 512B      | Author signature    | Bytes               | 8       |
-| 520    | 64B       | File hash           | Bytes               | 208     |
-| 584    | 4B        | .eica spec version  | Unsigned 32-bit int | 248     |
-| 588    | 64B       | Recipient muid      | Bytes               | 24C     |
+| 4      | 4B        | Version             | Unsigned 32-bit int | x       |
+| 8      | 2B        | Address algo        | Unsigned 16-bit int | x       |
+| 10     | 64B       | File hash           | Bytes               | x       |
+| 74     | 2B        | Cipher suite        | Unsigned 16-bit int | x       |
+| 76     | 66B       | Recipient muid      | Bytes               | x       |
+| 142    | 512B      | Author signature    | Bytes               | x       |
 
-Total length 652B | 28C
+Total length 654B | 28C
 
 **Inner container:**
 
 | Offset | Length    | Name                    | Format              |
 | ------ | --------- | -------------------     | -----------         |
 | 0      | 32B       | Inner nonce             | Bytes               |
-| 32     | 64B       | Author                  | Bytes               |
-| x      | 64B       | Closing muid (optional) | Bytes               |
+| 32     | 66B       | Author                  | Bytes               |
+| x      | 66B       | Closing muid (optional) | Bytes               |
 | x      | 32B       | Exit code (optional)    | Unsigned 32-bit int |
 
-Total size: 224B (encrypted size 512B) | 3A8
+Total size: xB (encrypted size 512B) | x
 
 #### 1. Magic number
 
@@ -594,7 +616,7 @@ The hash of this binding request, starting immediately after the hash (ie starti
 
 #### 5. EIAK version
 
-**Currently 0.0.1.** 
+**Currently 0.0.3.** 
 
 #### 6. Recipient muid
 
@@ -630,13 +652,14 @@ They will only be accepted from the muid that created the binding (or the recipi
 
 | Offset | Length    | Name                | Format              | Hexoff |
 | ------ | --------- | ------------------- | -----------         | ---    |
-| 0      | 4B        | Magic number        | x65x69x64x62        | 0      |
-| 4      | 4B        | Cipher suite        | Unsigned 32-bit int | x      |
-| 8      | 512B      | Debinder signature  | Bytes               | x      |
-| 520    | 64B       | File hash           | Bytes               | x      |
-| 584    | 4B        | .eic spec version   | Unsigned 32-bit int | x      |
-| 588    | 64B       | Debinder muid       | Bytes               | x      |
-| x      | 64B       | Target              | Bytes               | x      |
+| 0      | 4B        | Magic number        | x65x69x58x58        | 0      |
+| 4      | 4B        | Version             | Unsigned 32-bit int | x      |
+| 8      | 2B        | Address algo        | Unsigned 16-bit int | x      |
+| 10     | 64B       | File hash           | Bytes               | x      |
+| 74     | 2B        | Cipher suite        | Unsigned 16-bit int | x      |
+| 76     | 66B       | Debinder muid       | Bytes               | x      |
+| 142    | 512B      | Debinder signature  | Bytes               | x      |
+| x      | 66B       | Target              | Bytes               | x      |
 | x      | 32B       | Nonce               | Bytes               | x      |
 
 #### 1. Magic number
@@ -652,6 +675,8 @@ See above.
 #### 4. File hash
 
 #### 5. eiXX version
+
+**Currently 0.0.3.** 
 
 #### 6. Debinder muid
 
@@ -706,7 +731,7 @@ As the mediator between the transport layer and the Muse service layer, storage 
 
 1. Establish transport mechanism. Should be single-purpose (ex: specific TCP/IP socket, single URL for http support, etc) and support messages (or otherwise-delimited transmissions)
 
-**Storage providers are unique on the Muse network in that they *must* at some level operate outside of an EIC pipe.** However, for increased security, the storage provider API may be nested within an EIC pipe. This allows onion routing protocols to exist natively (and coexist with traditional point-to-point routing as well).
+**Storage providers are unique on a Muse network in that they *must* at some level operate outside of an EIC pipe.** However, for increased security, the storage provider API may be nested within an EIC pipe. This allows onion routing protocols to exist natively (and coexist with traditional point-to-point routing as well).
 
 
 Required commands & messages:
@@ -736,7 +761,7 @@ These three cases should be differentiated in their return by a 1-byte ASCII con
 **Notes:**
 
 + (At some point there will need to be an SP discovery protocol)
-+ (At some point there will need to be a definition of the transport interface -- aka what criteria a transport mechanism must satisfy to support the muse)
++ (At some point there will need to be a definition of the transport interface -- aka what criteria a transport mechanism must satisfy to support the muse protocol)
 + SP "peering" agreements are handled independently of the protocol.
 + This works on an unsecured bytestream, including those with relays.
 
@@ -836,6 +861,11 @@ Could be cool.
 
 
 
+Design decision: (slightly redundantly) separate the address hash definition from the cipher suite in the header. Decreases computational cost, eases pain of maintaining multiple hash algos, and decreases size of muid links, which must include the hash algo.
+
+
+
+
 
 Dynamic EIC files are a specialized symmetrically-encrypted container file. They are intended to retain static content-addressability with truly mutable content. They are **not** meant to be a mutable form of an EICs file, and EICd files support *only a single binary blob*. There are some tradeoffs involved with these files, and generally speaking they are not intended to be widely shared, but instead be reserved for the few situations in which maintaining a full set of anteherited static files would be impractical, impossible, or expensive. There is also additional overhead associated with the initial creation of dynamic files, as they involve more hash operations. However, they need not resolve inheritance/anteheritance chains, so bandwidth requirements may be lower.
 
@@ -863,6 +893,14 @@ Specific EICd goals:
 4. Termination
     + Problem: efficient 'delete' notification
     + Solution: transmit header with no payload and 0 buffer request
+
+
+
+# Potential future improvements
+
+1. Dedicated standard for key exchange API: avoid RSA signature overhead once API channel has been created.
+2. ECC
+
 
 
 

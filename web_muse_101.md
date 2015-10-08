@@ -1,5 +1,16 @@
 Disclaimer: this is a metaphor with some huge simplifications. Like a book made into a movie, it isn't 100% technically accurate, but it gets the general idea and mood across effectively. **If you're looking for a technical explanation, [jump below](#the-technical-explanation), or read [our whitepaper](/whitepaper.md).**
 
+Scratchbook
+----------
+
+
+
+And yet, despite how important privacy and security are, they're still severely lacking. Arguably the biggest obstacle here is that any meaningful definition of privacy requires a robust way of knowing *exactly* who you're talking to. This isn't usually something you need to consider when you're talking in person, but imagine your spouse has a perfectly identical twin. Now you need some fundamental way to unambiguously differentiate between indistinguishable people. That's exactly the difficulty online: on the web, *every* computer looks the same. The easiest solution is to create a password-protected account, and because the fundamental protocols of the web don't support sharing your account "identity" between sites, you're forced to create a new one for every site you visit.
+
+
+
+
+
 The web today
 --------------
 
@@ -56,7 +67,7 @@ This is ~~http**s**~~ a much better mail service, and it's the current recommend
 3. The post office can still create fake postcards, impersonating you.
 4. What if the post office sends your postcard (or a copy of it) to someone *other* than Alice?
 
-These are the privacy and security problems that the Muse seeks to address. But before we talk about the Muse, let's pretend that in our above scenario, you want to create an account to edit Wikipedia, using your Facebook profile picture, and using gmail for authentication. Under this scheme, the process goes:
+These are the privacy and security problems that the Muse protocol seeks to address. But before we talk about Muse, let's pretend that in our above scenario, you want to create an account to edit Wikipedia, using your Facebook profile picture, and using gmail for authentication. Under this scheme, the process goes:
 
 1. You start talking with the gmail, wikipedia, and facebook post offices, as discussed above.
 2. You send gmail a secure postcard, asking them to send wikipedia ~~a valet key~~ the last 4 characters of your password.
@@ -73,12 +84,12 @@ First of all, that *seems* very complicated, because it *is* very complicated. T
 5. What if Facebook doesn't ask your permission to share your picture? What if it isn't Wikipedia asking for it, but one of Facebook's advertisers, and you never asked the advertiser to do anything?
 6. Why, exactly, is *Facebook* responsible for making decisions about my profile picture on my behalf?
 
-You can see there's a **lot** going on here. These are the systemic issues that the Muse helps alleviate.
+You can see there's a **lot** going on here. These are the systemic issues that Muse helps alleviate.
 
 The mesh, made a Muse
 ----------------
 
-The Muse changes pretty much all of that. Again, as a warning, this is an oversimplification, but with the Muse, the internet looks like this:
+The Muse protocol changes pretty much all of that. Again, as a warning, this is an oversimplification, but with Muse, the internet looks like this:
 
 + A single, universal post office
 + Gmail's mailbox
@@ -88,7 +99,7 @@ The Muse changes pretty much all of that. Again, as a warning, this is an oversi
 + Your friend Alice's mailbox
 + Your enemy Bob's mailbox
 
-Here, there *is no concept of insecure transfer*. Every single ~~message~~ postcard is inside those special security envelopes. Let's walk through sending Alice another message, this time on the Muse:
+Here, there *is no concept of insecure transfer*. Every single ~~message~~ postcard is inside those special security envelopes. Let's walk through sending Alice another message, this time with Muse:
 
 1. You and Alice agree on a notary (or multiple notaries). You can make them as easy or as hard to impersonate as you'd like. This time, the notary checks *your* ID, instead of just the post office's.
 2. You and Alice exchange addresses
@@ -99,7 +110,7 @@ Not only is that a lot simpler, but now you only have to trust one thing:
 
 1. The post office delivers your message
 
-Nowhere does Bob even enter the picture. To illustrate the difference further, and how profound of an effect this has on developing services on top of the Muse, what about creating the wikipedia profile example from earlier?
+Nowhere does Bob even enter the picture. To illustrate the difference further, and how profound of an effect this has on developing services with Muse, what about creating the wikipedia profile example from earlier?
 
 1. You create your account at the post office and get it notarized. Think of this as a PO box.
 2. You send the post office a notarized, secure message. Within it is your profile picture. You password protect the picture with a random number that is automatically stored in a special box at the post office that only you can open. *The post office does not have access to the picture, nor the password.*
