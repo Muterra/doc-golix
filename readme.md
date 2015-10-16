@@ -4,7 +4,7 @@
 
 Muse is a decentralized encrypted social media protocol.
 
-It is currently under development by [Muterra, Inc](https://www.muterra.io), co-evolving with the [Ethyr](https://www.ethyr.net) social network. More information about both the protocol and the project can be found at our [blog](https://www.ehtyr.net/blog).
+It is currently under development by [Muterra, Inc](https://www.muterra.io), co-evolving with the [Ethyr](https://www.ethyr.net) social network. More information about both the protocol and the project can be found at our [blog](https://www.ethyr.net/blog).
 
 ## Okay, too simple
 
