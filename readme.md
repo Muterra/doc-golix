@@ -1,5 +1,19 @@
 **Warning:** this repo is considered public pre-release information and is in varying levels of completeness. If you have questions or comments, please [contact us](mailto:badg@muterra.io).
 
+# Keep it simple, stupid
+
+Muse is a decentralized encrypted social media protocol.
+
+It is currently under development by [Muterra, Inc](https://www.muterra.io), co-evolving with the [Ethyr](https://www.ethyr.net) social network. More information about both the protocol and the project can be found at our [blog](https://www.ehtyr.net/blog).
+
+## Okay, too simple
+
+Muse is an open, encrypted, and decentralized protocol for anything social. The goal is to consolidate and standardize all of the shared infrastrucuture that any new scoial application requires (content management, sharing management, and identity management). By doing that, we can minimize the barriers to creating new applications, while maximizing personal agency and privacy.
+
+## How does Muse change things?
+
+In short, Muse is an overlay network that encrypts everything *not just from device to device*, but from entity to entity. It readdresses communications directly between the participants' digital identities (essentially their public keys), instead of (for example) the IP addresses of their devices. The protocol implementation abstracts away data transport, so physical addresses are transparent to applications, making them free to focus on high-level concepts like "Paypal, tell Alice her account balance".
+
 We use the internet like this:
 
     1. Bob sends Alice a message that they're out of toilet paper
