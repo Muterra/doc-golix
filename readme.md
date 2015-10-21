@@ -4,11 +4,15 @@
 
 Muse is a decentralized encrypted social media protocol.
 
-It is currently under development by [Muterra, Inc](https://www.muterra.io), co-evolving with the [Ethyr](https://www.ethyr.net) social network. More information about both the protocol and the project can be found at our [blog](https://www.ethyr.net/blog).
+It is currently under development by [Muterra, Inc](https://www.muterra.io), co-evolving with the [Ethyr](https://www.ethyr.net) social network. More information about Muse, Muterra, and Ethyr can be found at our [blog](https://www.ethyr.net/blog). If you'd like to stay updated, consider joining our [mailing list](https://www.ethyr.net/mailing-signup.html).
 
 ## Okay, too simple
 
-Muse is an open, encrypted, and decentralized protocol for anything social. The goal is to consolidate and standardize all of the shared infrastrucuture that any new scoial application requires (content management, sharing management, and identity management). By doing that, we can minimize the barriers to creating new applications, while maximizing personal agency and privacy.
+Muse is an open, encrypted, and decentralized protocol for anything social. The goal is to consolidate and standardize all of the shared infrastructure that any new social application requires (content management, sharing management, and identity management). By doing that, we can minimize the barriers to creating new applications, while maximizing personal agency and privacy.
+
+Crucially, **all operations on Muse are cryptographically enforced**. The protocol eschews "privacy by promise" and opts instead to create a general-purpose, many-to-many encrypted network with asynchronous/offline retrieval and real-time capability. **It does not require everyone to operate their own server**, and nor does platform-based hosting compromise privacy or security for applications built on Muse.
+
+Like the Rust programming language, Muse aspires to be a [zero-cost abstraction](http://blog.rust-lang.org/2015/05/11/traits.html): what you don't use, you don't pay for; what you do use, you couldn't hand-code any better. Unlike previous federated social protocols (Diaspora, Tent, Hubzilla, etc), Muse operates at a highly-restricted abstraction: it produces authenticated, confidential, verified byte messages from arbitrary, insecure bytestream sources, but places no restrictions or specifications of what those messages might be.
 
 ## How does Muse change things?
 
