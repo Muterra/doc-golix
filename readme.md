@@ -14,6 +14,16 @@ Crucially, **all operations on Muse are cryptographically enforced**. The protoc
 
 Like the Rust programming language, Muse aspires to be a [zero-cost abstraction](http://blog.rust-lang.org/2015/05/11/traits.html): what you don't use, you don't pay for; what you do use, you couldn't hand-code any better. Unlike previous federated social protocols (Diaspora, Tent, Hubzilla, etc), Muse operates at a highly-restricted abstraction: it produces authenticated, confidential, verified byte messages from arbitrary, insecure bytestream sources, but places no restrictions or specifications of what those messages might be.
 
+Quick technical overview:
+
+1. End-to-end symmetric encryption for all data, eliminating site-specific privacy concerns.
+2. A unified protocol interface for storing persistent objects on any network data host
+3. Asynchronous communication for the entire network, constructed using that storage protocol as a buffer
+4. Static and dynamic content-based addresses (muids) bound to individual data containers by any network participants
+5. Object deletion via garbage collection of any unreferenced containers
+6. Container key exchange through symmetric inter-agent API sessions initiated with asymmetric API handshakes
+7. Network "identity" definition through self-hosted public key infrastructure
+
 ## How does Muse change things?
 
 In short, Muse is an overlay network that encrypts everything *not just from device to device*, but from entity to entity. It readdresses communications directly between the participants' digital identities (essentially their public keys), instead of (for example) the IP addresses of their devices. The protocol implementation abstracts away data transport, so physical addresses are transparent to applications, making them free to focus on high-level concepts like "Paypal, tell Alice her account balance".
@@ -51,15 +61,40 @@ This network vs agent disconnect is one of the most fundamental problems facing 
 
 Second, if you're a developer, this problem is a huge pain in the ass. The process of converting ```Alice``` into ```88.41.145.167``` is **tremendously** time-consuming and doesn't always work well. You get bogged down defining accounts, securely storing passwords, dealing with the little details about how ```(wwww.paypal.com = 66.211.169.66)``` talks to ```(www.wellsfargo.com = 159.45.2.145)```, etc. Muse, on the other hand, makes development as simple as ```Bob sends Alice a message```, and privacy as simple as ```since he didn't CC Google, Google can't see it.``` It's built to digitally complement the social expectations humans have evolved over millennia. If you'd like to know more, the project's [whitepaper](/whitepaper.md) is a good place to start.
 
-# Very brief technical overview and some pseudocode application examples
+# Problem flow
 
-1. End-to-end symmetric encryption for all data, eliminating site-specific privacy concerns.
-2. A unified protocol interface for storing persistent objects on any network data host
-3. Asynchronous communication for the entire network, constructed using that storage protocol as a buffer
-4. Static and dynamic content-based addresses (muids) bound to individual data containers by any network participants
-5. Object deletion via garbage collection of any unreferenced containers
-6. Container key exchange through symmetric inter-agent API sessions initiated with asymmetric API handshakes
-7. Network "identity" definition through self-hosted public key infrastructure
+This outlines, from first principles, the protocol design decisions that lead to the Muse. It is exceptionally brief and does not justify the answers. However, it does explain the entire protocol architecture.
+
+**Problem: create an asynchronous, agent-oriented, many-to-many overlay network. Solution: the Muse protocol.**
+
+1. **Problem:** What is content? **Solution:** Content is any arbitrary binary data. All content is encapsulated within containers that assure confidentiality, integrity, and authenticity.
+    1. **Problem:** How does an agent assure confidentiality? **Solution:** Encrypt the container content.
+        1. **Problem:** How should content be encrypted? **Solution:** It's of arbitrary length, so definitely symmetrically (as per usual!)
+        2. **Problem:** How does another agent access the encrypted file in a many-to-many network? **Solution:** Use a *separate* key-sharing mechanism (see below).
+    2. **Problem:** How does an agent assure integrity? **Solution:** They hash the encrypted container.
+    3. **Problem:** How does an agent assure authenticity? **Solution:** They asymmetrically sign the container hash.
+    4. **Problem:** How is the content identified on the network? **Solution:** All containers are deterministically and uniquely content-addressed. In other words, content is identified by a collision-resistant cryptographic hash.
+    5. **Problem:** How can this data be made asynchronously-available? **Solution:** Any Muse-implementing network requires a persistence system. These are transport-specific. A conformant physical network node stores data on agents' behalf(s). Nodes may also bridge between transport-specific Muse implementations to automatically sync network state between them. Uploading is implicit, and the persistence system must understand several commands defined within the Muse spec.
+        1. **Problem:** What commands must a persistence system accept? **Solution:** Publish, get, subscribe, unsubscribe, ack, nak, list node subscriptions, list object binders.
+        2. **Problem:** How are these persistence systems standardized? **Solution:** Each particular transport mechanism defines its own overlay standard for command format.
+    6. **Problem:** How does the persistence system know to retain data? **Solution:** Agents bind addresses to objects, reminiscent of a "call-by-assignment" programming language. Bindings may be created by any agent, regardless of data authorship. This prevents problematic deletion. Objects are always static, but bindings may also be dynamic (which creates a secondary address).
+        1. **Problem:** How does the persistence system know when to remove data? **Solution:** When all bindings have been removed through "debind" commands, the persistence system garbage collects the object.
+        2. **Problem:** How can an author-agent remove undesired content that has been bound by a different agent? **Solution:** Binding records include the binder as public metadata. Persistence systems must include a command to list the agents who have bound to a particular piece of content. The author may then exert social/political/legal pressure on those binders for them to remove the binding.
+2. **Problem:** What is sharing? **Solution:** An exchange of symmetric encryption keys.
+    1. **Problem:** How is this accomplished in a many-to-many network? **Solution:** Separate the key exchange from the content itself. Content is uniquely and trivially addressable, and access is shared one-to-one between agents. Note that agents may be computational, so public information may be automatically shared across communities of any size.
+    2. **Problem:** How do you perform secure online key exchange? **Solution:** Initially, through a special asymmetrically-encrypted handshake object. These are distributed like any other Muse content, but contain a public reference to their agent-target. Unlike standard objects, their author is named privately, within the container body.
+    3. **Problem:** Doesn't this hinge on the secrecy of the target's asymmetric private key? Can we get forward secrecy, etc? **Solution:** Absolutely. The handshake object *could* be used directly for every key exchange, but that would be both insecure and inefficient. The preferred method is to use the handshake to bootstrap a dynamic bidirectional communication pipe between two agents, and then use that for key exchange. The API definition for that key exchange pipe is out-of-scope for Muse itself, but candidates will be defined within overlay standards. Because it is encapsulated within the Muse symmetric pipe, it can be any binary message format.
+3. **Problem:** What is an agent? **Solution:** An agent produces, accesses, shares, or retains content.
+    1. **Problem:** An agent must be uniquely identifiable and network-available. **Solution:** Put the agent's entire identity within a single, standard content container on the network. These containers are themselves encrypted, so if the identity is public, it must then be bootstrapped (this process is defined in an overlay standard). Use their identity container's content address as their unique identifier.
+    2. **Problem:** The agent requires an asymmetric public key for signing content. **Solution:** Add that key to the container file.
+    3. **Problem:** The agent requires an asymmetric public key for receiving encrypted pipes. **Solution:** Add that key to the container file.
+    4. **Problem:** How does an agent invisibly (to external parties) transition to a new identity? **Solution:** Through a Diffie-Hellman-based identity exchange process.
+        1. **Problem:** Can this transition be made selectively deniable? **Solution:** Yes, through clever sequencing of the exchange.
+        2. **Problem:** How does an agent perform this exchange online? **Solution:** The DHE public key must be made available at the time of identity creation, and is therefore stored with the rest of the identity's public keys (aka: add it to the container file).
+    5. **Problem:** Agents are meant to exist independently of physical devices, so they need online private key storage. **Solution:** Out-of-scope, but defined within an overlay protocol.
+    6. **Problem:** How does the agent independently discover new content addresses? **Solution:** Out-of-scope.
+
+# Some ungraceful pseudocode application examples
 
 **"Server" with private personal content:**
 
