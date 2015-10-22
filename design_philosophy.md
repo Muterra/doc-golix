@@ -1,4 +1,4 @@
-**Draft warning:** this is a public draft dated 12 Aug 2015, but should not be considered final. 
+**Draft warning:** this is a public draft dated 12 Aug 2015, but should not be considered final. If you'd like to stay updated, consider joining our [mailing list](https://www.ethyr.net/mailing-signup.html).
 
 # Introduction
 

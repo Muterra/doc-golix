@@ -1,4 +1,4 @@
-**DANGER ZONE:** This is a draft document in-process and under review and is absolutely **not considered final!**
+**DANGER ZONE:** This is a draft document **in-process** and under review and is absolutely **not even close to finalized!** If you'd like to stay updated, consider joining our [mailing list](https://www.ethyr.net/mailing-signup.html).
 
 # Abstract
 
@@ -55,7 +55,7 @@ In the physical world, personal agency is the defining characteristic of animate
 
 Much of the benefit to agent-oriented architecture is contained in the ability to treat the internet as a global asynchronous communications system. Agents directly address other agents, and the muse-implementing network is treated as a single coherent information repository. As such, it replaces the website as a medium for data storage, which, by extension, eliminates the notion of site-specific privacy. This arrangement **requires** *all* confidential data to be private end-to-end, or it would be immediately exposed to every other agent. We are then left with a choice: have no explicit security requirement, allowing individual applications to develop their own information controls; or, make Muse private by default, thereby implementing a new standard for universal data privacy. The proliferation of both generic security solutions like SSL, and of the astoundingly important privacy questions now regularly raised, strongly indicates that the latter option is the clear choice.
 
-Having spelled out a privacy requirement, we need to define its scope. Since we're discussing information that already exists, and information isn't known to spontaneously appear, we can assume it has an author. We see privacy as an absence of information, and therefore to be "private by default", information must be known to *only and exactly* its author at the time it is created. This is intuitive in the physical world, and it's our firm belief that this paradigm should also apply to digital data. With current technology, we can then say that a functional definition of "private by default" requires data to be encrypted from pre-upload to post-download. This is known as [end-to-end encryption](http://en.wikipedia.org/wiki/End-to-end_encryption).
+Having spelled out a privacy requirement, we need to define its scope. Since we're discussing information that already exists, and information isn't known to spontaneously appear, we can assume it has an author. We see privacy as an absence of information, and therefore to be "private by default", information must be known to *only and exactly* its author at the time it is created. This is intuitive in the physical world, and it's our firm belief that this paradigm should also apply to digital data. With current technology, we can then say that a functional definition of "private by default" requires data to be encrypted from pre-upload to post-download. This is known as [end-to-end encryption](https://en.wikipedia.org/wiki/End-to-end_encryption).
 
 ### Privacy requires security
 
@@ -72,7 +72,7 @@ How to establish relationships between information?
 100% private information isn't particularly useful. The web derives most of its utility from the *collective* knowledge that is stored there; without the ability to share information, the internet would be little different from an exceptionally large paper notebook. Sharing is clearly a practical necessity, but for the "private by default" requirement to have any meaning, we have to set some ground rules:
 
 1. **Sharing requires agency.** An agent must be capable of independent action. Agency implies the ability to intentionally create, share, and receive information and cannot be directly restricted by other agents. Agents can be influenced but not controlled. Agents may be non-human, but all agents are equal of opportunity.
-2. **Sharing requires consent.** An agent must make a deliberate choice to share information. Consent is informed: an agent must know exactly and exhaustively what is being shared and recipients must be explicitly known by the agent before consent. Informed consent requires limited consent; past sharing does not imply future sharing. To be voluntary, consent must also be deniable: the agent *must* see non-sharing as a viable option. [Vendor lock-in](en.wikipedia.org/wiki/Vendor_lock-in) is non-consensual, and manifests itself in a myriad of ways.
+2. **Sharing requires consent.** An agent must make a deliberate choice to share information. Consent is informed: an agent must know exactly and exhaustively what is being shared and recipients must be explicitly known by the agent before consent. Informed consent requires limited consent; past sharing does not imply future sharing. To be voluntary, consent must also be deniable: the agent *must* see non-sharing as a viable option. [Vendor lock-in](https://en.wikipedia.org/wiki/Vendor_lock-in) is non-consensual, and manifests itself in a myriad of ways.
 3. **Sharing requires receivability.** A tree falling in an empty forest definitely makes a sound, but nobody cares unless someone hears it. Though the act of sharing itself does not require consent from the recipient, receipt is wholly voluntary: the recipient has every right to wholly ignore a share. Receipt is also stateful: a recipient must know who shared the information with them.
 4. **Sharing requires an author.** An agent must claim provable authorship of information before sharing it, though authorship need not be meaningful, and an author may be anonymously, pseudonymously, or explicitly named. Authorship is not ownership, and information, once created, cannot be directly controlled. All authorship is equivalent; no author can be inherently valued over another. Sharing is an egalitarian exchange.
 
@@ -858,6 +858,9 @@ Could be cool.
 
 **"Test post, please ignore"**
 
+
+
+Compared to the contemporary status quo, decentralization of network infrastructure (physical or virtual) constititutes a beneficial divestiture of institutional power. It creates room for smaller players to participate in network operations, and as such, reduces the likelihood of network abuse. But **for some individuals and organizations, total decentralization is rarely (if ever) a practical option.** As such, truly effective networks are of hybrid design: capable of decentralization, but never contingent upon it. Ignoring the complicated subject of spam management, email is by far the most successful example of this approach, and Muse seeks to emulate its approach.
 
 
 
