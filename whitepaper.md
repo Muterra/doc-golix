@@ -43,35 +43,89 @@ Finally, robust transport and application independence require the Muse protocol
 
 # Content management
 
-Since Muse functions are cryptographically enforced, the first problem 
+Consolidating technical requirements and applying scope limitations leaves the following minimum requirements for Muse content:
 
-## Base requirements
++ Binary format
++ Asynchronous availability
++ All content uniquely and statically identifiable on the network
++ All data contained within a private, encrypted body
++ Exactly one piece of public metadata: a unique identifier for the content's author
++ Hashed for integrity verification
++ Signed for authentication
 
-Arbitrary binary data
+Including a public identifier for content authorship is compromise between information privatization and network utility. It's both a defensive and offensive measure. It allows agent-authors to maintain their authorship across all communities, alleviating problems associated with [posting content to competing networks](http://www.urbandictionary.com/define.php?term=Freebooting). It also allows the network itself to police bad actors, and provides a general-purpose point of contact for remediation.
 
-## Asynchronous availability
+## Persistence and its standardization
 
-### Persistence and its standardization
+Because asynchronous systems allow agents to be online or offline at any time, they require a networked data persistence mechanism. Because the Muse protocol avoids all transport routing information, this persistent data buffer is unavoidably dependent upon the underlying Muse-implementing transport layer.
 
-Storage provider command set
+In keeping with the protocol's scope restriction, we do not specify the details of this persistence implementation; instead, transport-specific conventions are more flexibly defined within overlay standards.
 
-### Data retention and removal
+However, in the interest of protocol uniformity, we define both the commands to be implemented, and their sequence of transmission, within the Muse spec. Interactions with the persistence layer can therefore be contained within pluggable transport layer implementation packages, and any network node with access to multiple persistence systems can function as a bridge between them. 
+
+All persistence providers must, at a minimum, support the following commands:
+
++ Ping
++ Publish object
++ Get object 
++ Subscribe to address
++ Unsubscribe from address
++ List address subscriptions
++ Acknowledge (ack) transmission
++ Non-acknowledge (nak) transmission
++ List agents with bindings to an object
+
+## Data retention and removal
+
+Object deletion is notably absent from the persistence provider command set. There is currently a great deal of controversy surrounding the balance between an individual's so-described "right to be forgotten" and the general public's "right to remember". The Muse protocol is designed around the assumption that ephemerality is unenforceable: that is to say, individual agents have very limited direct control over the longevity of their footprints, whether digital *or* physical. However, since digital networks are generally designed to eliminate physical durability as an application concern, the lifetime of an object on a social platform is, for the most part, a wholly social question.
+
+Muse represents a consolidation of shared social infrastructure into a single unified protocol, so it must be capable of establishing a deterministic framework for network information deletion. Any other outcome would place social restrictions on the persistence mechanism, which, as a part of the transport layer, is intended to be strictly independent of social concerns. This is no small task.
+
+Our solution is inspired by high-level memory-managed programming languages. Objects themselves have no defined lifespan. Instead, their retention is governed by object "bindings". Bindings declare to the persistence provider that the object is under use; when none remain, the persistence provider garbage collects the object. Bindings may be placed by any agent on any content; however, to prevent malicious retention, the unique identifier for the agent is retained as public metadata in the binding. In this way, any agent may apply pressure to the binding party to remove the binding, but the persistence system remains entirely uninvolved in this social (or legal) process. Object bindings represent a compromise between unavoidably infinite and indeterminately finite data lifespans.
 
 ## Addressing content
 
-Including static and dynamic bindings
+As a mediating party between machine-based transport networks and agent-based social networks, Muse content requires a Muse unique identifier (MUID) -- essentially, our equivalent of a URL. We consider human-readable names to be an application-specific concern; once again, a distributed sensor network may have no need for them. Their use for objects adhering to the Muse protocol is therefore out-of-scope. Instead, we desire a simple, machine-readable, unique address for all content.
 
-Justification of dynamic bindings, despite them being a less primitive object than static objects, and therefore potentially introducing unwanted abstraction overhead
+Instead of a centralized content identifier (for example: a unique integer assigned by a trusted oracle), Muse uses cryptographic hash functions to deterministically assign collision-resistant addresses for content. Choosing a sufficiently strong hash function and allowing for future algorithm changes can minimize the risk of redundant addressing, whilst simultaneously adding an extra layer of security; any attempt to modify existing content should result in a new address.
 
-## Cryptographic enforcement
+This address scheme works quite well for static content, but it also fails to provide any form of dynamic referencing. Now, on the one hand, all individual observations are static: if we were to record the temperature of a room at 1-minute intervals for the rest of time, any particular data point would be forever immutable. From this perspective, one could argue that information mutability is, in reality, an application concern -- that a network like Muse has no business with dynamic addresses. However, given that the assumption of the one-way nature of secure hash functions precludes the ability to predict addresses in advance, as a practical concern, a very primitive form of dynamic addressing is exceptionally useful. A profound number of basic network operations (both physical and social) either require or are greatly simplified by a consistently-addressed, time-variant data stream. As such, we argue that the potentially unwanted abstraction overhead of any particular dynamic address system is justified, so long as applications are free to ignore it with no performance consequences.
 
-Choice of public metadata
+Therefore, the Muse protocol defines a second kind of object binding. Like static bindings, they prevent object garbage collection; unlike static bindings, they generate a new address for existing content. Like static objects, they can only be created (or updated) by a single agent; however, that agent need not be the author of the objects bound by the address. Dynamic bindings are constructed as an ordered list of bound static MUID(s). The meaning of this list may be application-specific, but is generally assumed to be a buffer, and in such a use is formulated with the newest entry first. The dynamic address is generated once, as the hash of the first set of bound MUID(s), and is then included in all subsequent revisions of the binding.
+
+## Content management primitives
+
+At this point we can fully enumerate the required components in a Muse encrypted object container (MEOC) record:
+
+1. File hash / MUID
+2. Author MUID
+3. Author's signature of the file hash
+4. Symmetrically encrypted payload
+
+As well as a Muse static object binding (MOBS) record:
+
+1. MUID of the agent placing the binding (the binding agent)
+2. Binding agent's signature
+3. MUID for the object to bind (the target)
+
+And a Muse dynamic object binding (MOBD) record:
+
+1. MUID of the binding agent
+2. Binding agent's signature
+3. Dynamic address
+4. MUID(s) for static target(s)
 
 # Sharing and access management
 
-## Base requirements
+Consolidating technical requirements and applying scope limitations leaves the following minimum requirements for Muse sharing:
 
-New content discovery is out-of-scope.
++ One-to-any
++ Simple key sharing with static, non-revocable keys
++ Sharing must be initiated by a uniquely identifiable agent
++ Sharing must be directed at a uniquely identifiable agent
++ Connections between the initiator and target agents should not be publicly visible
+
+Given the nature of Muse content containers, including cryptographic access management in the same delivery mechanism seems inefficient and unsustainable. As such, the Muse protocol wholly separates content from key distribution. Normally, relating keys to content resources would present a logistical challenge; however, with all Muse data being directly and only content-addressable, this problem is mostly inapplicable. Also note that public information sharing is out-of-scope, but can be simply constructed as a scripted network agent.
 
 ## Inter-agent "pipes"
 
@@ -85,19 +139,18 @@ Standardized share pipes
 
 # Identity management
 
-## Base requirements
+Consolidating technical requirements and applying scope limitations leaves the following minimum requirements for Muse identities:
 
-Must be independent of physical devices. Therefore, online private key storage, though that standard is out-of-scope.
++ Are self-contained, self-describing, and independent of any other identity
++ Can sign content
++ Can receive asymmetric content
++ Can be privately aliased
++ Should be independent of any physical device
+
+Also note that to effectively support device-independent identity, online private key storage is logistically necessary. As with all other network requirements, this need can be served through content containers; however, the format for these containers is out-of-scope for the core Muse protocol.
+
+## Eschewing connection-based description
 
 ## Selectively-deniable aliases
 
 # Conclusion
-
-# Scratchbook
-
-Asynchrony required:
-
-+ Agents do not have a 1:1 correspondence with devices.
-+ Agents can go offline.
-+ Therefore, an agent-based network must be asynchronous.
-
