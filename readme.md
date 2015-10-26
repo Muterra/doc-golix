@@ -67,6 +67,7 @@ This outlines, from first principles, the protocol design decisions that lead to
 
 1. **Problem:** What is content?  
    **Solution:** Content is any arbitrary binary data. All content is encapsulated within containers that assure confidentiality, integrity, and authenticity.  
+
   1. **Problem:** How does an agent assure confidentiality?  
      **Solution:** Encrypt the container content.  
     1. **Problem:** How should content be encrypted?  
