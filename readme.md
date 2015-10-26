@@ -67,10 +67,14 @@ This outlines, from first principles, the protocol design decisions that lead to
 
 **Problem: create an asynchronous, agent-oriented, many-to-many overlay network. Solution: the Muse protocol.**
 
-1. **Problem:** What is content? **Solution:** Content is any arbitrary binary data. All content is encapsulated within containers that assure confidentiality, integrity, and authenticity.
-    1. **Problem:** How does an agent assure confidentiality? **Solution:** Encrypt the container content.
-        1. **Problem:** How should content be encrypted? **Solution:** It's of arbitrary length, so definitely symmetrically (as per usual!)
-        2. **Problem:** How does another agent access the encrypted file in a many-to-many network? **Solution:** Use a *separate* key-sharing mechanism (see below).
+1. **Problem:** What is content? 
+   **Solution:** Content is any arbitrary binary data. All content is encapsulated within containers that assure confidentiality, integrity, and authenticity.   
+    1. **Problem:** How does an agent assure confidentiality? 
+       **Solution:** Encrypt the container content.   
+        1. **Problem:** How should content be encrypted? 
+           **Solution:** It's of arbitrary length, so definitely symmetrically (as per usual!)   
+        2. **Problem:** How does another agent access the encrypted file in a many-to-many network? 
+           **Solution:** Use a *separate* key-sharing mechanism (see below).   
     2. **Problem:** How does an agent assure integrity? **Solution:** They hash the encrypted container.
     3. **Problem:** How does an agent assure authenticity? **Solution:** They asymmetrically sign the container hash.
     4. **Problem:** How is the content identified on the network? **Solution:** All containers are deterministically and uniquely content-addressed. In other words, content is identified by a collision-resistant cryptographic hash.
@@ -94,102 +98,147 @@ This outlines, from first principles, the protocol design decisions that lead to
     5. **Problem:** Agents are meant to exist independently of physical devices, so they need online private key storage. **Solution:** Out-of-scope, but defined within an overlay protocol.
     6. **Problem:** How does the agent independently discover new content addresses? **Solution:** Out-of-scope.
 
-# Some ungraceful pseudocode application examples
+# Some pseudocode
 
-**"Server" with private personal content:**
+**Creating an application-transparent multi-transport node:**
 
 ```python
-# Environment variables
-ws_store = websockets_storage_gateway('https://www.muterra.io')
-public_access_provider = key_distributor('https://www.muterra.io')
+import muse
 
-# Creating and subscribing to oneself to listen for API requests
-self = muse_identity
-ws_store.publish(self)
-ws_store.subscribe(self.muid)
+class MultiPersist(muse.persist.ProviderBase):
+    ''' Naively broadcasts all operations across multiple transport 
+    systems. An actual implementation of this idea would (hopefully!) be
+    smarter than this.
+    '''
+    def __init__(self, websockets_url, serial_port, onion_address):
+        super().__init__()
+        self._persisters = [
+                                muse.persist.Websocket(websockets_url), 
+                                muse.persist.Serial(serial_port), 
+                                muse.persist.Tor(onion_address)
+                            ]
 
-# Generating and publishing the static homepage
-static_homepage = encrypted_container(raw_content)
-ws_store.publish(static_homepage)
-static_homepage.share(public_access_provider)
-
-# Creating Alice's personal content
-dynamic_content = encrypted_container(raw_personal_content)
-ws_store.publish(dynamic_content)
-
-# Establishing an API channel with Alice and sending her personal content
-alice = ws_store.get(alice_muid)
-alice_channel = receive_API(alice)
-dynamic_content.share(alice_channel)
+    def _lazy_wrapper(self, method, *args, **kwargs):
+        ''' Creates a quick general-purpose wrapper for functions.
+        For any method, serially calls to the persistence providers in
+        self, adding the response to a list.
+        
+        For the record, normally I would do some memoization here, but
+        in the interests of balancing clarity...
+        '''
+        result = []
+        for persister in self._persisters:
+            result.append(getattr(self, method)(*args, **kwargs))
+        return result
+        
+    def _notify(self):
+        ''' Callback for updates pushed from other sources. Included 
+        for clarity.
+        '''
+        return super()._notify()
+        
+    def ping(self):
+        return self._lazy_wrapper('ping')
+        
+    def publish(self, obj):
+        return self._lazy_wrapper('publish', obj)
+        
+    def get(self, muid):
+        return self._lazy_wrapper('get', muid)
+        
+    def subscribe(self, muid):
+        return self._lazy_wrapper('subscribe', muid, self._notify)
+        
+    def unsubscribe(self, muid):
+        return self._lazy_wrapper('unsubscribe', muid)
+        
+    def list_subs(self):
+        return self._lazy_wrapper('list_subs')
+        
+    def ack(self):
+        return self._lazy_wrapper('ack')
+        
+    def nak(self):
+        return self._lazy_wrapper('nak')
+        
+    def list_binders(self, muid):
+        return self._lazy_wrapper('list_binders', muid)
 ```
 
-**Alice's "client" accessing above site (asynchronous with above):**
-
+**Using that to build a simple messaging system:**
 ```python
-# Environment variables
-ws_store = websockets_storage_gateway('https://www.muterra.io')
-public_access_provider = key_distributor('https://www.muterra.io')
+import muse
+import queue
 
-# Creating and subscribing to oneself to listen for API requests
-self = muse_identity
-ws_store.publish(self)
-ws_store.subscribe(self.muid)
-
-# Getting the static homepage
-static_ciphertext = ws_store.get(static_muid)
-key = public_access_provider.request(static_muid)
-raw_content = decrypt_container(static_ciphertext, key)
-
-# Opening an API channel with the server and receiving personal content
-server_channel = request_API(server_muid)
-dynamic_content_muid = server_channel.backlog[0]
-dynamic_ciphertext = ws_store.get(dynamic_content_muid)
-key = server_channel.request(dynamic_content_muid)
-raw_dynamic_content = decrypt_container(dynamic_ciphertext, key)
+class Messenger():
+    ''' Note that, courtesy of rapant asynchrony, this is too naive to 
+    actually work. However, I think it gets the point across.
+    '''
+    def __init__(self, persister, my_identity, friend_muids):
+        ''' Setting up communication pipes between this identity and all
+        other friends is the hardest part, since it's an asynchronous 
+        handshake process.
+        '''
+        self.persister = persister
+        self.identity = my_identity
+        self.friends = friend_muids
+        self._pipes = {}
+        self.inbox = queue()
+        self.messages = queue()
+        
+        # Register callback for persister to add to my inbox
+        persister.notifier(self.inbox)
+        # Add a subscription to any handshake with my muid as a recipient
+        persister.subscribe(my_identity.muid)
+        
+        for friend in friend_muids:
+            # Open an API channel with your friend
+            pipe_up = muse.share.pipe(my_identity, friend)
+            persister.publish(pipe_up)
+            # Wait for their response through persister callback
+            pipe_down = False
+            while not pipe_down:
+                note = self.inbox.get()
+                if note.author == friend:
+                    pipe_down = note
+            # Asynchronously wait for shares from friend
+            persister.subscribe(pipe_down.muid, notify=self.receive)
+            self._pipes[friend] = {'up': pipe_up, 'down': pipe_down}
+            
+    def send(self, message):
+        # Add the message to my internal state record
+        self.messages.put(message)
+        # Turn the message into a muse encrypted object container
+        meoc, key = muse.meoc(self.identity, message)
+        persister.publish(meoc)
+        # Share the message muid and key with each friend through their pipes
+        for pipe_pair in self._pipes.values():
+            # Structure the muid and key into a message according to an 
+            # overlay protocol
+            keyshare = muse.mosp.keyshare_make(meoc.muid, key)
+            pipe_pair['up'].push(keyshare)
+            
+    def receive(self, message):
+        ''' Asynchronously wait for incoming messages.
+        '''
+        # Use the overlay protocol to digest the message into muid and key.
+        muid, key = muse.mosp.keyshare_unmake(message)
+        # Retrieve that object from the persistence share
+        meoc = self.persister.get(muid)
+        # Decrypt and read the message
+        message = muse.meoc.read(meoc, key)
+        # Add it to internal state
+        self.messages.put(message)
+        
+persister = MultiPersist(example.websocket.url, COM1, example.onion)
+# Create an anonymous identity and push it to persistence
+my_secrets, identity_meoc = muse.identity.create()
+persister.publish(identity_meoc)
+# Build friends lists
+friends = [
+            muid1thatlookslikeahash,
+            muid2thatlookslikeahash,
+            muid3thatlookslikeahash
+          ]
+client = Messenger(persister, my_secrets, friends)
 ```
-
-**Private asynchronous sensor data transmission:**
-
-```python
-# Environment variables
-ws_store = websockets_storage_gateway('https://www.muterra.io')
-public_access_provider = key_distributor('https://www.muterra.io')
-
-# Creating and subscribing to oneself to listen for API requests
-self = muse_identity
-ws_store.publish(self)
-ws_store.subscribe(self.muid)
-
-# Create the initial object and static binding; store the resulting muid
-# Yes, this is an awkward initialization, life is better with actual code
-raw_temp = b'0'
-temp_container = encrypted_container(raw_temp)
-temp_binding = dynamic_binding([temp_container.muid])
-ws_store.publish(temp_container, temp_binding)
-
-# Getting a reading
-while True:
-    temperature = hardware.get_temp()
-    temp_container = encrypted_container(temperature)
-    temp_binding.update(temp_container.muid)
-    ws_store.publish(temp_container, temp_binding)
-```
-
-**TOR-style nested routing using nested Muse API pipes:**
-
-```python
-def onion_route(traffic):
-    with websockets_storage_gateway('https://www.muterra.io') as ws:
-        nested_message = muse_storage(message)
-        ws.publish(nested_message)
-```
-
-**LAN fallback when connection interrupted:**
-
-```python
-ws_store = websockets_storage_gateway('https://www.muterra.io')
-lan_store = lan_storage_gateway('192.168.0.14')
-try:
-    ws_store.publish(message)
-except NetworkError:
-    lan_store.publish(message)
