@@ -65,17 +65,13 @@ Second, if you're a developer, this problem is a huge pain in the ass. The proce
 
 This outlines, from first principles, the protocol design decisions that lead to the Muse. It is exceptionally brief and does not justify the answers. However, it does explain the entire protocol architecture.
 
-**Problem: create an asynchronous, agent-oriented, many-to-many overlay network.**
-
-**Solution: the Muse protocol.**
-
-1. **Problem:** What is content?
+1. **Problem:** What is content?  
    **Solution:** Content is any arbitrary binary data. All content is encapsulated within containers that assure confidentiality, integrity, and authenticity.  
-  1. **Problem:** How does an agent assure confidentiality?
+  1. **Problem:** How does an agent assure confidentiality?  
      **Solution:** Encrypt the container content.  
-    1. **Problem:** How should content be encrypted?
+    1. **Problem:** How should content be encrypted?  
        **Solution:** It's of arbitrary length, so definitely symmetrically (as per usual!)  
-    2. **Problem:** How does another agent access the encrypted file in a many-to-many network?
+    2. **Problem:** How does another agent access the encrypted file in a many-to-many network?  
        **Solution:** Use a *separate* key-sharing mechanism (see below).  
   2. **Problem:** How does an agent assure integrity? **Solution:** They hash the encrypted container.
   3. **Problem:** How does an agent assure authenticity? **Solution:** They asymmetrically sign the container hash.
