@@ -69,14 +69,14 @@ This outlines, from first principles, the protocol design decisions that lead to
 
 **Solution: the Muse protocol.**
 
-1. **Problem:** What is content? 
-   **Solution:** Content is any arbitrary binary data. All content is encapsulated within containers that assure confidentiality, integrity, and authenticity.   
-  1. **Problem:** How does an agent assure confidentiality? 
-     **Solution:** Encrypt the container content.   
+1. **Problem:** What is content?
+   **Solution:** Content is any arbitrary binary data. All content is encapsulated within containers that assure confidentiality, integrity, and authenticity.  
+  1. **Problem:** How does an agent assure confidentiality?
+     **Solution:** Encrypt the container content.  
     1. **Problem:** How should content be encrypted?
-       **Solution:** It's of arbitrary length, so definitely symmetrically (as per usual!)   
-    2. **Problem:** How does another agent access the encrypted file in a many-to-many network? 
-       **Solution:** Use a *separate* key-sharing mechanism (see below).   
+       **Solution:** It's of arbitrary length, so definitely symmetrically (as per usual!)  
+    2. **Problem:** How does another agent access the encrypted file in a many-to-many network?
+       **Solution:** Use a *separate* key-sharing mechanism (see below).  
   2. **Problem:** How does an agent assure integrity? **Solution:** They hash the encrypted container.
   3. **Problem:** How does an agent assure authenticity? **Solution:** They asymmetrically sign the container hash.
   4. **Problem:** How is the content identified on the network? **Solution:** All containers are deterministically and uniquely content-addressed. In other words, content is identified by a collision-resistant cryptographic hash.
