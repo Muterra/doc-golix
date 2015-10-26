@@ -77,11 +77,11 @@ This outlines, from first principles, the protocol design decisions that lead to
            **Solution:** Use a *separate* key-sharing mechanism (see below).  
 
     2. **Problem:** How does an agent assure integrity?  
-       **Solution:** They hash the encrypted container.  
+       **Solution:** They hash the encrypted container.
     3. **Problem:** How does an agent assure authenticity?  
-       **Solution:** They asymmetrically sign the container hash.  
+       **Solution:** They asymmetrically sign the container hash.
     4. **Problem:** How is the content identified on the network?  
-       **Solution:** All containers are deterministically and uniquely content-addressed. In other words, content is identified by a collision-resistant cryptographic hash.  
+       **Solution:** All containers are deterministically and uniquely content-addressed. In other words, content is identified by a collision-resistant cryptographic hash.
     5. **Problem:** How can this data be made asynchronously-available?  
        **Solution:** Any Muse-implementing network requires a persistence system. These are transport-specific. A conformant physical network node stores data on agents' behalf(s). Nodes may also bridge between transport-specific Muse implementations to automatically sync network state between them. Uploading is implicit, and the persistence system must understand several commands defined within the Muse spec.  
 
