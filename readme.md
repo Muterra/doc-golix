@@ -2,68 +2,65 @@
 
 # Keep it simple, stupid
 
-Muse is a decentralized encrypted social media protocol.
+Muse is a decentralizeable encrypted social protocol.
 
 It is currently under development by [Muterra, Inc](https://www.muterra.io), co-evolving with the [Ethyr](https://www.ethyr.net) social network. More information about Muse, Muterra, and Ethyr can be found at our [blog](https://www.ethyr.net/blog). If you'd like to stay updated, consider joining our [mailing list](https://www.ethyr.net/mailing-signup.html).
 
-## Okay, too simple
+# Okay, too simple
 
-Muse is an open, encrypted, and decentralized protocol for anything social. The goal is to consolidate and standardize all of the shared infrastructure that any new social application requires (content management, sharing management, and identity management). By doing that, we can minimize the barriers to creating new applications, while maximizing personal agency and privacy.
+Muse is an open, encrypted, and trustless protocol for arbitrary social applications. It consolidates and standardizes content, sharing, and identity management into a common, shared infrastructure that maintains privacy regardless of physical data storage location or transport technology. This minimizes barriers to social application creation and greatly simplifies application development.
 
-Crucially, **all operations on Muse are cryptographically enforced**. The protocol eschews "privacy by promise" and opts instead to create a general-purpose, many-to-many encrypted network with asynchronous/offline retrieval and real-time capability. **It does not require everyone to operate their own server**, and nor does platform-based hosting compromise privacy or security for applications built on Muse.
+Crucially, **all operations on Muse are cryptographically enforced**. The protocol eschews "privacy by promise" and opts instead to create a general-purpose, many-to-many encrypted network with asynchronous/offline retrieval and real-time capability. This allows scalable, platform-based information storage without compromising personal agency or privacy.
 
-Like the Rust programming language, Muse aspires to be a [zero-cost abstraction](http://blog.rust-lang.org/2015/05/11/traits.html): what you don't use, you don't pay for; what you do use, you couldn't hand-code any better. Unlike previous federated social protocols (Diaspora, Tent, Hubzilla, etc), Muse operates at a highly-restricted abstraction: it produces authenticated, confidential, verified byte messages from arbitrary, insecure bytestream sources, but places no restrictions or specifications of what those messages might be.
+Like the Rust programming language, Muse aspires to be a [zero-cost abstraction](http://blog.rust-lang.org/2015/05/11/traits.html). Unlike previous federated social protocols like Diaspora, Tent, or Hubzilla, Muse operates in a highly-restricted scope: it produces authenticated, confidential, verified binary messages from arbitrary, insecure binary sources, but places no restrictions or specifications on what those messages might be.
 
-Quick technical overview:
+# What does Muse do differently?
 
-1. End-to-end symmetric encryption for all data, eliminating site-specific privacy concerns.
-2. A unified protocol interface for storing persistent objects on any network data host
-3. Asynchronous communication for the entire network, constructed using that storage protocol as a buffer
-4. Static and dynamic content-based addresses (muids) bound to individual data containers by any network participants
-5. Object deletion via garbage collection of any unreferenced containers
-6. Container key exchange through symmetric inter-agent API sessions initiated with asymmetric API handshakes
-7. Network "identity" definition through self-hosted public key infrastructure
+In short, Muse is an overlay network standard that encrypts everything *not just from device to device*, but from entity to entity. The protocol assumes that all transported data is vulnerable, relying only on universal encryption to limit data access. Applications built on Muse can therefore addresses communications directly between the participants' digital identities (essentially their public keys) without regard to the transport layer. Protocol implementations then distribute that information to transport-specific persistence providers, who deliver it to the conversation partner as soon as she is available.
 
-## How does Muse change things?
+More concretely, and using TCP/IP as an example, most existing transports are *network-oriented*:
 
-In short, Muse is an overlay network that encrypts everything *not just from device to device*, but from entity to entity. It readdresses communications directly between the participants' digital identities (essentially their public keys), instead of (for example) the IP addresses of their devices. The protocol implementation abstracts away data transport, so physical addresses are transparent to applications, making them free to focus on high-level concepts like "Paypal, tell Alice her account balance".
+    1. (Bob at 73.36.202.142) sends (www.gmail.com at 173.194.33.149) "Alice: we're out of toilet paper"
+    2. (Alice at 88.41.145.167) asks (www.gmail.com at 173.194.33.149) for new messages
+    3. (www.gmail.com at 173.194.33.149) responds with "From Bob: we're out of toilet paper"
+    4. (Alice at 88.41.145.167) sends (www.paypal.com at 66.211.169.66) "withdraw money from Alice's bank account"
+    5. (www.paypal.com at 66.211.169.66) sends (www.wellsfargo.com at 159.45.2.145) "withdraw money from Alice's account"
+    6. (Alice at 88.41.145.167) sends (www.amazon.com at 72.21.206.6) "Alice orders TP"
 
-We use the internet like this:
+The Muse protocol divides this into two strictly separated processes. Applications are *agent-oriented*:
 
-    1. Bob sends Alice a message that they're out of toilet paper
-    2. Alice tells Paypal to withdraw money from her bank account
-    3. Paypal asks Alice's bank for money
-    4. Alice's orders TP from Amazon
-    
-Alice, Bob, Paypal, Amazon, etc are all "agents" (they can independently manipulate data). The way we actually *use* the internet, then, is *agent-oriented*. However, networks only know how to talk like this: 
+    1. (Bob at <bobkey>) sends (Alice at <alicekey>) "We're out of toilet paper"
+    2. (Alice at <alicekey>) tells (Paypal at <paypalkey>) to withdraw money from her bank account
+    3. (Paypal at <paypalkey>) asks (<Wells Fargo at <wellskey>) to withdraw from Alice's account
+    4. (Alice at <alicekey>) orders TP from (Amazon at <amazonkey>)
 
-    1. 73.36.202.142 sends 88.41.145.167 "we're out of toilet paper"
-    2. 88.41.145.167 sends (wwww.paypal.com = 66.211.169.66) "withdraw money from Alice's bank account"
-    3. (wwww.paypal.com = 66.211.169.66) sends (www.wellsfargo.com = 159.45.2.145) "withdraw money from Alice's account"
-    4. 88.41.145.167 sends (www.amazon.com = 72.21.206.6) "Alice orders TP"
+Meanwhile, protocol implementations transparently pass this conversation across content-agnostic, network-oriented physical transports, storing files in pluggable "buffering" services:
 
-In reality this *network-oriented* architecture is even more convoluted, because Alice and Bob both have network infrastructure barriers (firewalls, NATs, ISPs, dynamic IP addresses, etc) impeding or preventing them from directly talking to each other. In practice, the first step actually works like this:
+    1. 73.36.202.142 sends <encrypted blob with ID=hash1> to (persistence provider at 55.194.11.158) 
+    2. 88.41.145.167 requests <encrypted blob with ID=hash1> from (persistence provider at 55.194.11.158)
+    3. 88.41.145.167 sends <encrypted blob with ID=hash2> to (persistence provider at 55.194.11.158) 
+    4. 66.211.169.66 requests <encrypted blob with ID=hash2> from (persistence provider at 55.194.11.158)
+    5. 66.211.169.66 sends <encrypted blob with ID=hash3> to (persistence provider at 55.194.11.158) 
+    6. 159.45.2.145 requests <encrypted blob with ID=hash3> from (persistence provider at 55.194.11.158)
+    7. 88.41.145.167 sends <encrypted blob with ID=hash4> to (persistence provider at 55.194.11.158) 
+    8. 72.21.206.6 requests <encrypted blob with ID=hash4> from (persistence provider at 55.194.11.158)
 
-    1. 73.36.202.142 sends (www.gmail.com = 173.194.33.149) "Alice: we're out of toilet paper"
-    2. 88.41.145.167 asks (www.gmail.com = 173.194.33.149) for new messages
-    3. (www.gmail.com = 173.194.33.149) responds with "From Bob: we're out of toilet paper"
+# Why is this better?
 
-The Muse protocol sits on top of the transport layer (that's the part responsible for actually delivering messages), and below the application layer (Alice's email client, Paypal, Amazon, etc). It translates Bob's application-level "send Alice a message" command into a format that the transport layer can deliver to Alice, regardless of what ```123.123.123.123``` location she's at (and therefore regardless of what computer she's on). It does this by universally defining:
++ **Protocol-protected individual agency.** By far the most important change, and yet for political reasons, I'm not yet ready to explain its implications.
++ **Platform-independent privacy.** Cloud-stored information is unavailable to anyone you don't explicitly share with, including the cloud owner.
++ **Application-independent communication security.** The protocol can't guarantee applications are running safe code, but it separates most communication security into open-source, vetted protocol implementations that are independent from the applications built on them.
++ **Hosting modularity.** Container format is standardized, minimizing switching costs between hosting providers. Each file transfer takes exactly two API calls.
++ **Transport flexibility.** Muse applications don't deal directly with the transport layer. This job is left to protocol implementations. Applications can switch between implementations seamlessly, making cross-transport redundancy incredibly simple for application developers. This also makes it substantially easier to experiment with new transport technologies.
++ **Application agility.** Instead of getting bogged down in incredibly difficult network implementation details, applications can focus on their core value propositions. Even asynchrony and authentication are handled at the implementation level: from an application development perspective, they're free.
++ **Personal identity management.** Identity, *including usernames and passwords*, are synchronized across the entire protocol. If you only want one identity, you only need one set of credentials -- for any and all Muse applications.
++ **Anonymous, pseudonymous, and eponymous identities coexisting.** Identities carry no inherent physical meaning. Applications are free to place restrictions on verification (ex: your bank needs to know it's you), but this is handled elsewhere. The protocol itself supports anything.
 
-1. How to keep data private
-2. How to store and transfer private data
-3. How Bob shares private data with Alice
-4. What, exactly, Bob means by "Alice"
+If you want to know more in easily-digestible, not-heavily-technical chunks, now would be a good time to check out our [blog](https://www.ethyr.net/blog/tag/muse.html).
 
-**Why should you care?**
+# How does Muse work?
 
-This network vs agent disconnect is one of the most fundamental problems facing the internet today. It is in large part responsible for data data disempowerment: you're forced to use sites like ```(www.gmail.com = 173.194.33.149)``` to talk to someone for precisely this reason, even though Google can (and does!) read all of your messages. If you don't want to share with Google, you can't share with Alice, either -- and when those middleman websites aren't secured, anyone else can eavesdrop on those conversations as well. Muse protects against that at a protocol level, regardless of the application or site you're using.
-
-Second, if you're a developer, this problem is a huge pain in the ass. The process of converting ```Alice``` into ```88.41.145.167``` is **tremendously** time-consuming and doesn't always work well. You get bogged down defining accounts, securely storing passwords, dealing with the little details about how ```(wwww.paypal.com = 66.211.169.66)``` talks to ```(www.wellsfargo.com = 159.45.2.145)```, etc. Muse, on the other hand, makes development as simple as ```Bob sends Alice a message```, and privacy as simple as ```since he didn't CC Google, Google can't see it.``` It's built to digitally complement the social expectations humans have evolved over millennia. If you'd like to know more, the project's [whitepaper](/whitepaper.md) is a good place to start.
-
-# Problem flow
-
-This outlines, from first principles, the protocol design decisions that lead to the Muse. It is exceptionally brief and does not justify the answers. However, it does explain the entire protocol architecture.
+This outlines, from first principles, the protocol design decisions that lead to the Muse. This does not justify our answers -- for that, read our [whitepaper](/whitepaper.md). However, it does explain the entire protocol architecture.
 
 1. **Problem:** What is content?  
    **Solution:** Content is any arbitrary binary data. All content is encapsulated within containers that assure confidentiality, integrity, and authenticity.
@@ -96,7 +93,7 @@ This outlines, from first principles, the protocol design decisions that lead to
         1. **Problem:** How does the persistence system know when to remove data?  
            **Solution:** When all bindings have been removed through "debind" commands, the persistence system garbage collects the object.
         2. **Problem:** How can an author-agent remove undesired content that has been bound by a different agent?  
-           **Solution:** Binding records include the binder as public metadata. Persistence systems must include a command to list the agents who have bound to a particular piece of content. The author may then exert social/political/legal pressure on those binders for them to remove the binding.
+           **Solution:** Binding records include the binding agent as public metadata. Persistence systems must include a command to list the agents who have bound to a particular piece of content. The author may then exert social/political/legal pressure on those binders for them to remove the binding.
 
 2. **Problem:** What is sharing?  
    **Solution:** An exchange of symmetric encryption keys.
@@ -104,7 +101,7 @@ This outlines, from first principles, the protocol design decisions that lead to
     1. **Problem:** How is this accomplished in a many-to-many network?  
        **Solution:** Separate the key exchange from the content itself. Content is uniquely and trivially addressable, and access is shared one-to-one between agents. Note that agents may be computational, so public information may be automatically shared across communities of any size.
     2. **Problem:** How do you perform secure online key exchange?  
-       **Solution:** Initially, through a special asymmetrically-encrypted handshake object. These are distributed like any other Muse content, but contain a public reference to their agent-target. Unlike standard objects, their author is named privately, within the container body.
+       **Solution:** Initially, through a special asymmetrically-encrypted handshake object. These are distributed like any other Muse content, but contain a public reference to their agent-target. Unlike standard objects, their author is only named privately, within the container body.
     3. **Problem:** Doesn't this hinge on the secrecy of the target's asymmetric private key? Can we get forward secrecy, etc?  
        **Solution:** Absolutely. The handshake object *could* be used directly for every key exchange, but that would be both insecure and inefficient. The preferred method is to use the handshake to bootstrap a dynamic bidirectional communication pipe between two agents, and then use that for key exchange. The API definition for that key exchange pipe is out-of-scope for Muse itself, but candidates will be defined within overlay standards. Because it is encapsulated within the Muse symmetric pipe, it can be any binary message format.
 
