@@ -95,7 +95,7 @@ Therefore, the Muse protocol defines a second kind of object binding. Like stati
 
 ## Content management primitives
 
-At this point we can fully enumerate the required components in a Muse encrypted object container (MEOC) record:
+At this point we can fully enumerate the required **public** components in a Muse encrypted object container (MEOC) record:
 
 1. File hash / MUID
 2. Author MUID
@@ -115,6 +115,12 @@ And a Muse dynamic object binding (MOBD) record:
 3. Dynamic address
 4. MUID(s) for static target(s)
 
+And a Muse address debinding (MDXX) statement:
+
+1. MUID of the debinding agent
+2. Debinding agent's signature
+3. Address to be debound
+
 # Sharing and access management
 
 Consolidating technical requirements and applying scope limitations leaves the following minimum requirements for Muse sharing:
@@ -127,15 +133,69 @@ Consolidating technical requirements and applying scope limitations leaves the f
 
 Given the nature of Muse content containers, including cryptographic access management in the same delivery mechanism seems inefficient and unsustainable. As such, the Muse protocol wholly separates content from key distribution. Normally, relating keys to content resources would present a logistical challenge; however, with all Muse data being directly and only content-addressable, this problem is mostly inapplicable. Also note that public information sharing is out-of-scope, but can be simply constructed as a scripted network agent.
 
-## Inter-agent "pipes"
+Once keys are separated from content, we can start to build communication primitives from dynamically-bound objects. In the Muse protocol, these channels are known as "pipes". Since Muse-compliant content is always singularly authored, each multidirectional pipe is a combination of unidirectional half-pipes.
 
 ## Key/content separation
 
-## Online key exchange
+Many (perhaps most) protocols include some kind of key management within the ordinary application message exchange. For example, the PGP protocol includes both key distribution and encrypted content in the same email. OTR similarly mixes the application message body with exchange key management. This approach is troublesome with arbitrary (and potentially inconsistent) numbers of conversation partners; put simply, it does not scale into a many-to-many network environment, even when individual messages are authored by single parties. As such, the Muse protocol entirely separates key management from content distribution.
 
-Handshake
+The chief downside to this approach when creating a high-level protocol like PGP or OTR is that it does not integrate conveniently with most message-based transport exchanges. This is particularly true for email, where building a usable client for such a system would imply a very heavy-handed post-receipt merger of the separate content and key messages.
 
-Standardized share pipes
+However, as a standalone entity, the Muse protocol bears no such limitation. Our biggest concern, then, with this separation of key and message, is how to create a reliable, secure, unambiguous link between the two. This problem can be easily solved by sharing keys paired not with the content itself, but with that content's MUID.
+
+## Inter-agent "pipes"
+
+Half-pipes, once created, are simply a dynamic binding with key state shared between multiple (usually two) agents. The simplest example would use the same key for every dynamic frame. Alice generates her initial frame and dynamic binding, shares the binding with Bob (along with the decryption key), and Bob subscribes to the dynamic address at the implementation level. Alice can then update the binding with new frames, establishing a consistent unidirectional communication channel (the half-pipe) with Bob. To construct a full pipe, Bob repeats the process with Alice, using a different symmetric key. More sophisticated pipes implement key rotation for forward secrecy.
+
+These pipes may be used for any purpose, but are generally intended for one-to-one API communication. Because half-pipes have a consistent shared key state, once one is shared with another agent, it is impossible to revoke access without creating a new half-pipe. As such, in most cases, the optimal strategy is to make a single pipe for each possible pair.
+
+Since agents may expose more than one API, and to avoid accidental or malicious confusion when matching half-pipes into full pipes, pipes should contain an API identifier in the first half-pipe frame. However, this operation -- and in particular, its applicability to dedicated keysharing pipes -- is defined within an overlay standard.
+
+Finally, once a pipe-based transaction is complete, the terminating agent (Alice) pushes a special termination code to her upstream half-pipe. She may then either wait for an off-pipe response acknowledgement (ACK), or she may immediately debind her half-pipe. Either action should be interpreted by her parter Bob as a closure of the pipe, and he must respond by issuing an ACK, and should then remove any bindings he may have placed on Alice's half-pipe.
+
+## Pipe handshakes
+
+Conspicuously absent from this basic description of pipes is the initial keysharing process.  Because the Muse protocol is capable of asynchronous operation, and pipe initiation may not always be between previously "acquainted" agents, the only way to eliminate metadata publicly linking the pipe participants is for the pipe handshake to use public/private cryptography.
+
+This process is fully symmetric and can be initiated by either party. First, Alice creates her half-pipe. She then uses Bob's public key to privately announce the half-pipe's dynamic MUID and its key to Bob, and he responds with either a pipe ACK (if successful) or pipe NAK (if unsuccessful). If a full pipe is desired, Bob can then repeat this process for Alice.
+
+Of course, for Bob to respond, this request must be provably Alice's. Once again, though, we are explicitly avoiding publicly linking Alice and Bob in the handshake request. This has the somewhat undesirable consequence that Bob can only verify Alice's signature *after* decrypting the request. Though this prevents a malicious party from successfully initiating an API pipe on someone else's behalf, it also means that signature verification cannot be performed by the network. This opens a potential DoS-style attack vulnerability: an agent's application could be overwhelmed by spoofed pipe requests with invalid signatures from invalid muids. Such an attack would compromise the victim's ability to initiate new pipes, but presumably leave its existing pipes minimally affected.
+
+Mitigations against this style of attack will likely need to be developed, but it's worth mentioning that, since pipe requests are strictly a one-to-one transaction, they need not be signed asymmetrically. Rather, if both agents' public identities include a Diffie-Hellman public key, the request can be signed using a MAC with a key derived from their DH shared secret. This substantially decreases signature verification time, and therefore increases the computational footprint required for a successful attack. It also has the added benefit of inherent immunity to attempts to link Alice and Bob together by testing signature validity against a dictionary of public keys.
+
+## Key state management
+
+Once a pipe is established, given that Muse agents are device-independent, how do the connected parties remember encryption keys?
+
+Though state can be easily transferred between agents using pipes, state management in the Muse applications themselves can be quite complicated. This will be an area of rapid early development for Muse applications as best practices and overlay protocols evolve.
+
+Fortunately, key memory is a relatively direct form of persistence. It happens at a low level; in general, keys should only be handled by heavily-reviewed protocol implementation processes. Questions like application state sandboxing simply don't apply here: **no** downstream application is trusted with keys. As such, we can directly approach the question of key lifetimes,which is (at the moment) a concern reserved for implementation best practices, and not within scope for the Muse protocol With that being said, actual format for the key state file(s) will be defined within an overlay standard.
+
+## Sharing primitives
+
+At this point we can fully enumerate the required components in a Muse encrypted pipe requestor (MEPR) record:
+
+1. Recipient agent MUID (public)
+2. Requesting agent MUID (private)
+3. Target half-pipe MUID (private)
+4. Half-pipe initial symmetric key (private)
+5. Requesting agent MAC (public)
+
+As well as a Muse pipe ACK (MPAK) record (using the same nomenclature as above):
+
+1. Requesting agent MUID (public)
+2. Recipient agent MUID (private)
+3. Target half-pipe MUID (private)
+4. Recipient agent MAC (public)
+
+And a Muse pipe NAK (MPNK) record:
+
+1. Requesting agent MUID (public)
+2. Recipient agent MUID (private)
+3. Target half-pipe MUID (private)
+4. Recipient agent MAC (public)
+
+Additionally, both the ACK and NAK records may include an optional, application-specific status code within the private container.
 
 # Identity management
 
