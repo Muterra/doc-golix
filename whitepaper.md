@@ -1,4 +1,4 @@
-**Draft warning:** this is a public draft **in-process** dated 23 Oct 2015, but should not be considered final. If you'd like to stay updated, consider joining our [mailing list](https://www.ethyr.net/mailing-signup.html). Our previous whitepaper was very shy on technical details and has been moved to a [design philosophy](/design_philosopy.md) document.
+**Draft warning:** this is a public draft dated 27 Oct 2015, but should not be considered final. If you'd like to stay updated, consider joining our [mailing list](https://www.ethyr.net/mailing-signup.html). Our previous whitepaper was very shy on technical details and has been moved to a [design philosophy](/design_philosopy.md) document.
 
 # Introduction
 
@@ -204,13 +204,50 @@ Consolidating technical requirements and applying scope limitations leaves the f
 + Are self-contained, self-describing, and independent of any other identity
 + Can sign content
 + Can receive asymmetric content
++ Can generate Diffie-Hellman shared secrets
 + Can be privately aliased
 + Should be independent of any physical device
 
-Also note that to effectively support device-independent identity, online private key storage is logistically necessary. As with all other network requirements, this need can be served through content containers; however, the format for these containers is out-of-scope for the core Muse protocol.
+Also note that to effectively support device-independent identity, online private key storage is logistically necessary. As with all other network requirements, this need can be served through content containers; however, the format for these containers (and indeed the entire "login" process) is out-of-scope for the core Muse protocol.
 
-## Eschewing connection-based description
+Similarly, at this level of abstraction, high-level descriptions of relationships between agents ("Friends lists" and the like) are entirely inappropriate. Automation may be built *on top* of the Muse protocol, but in the interests of general applicability at minimum cost, it should not be "baked" into it.
 
-## Selectively-deniable aliases
+## Identities within MEOC records
 
-# Conclusion
+A key shortcoming of PGP-over-email is that public keys are distributed on a different transport mechanism than the messages themselves. Now, to be fair, if a key exchange process were also built upon SMTP, it would provide very little protection against man-in-the-middle attacks on initial contact. If Alice requests Bob's key over an insecure transport like email, an adversary Eve can simply intercept that key request, impersonating Bob from the outset. External key distribution helps slightly to mitigate this risk, but robust PGP-over-email implementations rely upon webs of trust. The difficulty here is that it entirely breaks the email workflow, and cannot be self-supporting. This situation is far less than ideal.
+
+However, an alternative would be a protocol where "email addresses" were inseparable from their public key(s). This system, though still vulnerable to phishing attacks (as nearly all human-interfacing systems are), could never suffer from such a direct impersonation attack: if Eve replaced the public key in a malicious response to Alice's key request, Alice would be aware that the new address mismatched her request.
+
+On a Muse-implementing network, MEOC records already provide this property. The container is uniquely identified through its MUID; changing its content results in the generation of a new MUID. By encapsulating all of an identity's public keys in a single MEOC, and referring to the keys' owner-agent by that container's MUID, we can adopt a MEOC's beneficial security properties without any added infrastructure overhead. The network, including agent identities, can be wholly self-hosting. 
+
+Since MEOC containers are encrypted, this opens the possibility of creating identities that can only be contacted after an initial referral. Though we expect that the majority of agent identities will be public, there is certainly potential usefulness in these hidden, private identities. That said, for public usefulness, encrypted identity containers are a few points short of a winning game. This downfall can be easily remedied with a standardized "bootstrapping" symmetric key.
+
+## Aliases and their selective deniability
+
+A final desirable property of identities is aliasing. It's sometimes useful to have a second point of contact for any particular entity. This isn't exactly a pseudonym, since both aliases (at least in this context) can bear the same name; it's more like a having two phone numbers, one public, one private.
+
+Now, a basic alias could be built by simply creating a new Muse identity. But without also providing some provable linkage between the private identity and the public one, this is more a pseudonym than an alias -- two individually consistent digital entities, certainly, but their relationship is no stronger than their word. A better assurance is a preexisting shared secret, but it is not without potential consequences.
+
+Sharing an alias is inherently a vulnerable process. Alice may not entirely trust Bob, but want to talk with him anyway. In this case, it would nice if the aliasing shared secret weren't something Bob could use to authenticate Alice's alias to an outside observer, Eve. For that we have only one option: a secret trivially constructible by either Alice or Bob, originating from nothing more than their principal identities. That way, Alice can always claim Bob made the whole thing up; his use of their conversation as evidence to Eve is wholly predicated on Eve's trust of his word.
+
+Given principal identities BobPrincipal and AlicePrincipal, and alias identity AliceAlias, and assuming that their respective identity containers already include a Diffie-Hellman public key, the mechanism works as follows:
+
++ Alice creates AliceAlias
++ AliceAlias contacts BobPrincipal
++ AliceAlias sends BobPrincipal the shared secret from a Diffie-Hellman exchange between BobPrincipal and AlicePrincipal.
+
+## We three keys
+
+Agent identity MEOCs must therefore contain three public keys:
+
++ Public encryption key
++ Public signing key
++ Public half of Diffie-Hellman pair
+
+Their format, along with public identity bootstrapping information, is defined within an overlay standard devoted to Muse identities.
+
+# The conclusion: social agency in a digital world
+
+In the physical world, personal agency is the defining characteristic of animate existence. Meanwhile, our contemporary digital environment is running rife with disempowerment. The reigning pattern of "privacy by promise" in walled-garden platforms has a dramatic chilling effect on the internet. And from a development standpoint, since every new social application is forced to build its own platform infrastructure, this approach comes with tremendous economic cost.
+
+Muse consolidates content, sharing, and identity management into a single encrypted protocol. It allows social applications to focus on social utility, and frees their distribution platforms from arduous and repetitive account management and authentication concerns. It is encrypted from participant to participant and supports arbitrary content with asynchronous availability. The Muse protocol is a paradigm shift: it represents an attempt to algorithmically protect individual agency in a digital world.
