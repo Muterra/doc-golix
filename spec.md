@@ -595,6 +595,11 @@ An application-specific status/error code. Entirely optional, potentially very h
 
 
 
+--------------------
+
+--------------------
+
+--------------------
 
 + Need to define command flow.
 + Need to define required persistence provider commands
@@ -603,18 +608,7 @@ An application-specific status/error code. Entirely optional, potentially very h
 + Need to add nonce generation
 + Need to review whitepaper for anything I missed
 
-
---------------------
 # Everything below this line is (probably) wrong
-
-
-
-
-
-
-
-
-
 
 ## Service layer
 
