@@ -4,7 +4,7 @@
 
 **NOTE:** This is a purely implementation document. For design discussion, see our [design document](/design_philosophy.md). For technical discussion, see our [whitepaper](/whitepaper.md). For security discussion, stay tuned for our security excerpt.
 
-# MEOC records
+# Object container (MEOC)
 
 + Preferred stored file extension: no extension
 + Secondary stored file extension: .meoc
@@ -59,11 +59,21 @@ The file has is appended to the 1-byte address algorithm field to construct a MU
 
 ## 5. Cipher suite
 
-Muse plans to support multiple cipher suites. They are represented as an 8-bit integer. ECC is the next support candidate.
+Muse plans to support multiple cipher suites. They are represented as an 8-bit integer.
 
 Cipher suites, by representation:
 
-1. **0x1:** SHA512/AES256/RSA4096. **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537. **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537. **Symmetric encryption:** AES-256 in CTR mode with nonce prepended to payload ciphertext. Nonce generation is described below. **Diffie-Hellman deniable exchange:** 2048-bit [Group #14](http://www.ietf.org/rfc/rfc3526.txt) with a generator of 2.
+1. **0x1:** SHA512/AES256/RSA4096.  
+   **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537.  
+   **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537.  
+   **Symmetric encryption:** AES-256 in CTR mode with nonce prepended to payload ciphertext. Nonce generation is described below.  
+   **Symmetric shared secrets:** 2048-bit Diffie-Hellman [Group #14](http://www.ietf.org/rfc/rfc3526.txt) with a generator of 2.  
+   **Key agreement from shared secret:** HKDF+SHA512. Salt is application-specific.  
+   **Symmetric signatures / MAC:** HMAC+SHA512
+
+**Quick note:** Why not elliptic curves first? Basically, development resource allocation. There was a reasonably large amount of thought put into this decision, and I stand by it. We need a prototype that works and is suitably secure for alpha testing. ECC is a very high priority for the production standard, as is a serious consideration of moving the address algorithm to a concatenation of SHA256 and SHA3 for the same input bytes. If you want to discuss this further, please [get in contact directly](mailto:badg@muterra.io).
+
+**Quick note 2:** Why not an AE/AEAD block mode? The added complexity doesn't make sense in this application. Dynamic bindings don't use symmetric encryption, and everything else is non-malleable. There's already a hash, and a signature, on top of the existing non-malleability, for MEOC records. CTR is very simple, which makes it much harder to screw up.
 
 ## 6. Author MUID
 
@@ -81,7 +91,7 @@ A 64-bit unsigned integer representation *N* of the length (in bytes) of the bin
 
 The payload follows the public header immediately, with no padding. It is encrypted according to the cipher suite definition, as described in the public header. The file terminates immediately at the end of the payload.
 
-## Static bindings
+## Static binding (MOBS)
 
 + Preferred stored file extension: no extension
 + Secondary stored file extension: .mobs
@@ -140,7 +150,7 @@ See Author Signature above.
 
 The MUID of the MEOC resource to bind to.
 
-## Dynamic bindings
+# Dynamic binding (MOBD)
 
 + Preferred stored file extension: no extension
 + Secondary stored file extension: .mobd
@@ -218,7 +228,7 @@ of the first frame in the binding, using the hash algorithm described in the Add
 
 This field makes it possible to have multiple dynamic bindings with the same (binder + original frames) seed. It should never be repeated for the same binder + original frames combination. It is static across the lifetime of the dynamic binding.
 
-We recommend using a sufficiently strong random number generator to produce the nonce. The availability of the resultant dynamic address should then be verified against the binder's preferred persistence providers. The weaker the random number generator, the more important the availability verification.
+We recommend using a sufficiently strong random number generator to produce the nonce. The availability of the resultant dynamic address should then be verified against the binder's preferred persistence providers. The weaker the random number generator, the more important the verification.
 
 ## 9. Dynamic frame count
 
@@ -228,318 +238,383 @@ An integer count of the bound MUIDs. The length of the remaining record can be c
 
 An ordered list of the MUIDs for each frame. If the dynamic binding is being used as a buffered object, the most recent frame should be first.
 
+# Debind record (MDXX)
 
++ Preferred stored file extension: no extension
++ Secondary stored file extension: .mdxx
 
+**Format:**
 
+| Decimal Offset | Decimal Length | Name                    | Format              |
+| ------         | ---------      | -------------------     | -----------         |
+| 0              | 4B             | Magic number            | 0x 4D 44 58 58      |
+| 4              | 4B             | Version number          | Unsigned 32-bit int |
+| 8              | 1B             | Address algorithm       | Unsigned 8-bit int  |
+| 9              | 64B            | File hash               | Bytes               |
+| 73             | 1B             | Cipher suite            | Unsigned 8-bit int  |
+| 74             | 65B            | Debinder MUID           | Bytes               |
+| 139            | 512B           | Debinder signature      | Bytes               |
+| 651            | 65B            | Target MUID             | Bytes               |
 
+Debind requesters must remove:
 
+1. Static and dynamic bindings, only at the request of the binder
+2. Pipe requesters, pipe ACKs, and pipe NAKs, only at the request of their recipient
 
+## 1. Magic number
 
---------------------------
+ASCII "MDXX" (4D 44 58 58)
 
-# Everything below this line is incorrect.
+## 2. Version
 
+See above for description. **Currently 4.**
 
+## 3. Address algorithm
 
+See above for description.
 
+## 4. File hash
 
+Constructed from the concatenation of:
 
+1. Magic number
+2. Version
+3. Address algorithm
+4. Cipher suite
+5. Debinder MUID
+6. Target MUID
 
+The file hash is used only for the signature. It is **not** used for addressing the debind statement. See above for further description.
 
-## API requesters
+## 5. Cipher suite
 
-API requesters (EIARs, which I pronounce "ears") serve as signaling mechanism for an API handshake. They are encrypted asymmetrically against the public key of the recipient. Remember that all EICOs are single author, (potentially) multiple consumer -- in other words, unidirectional. Any bidirectional API therefore requires both a client/consumer pipe and a server/producer pipe, even just to issue an ACK. An eiar is generated by the API client/consumer, signaling both the MUID and access key for the consumer's "pipe" to the API. In response, the API producer generates a response eiar, signaling the MUID and key to its response pipe.
+See above for description.
 
-APIs themselves may be self-describing: the pipe may describe its intended purpose internally, but such a description cannot be contained within the eiar. 
+## 6. Debinder MUID 
 
-An eiar is removed by the *recipient*, through a debind request against the file hash of the eiar.
+The full MUID (hash algorithm byte + file hash) of the MEOC object containing the identity (the public keys) of the debinding agent.
 
-### Format
+## 7. Binder signature
 
-**Public header:**
+See Author Signature above.
 
-| Offset | Length    | Name                | Format              | Hex off |
-| ------ | --------- | ------------------- | -----------         | ---     |
-| 0      | 4B        | Magic number        | x65x69x61x72        | 0       |
-| 4      | 4B        | Version             | Unsigned 32-bit int | x       |
-| 8      | 2B        | Address algo        | Unsigned 16-bit int | x       |
-| 10     | 64B       | File hash           | Bytes               | x       |
-| 74     | 2B        | Cipher suite        | Unsigned 16-bit int | x       |
-| 76     | 66B       | Recipient MUID      | Bytes               | x       |
+## 8. Target MUID
 
-Total length 654B | x
+The MUID of the MEOC resource to debind. If multiple authors have bound to a particular MUID, the debind must only remove the binding associated with the agent MUID specified in the debind statement. 
 
-**Inner container:**
+For a static binding, this is the same as the MEOC's original MUID. For a dynamic binding, this is the dynamic address. For a pipe requester, pipe ACK, or pipe NAK, this is the address algorithm + file hash.
+
+# Muse encrypted pipe request (MEPR)
+
++ Preferred stored file extension: no extension
++ Secondary stored file extension: .mepr
+
+**Public header format:**
+
+| Decimal Offset | Decimal Length | Name                       | Format              |
+| ------         | ---------      | -------------------        | -----------         |
+| 0              | 4B             | Magic number               | 0x 4D 45 50 52      |
+| 4              | 4B             | Version number             | Unsigned 32-bit int |
+| 8              | 1B             | Address algorithm          | Unsigned 8-bit int  |
+| 9              | 64B            | File hash                  | Bytes               |
+| 73             | 1B             | Cipher suite               | Unsigned 8-bit int  |
+| 74             | 65B            | Recipient MUID             | Bytes               |
+| 139            | 64B            | Author symmetric signature | Bytes               |
+
+**Asymmetrically encrypted inner container format:**
 
 | Offset | Length    | Name                 | Format      |
 | ------ | --------- | -------------------  | ----------- |
-| 0      | 66B       | Author               | Bytes       |
-| 130    | 66B       | Target MUID          | Bytes       |
-| 196    | 32B       | Target symmetric key | Bytes       |
+| 0      | 65B       | Author MUID          | Bytes       |
+| 65     | 65B       | Target MUID          | Bytes       |
+| 130    | 32B       | Target symmetric key | Bytes       |
 
-Total size: 228B (encrypted size 512B) | x
+## 1. Magic number
 
-**Public footer:**
+ASCII "MEPR" (4D 45 50 52)
 
-| Offset | Length    | Name                | Format      | Hex off |
-| ------ | --------- | ------------------- | ----------- | ---     |
-| 142    | 64B       | Author HMAC         | Bytes       | x       |
+## 2. Version
 
-#### 1. Magic number
+See above for description. **Currently 9.**
 
-API requester magic number: ASCII "eiar" (65 69 61 72)
+## 3. Address algorithm
 
-#### 2. Cipher suite
+See above for description.
 
-See above.
+## 4. File hash
 
-#### 3. Author signature
+Constructed from the concatenation of:
 
-The author's signature. Unlike other EIC objects, EIAR signatures are constructed from the bitwise XOR of the file hash and inner hash. This is to preserve the security of the author's identity to an outside observer with a dictionary of public keys.
+1. Magic number
+2. Version
+3. Address algorithm
+4. Cipher suite
+5. Recipient MUID
+6. Encrypted payload
 
-#### 4. File hash
+The file hash is used only for debinding.
 
-The hash of this API request, starting immediately after the hash (ie starting with byte 584, as with EICOs).
+## 5. Cipher suite
 
-#### 5. EIAR version
+See above for description.
 
-**Currently 0.0.8.** 
+## 6. Recipient MUID 
 
-#### 6. Recipient MUID
+The MUID of the agent against whose public key the MEPR was encrypted. If Alice is the author and she wants to open a pipe with Bob, this is Bob's MUID.
 
-The MUID for the recipient.
+## 7. Author symmetric signature
 
-#### 7. Inner hash
+The symmetric signature / MAC of the author. The key for the signature is derived by:
 
-Digest of all remaining bytes in the inner container. It is included as an integrity assurance and to ease signature verification.
+1. DHE shared secret between author and recipient
+2. Expand shared secret into key material using the file hash as salt. (Ex: cipher suite 0x1 would use HKDF+SHA512)
 
-#### 8. Author
+The material for input into the signature algorithm is then constructed as:
 
-The MUID of the identity creating the request.
+1. Magic number
+2. Version
+3. Address algorithm
+4. File hash
+5. Cipher suite
+6. Recipient MUID
+7. Encrypted payload
 
-#### 9. Target MUID
+## 8. Author MUID (private)
 
-The MUID of the dynamic binding to use for the API pipe. By keeping this encrypted, there is no public link between the author and the recipient.
+The MUID of the agent requesting the pipe.
 
-#### 10. Target symmetric key
+## 9. Target MUID (private)
 
-The encryption key for the API pipe.
+The MUID of the dynamic binding (or MEOC, but this use is not recommended) for the author's half-pipe.
 
-### Known vulnerabilities
+## 10. Target symmetric key (private)
 
-EIAR files have one design tradeoff that justifies explicit discussion. To prevent an observer from inferring a connection between the API consumer and the API provider, the signature can only be verified **after** decrypting the request. Though this *does* prevent a malicious party from successfully initiating an API pipe on someone else's behalf, because the signature verification requires the recipient's private key, it cannot be performed by the network. This opens a potential DoS attack vulnerability: an API provider could be overwhelmed by spoofed EIARs with invalid signatures from invalid MUIDs. Such an attack would compromise the API provider's ability to initiate new API pipes, but presumably leave its ability to handle existing APIs intact.
+The encryption key for the author's half-pipe.
 
-However, EIARs have no hard response requirement, so two attack mitigation strategies are immediately apparent:
+# Muse pipe acknowledgement (MPAK)
 
-1. For in-progress attack mitigation from EIAR "cold calls", trusted third-party verification of request origin using the EIAR file hash. The requestor registers the request with the third party, and the API provider verifies the author's signature using the identity acquired from the third party. Exposes the API consumer/provider relationship to the third party.
-2. For attack prevention, adding an extra API channel to existing API consumers, allowing them to initiate EIARs on others' behalf. This is a decentralized version of (1) above that requires prior planning.
++ Preferred stored file extension: no extension
++ Secondary stored file extension: .mpak
 
-## API handshake NAKs
+**Public header format:**
 
-API NAKs are a single-purpose denial of an API request. They should **not** be used for API problems; they should only be used during initial API handshake negotiation. They acknowledge (not necessarily successful) receipt of the API request, combined with either unsuccessful operation or outright refusal of the request.
+| Decimal Offset | Decimal Length | Name                       | Format              |
+| ------         | ---------      | -------------------        | -----------         |
+| 0              | 4B             | Magic number               | 0x 4D 50 41 4B      |
+| 4              | 4B             | Version number             | Unsigned 32-bit int |
+| 8              | 1B             | Address algorithm          | Unsigned 8-bit int  |
+| 9              | 64B            | File hash                  | Bytes               |
+| 73             | 1B             | Cipher suite               | Unsigned 8-bit int  |
+| 74             | 65B            | Recipient MUID             | Bytes               |
+| 139            | 64B            | Author symmetric signature | Bytes               |
 
-Most internal NAK information is optional, to allow a single NAK to be built, cached, and reused in the case of DoS attack mitigation.
+**Asymmetrically encrypted inner container format:**
 
-API NAKs are removed by the *recipient*, through a debind request against the file hash of the NAK.
+| Offset | Length    | Name                   | Format      |
+| ------ | --------- | -------------------    | ----------- |
+| 0      | 65B       | Author MUID            | Bytes       |
+| 65     | 65B       | Requested MUID         | Bytes       |
+| 130    | 32B       | Status code (optional) | Bytes       |
 
-### Format
+Pipe ACKs should only be used during pipe negotiation. They most commonly indicate a successful closure or initiation of a half-pipe. They must only be used to indicate problems incurred during pipe management, not, for example, acknowledging messages within the pipe itself.
 
-**Public header:**
+## 1. Magic number
 
-| Offset | Length    | Name                | Format              | Hex off |
-| ------ | --------- | ------------------- | -----------         | ---     |
-| 0      | 4B        | Magic number        | x65x69x4Ex4B        | 0       |
-| 4      | 4B        | Version             | Unsigned 32-bit int | x       |
-| 8      | 2B        | Address algo        | Unsigned 16-bit int | x       |
-| 10     | 64B       | File hash           | Bytes               | x       |
-| 74     | 2B        | Cipher suite        | Unsigned 16-bit int | x       |
-| 76     | 66B       | Recipient MUID      | Bytes               | x       |
+ASCII "MPAK" (4D 50 41 4B)
 
-Total length 654B | x
+## 2. Version
 
-**Inner container:**
+See above for description. **Currently 4.**
 
-| Offset | Length    | Name                       | Format              |
-| ------ | --------- | -------------------        | -----------         |
-| 0      | 66B       | Author                     | Bytes               |
-| x      | 66B       | Requesting MUID (optional) | Bytes               |
-| x      | 32B       | Error code (optional)      | Unsigned 32-bit int |
+## 3. Address algorithm
 
-Total size: xB (encrypted size 512B) | x
+See above for description.
 
-**Public footer:**
+## 4. File hash
 
-| Offset | Length    | Name                | Format      | Hex off |
-| ------ | --------- | ------------------- | ----------- | ---     |
-| 142    | 64B       | Author HMAC         | Bytes       | x       |
+Constructed from the concatenation of:
 
-#### 1. Magic number
+1. Magic number
+2. Version
+3. Address algorithm
+4. Cipher suite
+5. Recipient MUID
+6. Encrypted payload
 
-API NAK magic number: ASCII "eiNK" (65 69 4E 4B)
+The file hash is used only for debinding.
 
-#### 2. Cipher suite
+## 5. Cipher suite
 
-See above.
+See above for description.
 
-#### 3. Author signature
+## 6. Recipient MUID 
 
-The author's signature. Unlike other EIC objects, EINO signatures are constructed from the bitwise XOR of the file hash and inner nonce. This is to preserve the security of the author's identity to an outside observer with a dictionary of public keys.
+The MUID of the agent against whose public key the MEPR was encrypted. This is the agent that requested the pipe.
 
-#### 4. File hash
+## 7. Author symmetric signature
 
-The hash of this binding request, starting immediately after the hash (ie starting with byte 584, as with EICOs).
+The symmetric signature / MAC of the author. The key for the signature is derived by:
 
-#### 5. EINK version
+1. DHE shared secret between author and recipient
+2. Expand shared secret into key material using the file hash as salt. (Ex: cipher suite 0x1 would use HKDF+SHA512)
 
-**Currently 0.0.3.** 
+The material for input into the signature algorithm is then constructed as:
 
-#### 6. Recipient MUID
+1. Magic number
+2. Version
+3. Address algorithm
+4. File hash
+5. Cipher suite
+6. Recipient MUID
+7. Encrypted payload
 
-The MUID for the recipient (the identity requesting the API that is currently being denied).
+## 8. Author MUID (private)
 
-#### 7. Inner nonce
+The MUID of the agent non-acknowledging the pipe.
 
-Random noise. This preserves verifiability of the signature, while still protecting the author from a public key dictionary attack, even if all optional arguments are omitted.
+## 9. Requested MUID (private)
 
-#### 8. Author
+The MUID of the dynamic binding (or MEOC, but this use is not recommended) that was requested.
 
-The entity denying the EIAR.
+## 10. Status code (private, optional)
 
-#### 9. Requesting MUID
+An application-specific status/exit code. Entirely optional, potentially very helpful.
 
-The file hash of the EIAR request that this NAK is denying. May be omitted to reuse the built NAK for subsequent requests from the same recipient. Best practice is to send at least one NAK including this field, falling back on a cached, generic NAK for subsequent denied requests from the same source in times of heavy traffic.
+# Muse pipe non-acknowledgement (NPNK)
 
-#### 10. Error code
++ Preferred stored file extension: no extension
++ Secondary stored file extension: .mpnk
 
-An API-specific error code. Should be defined by the API itself, and entirely optional. If one is available, best practices should follow similar fallback-to-generic behavior as the requesting EIAR file hash.
+**Public header format:**
 
-## API disconnect ACKs
+| Decimal Offset | Decimal Length | Name                       | Format              |
+| ------         | ---------      | -------------------        | -----------         |
+| 0              | 4B             | Magic number               | 0x 4D 50 4E 4B      |
+| 4              | 4B             | Version number             | Unsigned 32-bit int |
+| 8              | 1B             | Address algorithm          | Unsigned 8-bit int  |
+| 9              | 64B            | File hash                  | Bytes               |
+| 73             | 1B             | Cipher suite               | Unsigned 8-bit int  |
+| 74             | 65B            | Recipient MUID             | Bytes               |
+| 139            | 64B            | Author symmetric signature | Bytes               |
 
-API ACKs are a single-purpose API "farewell". They should **not** be used for ACKs within an actual Muse API; they should only be used during final API disconnection, after all parties have cleaned up their API pipes. They acknowledge successful closure of the API.
+**Asymmetrically encrypted inner container format:**
 
-Most internal ACK information is optional, to allow a single NAK to be built, cached, and reused in the case of DoS attack mitigation.
+| Offset | Length    | Name                   | Format      |
+| ------ | --------- | -------------------    | ----------- |
+| 0      | 65B       | Author MUID            | Bytes       |
+| 65     | 65B       | Requested MUID         | Bytes       |
+| 130    | 32B       | Status code (optional) | Bytes       |
 
-API ACKs are removed by the *recipient*, through a debind request against the file hash of the ACK.
+Pipe non-acknowledgements (NAKs) should only be used during pipe negotiation. They most commonly indicate a rejection of the pipe request, but may also indicate an error in opening the pipe (wrong key, etc). They must only be used to indicate problems incurred during pipe management, not, for example, malformed messages within the pipe itself.
 
-### Format
+## 1. Magic number
 
-**Public header:**
+ASCII "MPNK" (4D 50 4E 4B)
 
-| Offset | Length    | Name                | Format              | Hex off |
-| ------ | --------- | ------------------- | -----------         | ---     |
-| 0      | 4B        | Magic number        | x65x69x41x4B        | 0       |
-| 4      | 4B        | Version             | Unsigned 32-bit int | x       |
-| 8      | 2B        | Address algo        | Unsigned 16-bit int | x       |
-| 10     | 64B       | File hash           | Bytes               | x       |
-| 74     | 2B        | Cipher suite        | Unsigned 16-bit int | x       |
-| 76     | 66B       | Recipient MUID      | Bytes               | x       |
-| 142    | 512B      | Author signature    | Bytes               | x       |
+## 2. Version
 
-Total length 654B | 28C
+See above for description. **Currently 4.**
 
-**Inner container:**
+## 3. Address algorithm
 
-| Offset | Length    | Name                    | Format              |
-| ------ | --------- | -------------------     | -----------         |
-| 32     | 66B       | Author                  | Bytes               |
-| x      | 66B       | Closing MUID (optional) | Bytes               |
-| x      | 32B       | Exit code (optional)    | Unsigned 32-bit int |
+See above for description.
 
-**Public footer:**
+## 4. File hash
 
-| Offset | Length    | Name                | Format      | Hex off |
-| ------ | --------- | ------------------- | ----------- | ---     |
-| 142    | 64B       | Author HMAC         | Bytes       | x       |
+Constructed from the concatenation of:
 
-Total size: xB (encrypted size 512B) | x
+1. Magic number
+2. Version
+3. Address algorithm
+4. Cipher suite
+5. Recipient MUID
+6. Encrypted payload
 
-#### 1. Magic number
+The file hash is used only for debinding.
 
-API requestor magic number: ASCII "eiAK" (65 69 41 4B)
+## 5. Cipher suite
 
-#### 2. Cipher suite
+See above for description.
 
-See above.
+## 6. Recipient MUID 
 
-#### 3. Author signature
+The MUID of the agent against whose public key the MEPR was encrypted. This is the agent that requested the pipe.
 
-The author's signature. Unlike other EIC objects, EINO signatures are constructed from the bitwise XOR of the file hash and inner nonce. This is to preserve the security of the author's identity to an outside observer with a dictionary of public keys.
+## 7. Author symmetric signature
 
-#### 4. File hash
+The symmetric signature / MAC of the author. The key for the signature is derived by:
 
-The hash of this binding request, starting immediately after the hash (ie starting with byte 584, as with EICOs).
+1. DHE shared secret between author and recipient
+2. Expand shared secret into key material using the file hash as salt. (Ex: cipher suite 0x1 would use HKDF+SHA512)
 
-#### 5. EIAK version
+The material for input into the signature algorithm is then constructed as:
 
-**Currently 0.0.3.** 
+1. Magic number
+2. Version
+3. Address algorithm
+4. File hash
+5. Cipher suite
+6. Recipient MUID
+7. Encrypted payload
 
-#### 6. Recipient MUID
+## 8. Author MUID (private)
 
-The MUID for the recipient (the identity requesting the API that is currently being denied).
+The MUID of the agent non-acknowledging the pipe.
 
-#### 7. Inner nonce
+## 9. Requested MUID (private)
 
-Random noise. This preserves verifiability of the signature, while still protecting the author from a public key dictionary attack, even if all optional arguments are omitted.
+The MUID of the dynamic binding (or MEOC, but this use is not recommended) that was requested.
 
-#### 8. Author
+## 10. Status code (private, optional)
 
-The entity denying the EIAR.
+An application-specific status/error code. Entirely optional, potentially very helpful.
 
-#### 9. Closing MUID
 
-The MUID of the dynamic API pipe that this ACK is recognizing the closure of. May be omitted to reuse the built ACK for subsequent requests from the same recipient. EIAKs should be very rare compared to other EIC traffic: the represent both successful creation and removal of an API. As such, best practice is to always include this field. However, a cached, generic ACK may be used as a fallback for subsequent denied requests from the same source in times of heavy traffic.
 
-#### 10. Exit code
 
-An API-specific exit code. Should be defined by the API itself, and entirely optional. If one is available, best practices should follow similar fallback-to-generic behavior as the closing MUID.
 
-## Debind requestors
 
-Debind requestors remove
 
-1. Static bindings,
-2. Dynamic bindings, or
-3. API requestors.
 
-They will only be accepted from the MUID that created the binding (or the recipient of the API requestor).
 
-### Format
 
-| Offset | Length    | Name                | Format              | Hexoff |
-| ------ | --------- | ------------------- | -----------         | ---    |
-| 0      | 4B        | Magic number        | x65x69x58x58        | 0      |
-| 4      | 4B        | Version             | Unsigned 32-bit int | x      |
-| 8      | 2B        | Address algo        | Unsigned 16-bit int | x      |
-| 10     | 64B       | File hash           | Bytes               | x      |
-| 74     | 2B        | Cipher suite        | Unsigned 16-bit int | x      |
-| 76     | 66B       | Debinder MUID       | Bytes               | x      |
-| 142    | 512B      | Debinder signature  | Bytes               | x      |
-| x      | 66B       | Target              | Bytes               | x      |
-| x      | 32B       | Nonce               | Bytes               | x      |
 
-#### 1. Magic number
 
-Debind requestor magic number: ASCII "eiXX" (65 69 58 58)
 
-#### 2. Cipher suite
 
-See above.
 
-#### 3. Debinder signature
 
-#### 4. File hash
 
-#### 5. eiXX version
 
-**Currently 0.0.3.** 
 
-#### 6. Debinder MUID
 
-#### 7. Target
 
-#### 8. Nonce 
 
-Random noise. Prevents spoofing a static binding into a static debind request.
+
+
+
+
+
+
++ Need to define command flow.
++ Need to define required persistence provider commands
++ Need to define required components for identity containers
++ Need to define deniable aliasing
++ Need to add nonce generation
++ Need to review whitepaper for anything I missed
+
+
+--------------------
+# Everything below this line is (probably) wrong
+
+
+
+
+
+
+
+
+
 
 ## Service layer
 
