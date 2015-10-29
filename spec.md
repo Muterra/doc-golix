@@ -91,7 +91,7 @@ A 64-bit unsigned integer representation *N* of the length (in bytes) of the bin
 
 The payload follows the public header immediately, with no padding. It is encrypted according to the cipher suite definition, as described in the public header. The file terminates immediately at the end of the payload.
 
-## Static binding (MOBS)
+# Static binding (MOBS)
 
 + Preferred stored file extension: no extension
 + Secondary stored file extension: .mobs
