@@ -173,7 +173,7 @@ Fortunately, key memory is a relatively direct form of persistence. It happens a
 
 ## Sharing primitives
 
-At this point we can fully enumerate the required components in a Muse encrypted pipe requestor (MEPR) record:
+At this point we can fully enumerate the required components in a Muse encrypted pipe requester (MEPR) record:
 
 1. Recipient agent MUID (public)
 2. Requesting agent MUID (private)
