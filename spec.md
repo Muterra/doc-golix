@@ -352,7 +352,7 @@ Constructed from the concatenation of:
 5. Recipient MUID
 6. Encrypted payload
 
-The file hash is used only for debinding.
+The file hash is used only for debinding and persistence retrieval.
 
 ## 5. Cipher suite
 
@@ -441,7 +441,7 @@ Constructed from the concatenation of:
 5. Recipient MUID
 6. Encrypted payload
 
-The file hash is used only for debinding.
+The file hash is used only for debinding and persistence retrieval.
 
 ## 5. Cipher suite
 
@@ -530,7 +530,7 @@ Constructed from the concatenation of:
 5. Recipient MUID
 6. Encrypted payload
 
-The file hash is used only for debinding.
+The file hash is used only for debinding and persistence retrieval.
 
 ## 5. Cipher suite
 
@@ -569,13 +569,115 @@ The MUID of the dynamic binding (or MEOC, but this use is not recommended) that 
 
 An application-specific status/error code. Entirely optional, potentially very helpful.
 
+# Persistence provider commands
 
+All of the following commands must be supported by all persistence providers. Additional application-specific commands may be added, though this is not necessarily recommended. Overlay standards define their format for different transport mechanisms. All commands are bidirectional. Nomenclature used here is party ```A``` initiates (in a unidirectional architecture, the client), ```B``` responds (unidirectional server).
 
+## ACK
 
+```A``` acknowledges a transmission from ```B```, indicating successful completion of request. May be accompanied by a status code.
 
+```A``` sends bare statement
 
+```B``` does not respond
 
+## NAK
 
+```A``` acknowledges a transmission from ```B```, indicating unsuccessful completion of request. May be accompanied by a status code.
+
+```A``` sends bare statement
+
+```B``` does not respond
+
+## Ping
+
+```A``` queries ```B``` to determine reachability.
+
+```A``` sends bare request, or request with a MUID to indicate an update.
+
+```B``` responds with:
+
++ ACK if reachable and ready
++ NAK if reachable and unready
+
+## Publish
+
+```A``` sends ```B``` a Muse network object.
+
+```A``` sends MEOC, MOBS, MOBD, MDXX, MEPR, MPAK, or MPNK
+
+```B``` responds with:
+
++ ACK if successful
++ NAK if unsuccessful
+
+## Get
+
+```A``` requests an object from ```B```.
+
+```A``` sends MUID
+
+```B``` responds with:
+
++ The object if successful
++ NAK if unsuccessful
+
+There is no return response from ```A```. Retries are initiated with a new get command.
+
+## Subscribe
+
+```A``` requests to be subscribed to an address at ```B```.
+
+```A``` sends MUID
+
+```B``` responds with:
+
++ ACK if successful
++ NAK if unsuccessful 
+
+If ```B``` receives:
+
++ An updated copy of a dynamic binding with the indicated dynamic MUID
++ An asymmetric request with the indicated MUID as recipient
+
+then ```B``` starts to ping ```A``` with the MUID only (not the actual object). If unsuccessful, ```B``` *may* repeat ping until successful.
+
+## Unsubscribe
+
+```A``` requests to be unsubscribed from an object at ```B```.
+
+```A``` sends MUID
+
+```B``` responds with:
+
++ ACK if successful
++ NAK if unsuccessful
+
+## List subscribed addresses
+
+```A``` requests a list of subscribed MUIDs from ```B```.
+
+```A``` sends bare command
+
+```B``` responds with:
+
++ List of MUIDs if successful
++ NAK if unsuccessful
+
+There is no return response from ```A```. Retries are initiated with a new list command.
+
+## List binders
+
+```A``` requests a list of agents who have bound to a specified MUID ```B```.
+
+```A``` sends MUID
+
+```B``` responds with:
+
++ List if successful
++ NAK if unsuccessful
+
+There is no return response from ```A```. Retries are initiated with a new list command.
 
 
 
@@ -601,8 +703,7 @@ An application-specific status/error code. Entirely optional, potentially very h
 
 --------------------
 
-+ Need to define command flow.
-+ Need to define required persistence provider commands
++ Add hello/goodbye to persistence commands?
 + Need to define required components for identity containers
 + Need to define deniable aliasing
 + Need to add nonce generation
