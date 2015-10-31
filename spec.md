@@ -1,4 +1,4 @@
-**WARNING:** This is a draft document dated 29 October. It is under review and is definitely **not finalized!** If you'd like to stay updated, consider joining our [mailing list](https://www.ethyr.net/mailing-signup.html).
+**WARNING:** This is a draft document dated 30 October. It is under review and is definitely **not finalized!** If you'd like to stay updated, consider joining our [mailing list](https://www.ethyr.net/mailing-signup.html).
 
 **SPECIAL WARNING:** This should not be implemented in a production environment until subjected to security reviews.
 
@@ -545,7 +545,7 @@ The MUID of the agent against whose public key the MEPR was encrypted. This is t
 The symmetric signature / MAC of the author. The key for the signature is derived by:
 
 1. DHE shared secret between author and recipient
-2. Expand shared secret into key material using the file hash as salt. (Ex: cipher suite 0x1 would use HKDF+SHA512)
+2. Expand shared secret into key material using the file hash as salt. (Ex: cipher suite 0x1 and address algorithm 0x1 would use HKDF+SHA512 on the SHA512 file hash)
 
 The material for input into the signature algorithm is then constructed as:
 
@@ -599,6 +599,8 @@ All of the following commands must be supported by all persistence providers. Ad
 
 + ACK if reachable and ready
 + NAK if reachable and unready
+
+This command is also used by ```A``` to initiate a connection with ```B```.
 
 ## Publish
 
@@ -679,17 +681,18 @@ There is no return response from ```A```. Retries are initiated with a new list 
 
 There is no return response from ```A```. Retries are initiated with a new list command.
 
+## Disconnect
 
+```A``` disconnects from ```B```, terminating all subscriptions and requests.
 
+```A``` sends bare request
 
+```B``` responds with:
 
++ ACK if successful
++ NAK if unsuccessful
 
-
-
-
-
-
-
+```B``` should not require this from ```A```; persistence providers should also include a timeout (or other connection termination) method. This command is included to allow ```B``` to log off a particular device securely.
 
 
 
@@ -703,113 +706,7 @@ There is no return response from ```A```. Retries are initiated with a new list 
 
 --------------------
 
-+ Add hello/goodbye to persistence commands?
 + Need to define required components for identity containers
 + Need to define deniable aliasing
 + Need to add nonce generation
 + Need to review whitepaper for anything I missed
-
-# Everything below this line is (probably) wrong
-
-## Service layer
-
-During handshake negotiation, Muse APIs create two unidirectional pipes. These two pipes may then be used to create an arbitrary number of secondary pipes between the two parties.
-
-**Generic API handshake:**
-
-1. Client creates 'hello' eico for upload pipe
-2. Client creates dynamic binding for 'hello' eico as upstream API pipe
-3. Client create EIAR for dynamic pipe
-4. Client pushes dynamic pipe, EICO over transport *as a single message*
-5. Client pushes EIAR as *separate* message (for security reasons)
-6. Server creates 'hello' eico for download pipe
-7. Server creates dynamic binding for 'hello' eico as downstream API pipe
-8. Server creates EIAR for dynamic pipe
-9. Server pushes dynamic pipe, EICO over transport *as a single message*
-10. Server pushes EIAR as *separate* message (for security reasons)
-
-Note that in most cases, it's a good idea for the client to **immediately** update the upstream pipe with an ACK to signify successful completion of 10. However, this is *not* a requirement and will vary from API to API.
-
-**Handshake excerpt where something goes wrong:**
-
-5. Client pushes EIAR
-6. Server pushes EINK
-
-**Updating dynamic API pipe:**
-
-1. Client creates new EICO frame
-2. Client updates dynamic binding
-3. Client pushes both over transport as single message
-4. Server responds with ACK
-
-**Closing the API session:**
-
-1. Client pushes debind for upstream API pipe
-2. Server acknowledges with debind request for downstream API pipe
-3. Client responds with ACK 
-
-### Storage providers
-
-As the mediator between the transport layer and the Muse service layer, storage providers can expose both a physical and EIC API. The physical API requires a single bidirectional pipe and is a simple, unprotected pub/sub bytestream.
-
-**Prerequisites:**
-
-1. Establish transport mechanism. Should be single-purpose (ex: specific TCP/IP socket, single URL for http support, etc) and support messages (or otherwise-delimited transmissions)
-
-**Storage providers are unique on a Muse network in that they *must* at some level operate outside of an EIC pipe.** However, for increased security, the storage provider API may be nested within an EIC pipe. This allows onion routing protocols to exist natively (and coexist with traditional point-to-point routing as well).
-
-
-Required commands & messages:
-
-+ Publish
-+ Get
-+ Subscribe
-+ Unsub
-+ Ack
-+ Nak
-+ List subscriptions
-+ List bindings for MUID
-
-Subscribe behavior: let's say I subscribe to MUID123. The subscriber should expect the following behavior:
-
-1. SP will send client the MUID of any available resource with MUID123 as the public recipient;
-2. SP will send client the MUID of any available resource with MUID123 as the public author;
-3. SP will send client MUID123 of any modified dynamic binding address MUID123;
-4. Except if MUID123 was received from client, in which case, send nothing.
-
-These three cases should be differentiated in their return by a 1-byte ASCII control string prefix.
-
-
-
-
-
-**Notes:**
-
-+ (At some point there will need to be an SP discovery protocol)
-+ (At some point there will need to be a definition of the transport interface -- aka what criteria a transport mechanism must satisfy to support the muse protocol)
-+ SP "peering" agreements are handled independently of the protocol.
-+ This works on an unsecured bytestream, including those with relays.
-
-**EIC API:**
-
-Note that the EIC API uses eic-formatted debind, bind, and EIAR requests so that a storage provider can broadcast the message to a mesh storage system.
-
-
-
-Storage providers are a bidirectional API. Both endpoints are treated by the other as a storage provider.
-
-USE WEBSOCKETS WHEN USING THE INTERNET AS A TRANSPORT MECHANISM.
-
-Only APIs that require "on-the-wire" (as opposed to purely EIC-based) commands.
-
-Everything should be signed, even query/head/get requests, to mitigate (d)dos attacks. If you're looking for blazing performance, use a lower-level pipe. Service providers may very well provide this, using high-level muse for session handshakes. That would also allow specific low-level holes to be punched in firewalls at runtime for high-performance throughput; meanwhile, all high-level muse traffic would be verified by the network. Firewalls vs performance -- best of both worlds.
-
-Put is implicit. If an object arrives, it's a put request. Put should (?) be complemented by an ack/nak?
-
-Get 
-
-Ack/Nak is important. Query is unnecessary; simply "get" or "head", then if NAK, it's unavailable. Head is useful for 'lightweight' clients, as well as (potentially) some buffering situations, plus as a shortform for query. Use a single ack/nak though; if more detail is desired it can be defined by an individual storage provider and transmitted within the api pipe.
-
-Put, Get, Head, Ack, Nak?
-
-Get, head, ack, nak: can (and should be!) all be contained within the API pipe. The question is, what do you need to be able to perform the initial handshake?

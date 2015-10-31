@@ -74,6 +74,7 @@ All persistence providers must, at a minimum, support the following commands:
 + Acknowledge (ack) transmission
 + Non-acknowledge (nak) transmission
 + List agents with bindings to an object
++ Disconnect
 
 ## Data retention and removal
 
