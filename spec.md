@@ -1,4 +1,4 @@
-**WARNING:** This is a draft document dated 30 October. It is under review and is definitely **not finalized!** If you'd like to stay updated, consider joining our [mailing list](https://www.ethyr.net/mailing-signup.html).
+**WARNING:** This is a draft document dated 1 November. It is under review and is definitely **not finalized!** If you'd like to stay updated, consider joining our [mailing list](https://www.ethyr.net/mailing-signup.html).
 
 **SPECIAL WARNING:** This should not be implemented in a production environment until subjected to security reviews.
 
@@ -21,8 +21,8 @@
 | ------         | ---------      | ------------------- | -----------         |
 | 0              | 4B             | Magic number        | 0x 4D 45 4F 43      |
 | 4              | 4B             | Version number      | Unsigned 32-bit int |
-| 8              | 65B            | Author MUID         | Bytes               |
-| 73             | 1B             | Cipher suite        | Unsigned 8-bit int  |
+| 8              | 1B             | Cipher suite        | Unsigned 8-bit int  |
+| 9              | 65B            | Author MUID         | Bytes               |
 | 74             | 8B             | Payload length, *N* | Unsigned 64-bit int |
 | 82             | *N*            | Private payload     | Encrypted blob      |
 | 82 + *N*       | 1B             | Address algorithm   | Unsigned 8-bit int  |
@@ -39,11 +39,7 @@ The version number is an incrementing unsigned integer. It is not intended for h
 
 **The current MEOC version is 14.**
 
-### 3. Author MUID
-
-The full MUID of the MEOC object containing the author's identity (her public keys).
-
-### 4. Cipher suite
+### 3. Cipher suite
 
 Muse plans to support multiple cipher suites. They are represented as an 8-bit integer.
 
@@ -60,6 +56,10 @@ Cipher suites, by representation:
 **Quick note:** Why not elliptic curves first? Basically, development resource allocation. There was a reasonably large amount of thought put into this decision, and I stand by it. We need a prototype that works and is suitably secure for alpha testing. ECC is a very high priority for the production standard, as is a serious consideration of moving the address algorithm to a concatenation of SHA256 and SHA3 for the same input bytes. If you want to discuss this further, please [get in contact directly](mailto:badg@muterra.io).
 
 **Quick note 2:** Why not an AE/AEAD block mode? The added complexity doesn't make sense in this application. Dynamic bindings don't use symmetric encryption, and everything else is non-malleable. There's already a hash, and a signature, on top of the existing non-malleability, for MEOC records. CTR is very simple, which makes it much harder to screw up.
+
+### 4. Author MUID
+
+The full MUID of the MEOC object containing the author's identity (her public keys).
 
 ### 5. Payload length
 
@@ -109,18 +109,16 @@ Note that the static MUID applies to this particular binding, not to the target.
 
 ## Format
 
-| Decimal Offset | Decimal Length   | Name                | Format              |
-| ------         | ---------        | ------------------- | -----------         |
-| 0              | 4B               | Magic number        | 0x 4D 4F 42 53      |
-| 4              | 4B               | Version number      | Unsigned 32-bit int |
-| 8              | 65B              | Binder MUID         | Bytes               |
-| 73             | 1B               | Cipher suite        | Unsigned 8-bit int  |
-| 74             | 65B              | Target MUID         | Bytes               |
-| 139            | 1B               | Override flag, *R*  | 0x0 or 0x1          |
-| 140            | *LR* = 65B * *R* | Override MUID       | Bytes               |
-| 140 + *LR*     | 1B               | Address algorithm   | Unsigned 8-bit int  |
-| 141 + *LR*     | 64B              | File hash           | Bytes               |
-| 205 + *LR*     | 512B             | Binder signature    | Bytes               |
+| Decimal Offset | Decimal Length | Name                | Format              |
+| ------         | ---------      | ------------------- | -----------         |
+| 0              | 4B             | Magic number        | 0x 4D 4F 42 53      |
+| 4              | 4B             | Version number      | Unsigned 32-bit int |
+| 8              | 1B             | Cipher suite        | Unsigned 8-bit int  |
+| 9              | 65B            | Binder MUID         | Bytes               |
+| 74             | 65B            | Target MUID         | Bytes               |
+| 139            | 1B             | Address algorithm   | Unsigned 8-bit int  |
+| 140            | 64B            | File hash           | Bytes               |
+| 204            | 512B           | Binder signature    | Bytes               |
 
 ### 1. Magic number
 
@@ -128,41 +126,29 @@ ASCII "MOBS" (4D 4F 42 53)
 
 ### 2. Version
 
-See above for description. **Currently 5.**
+See above for description. **Currently 6.**
 
-### 3. Binder MUID 
-
-The full MUID (hash algorithm byte + file hash) of the MEOC object containing the identity (the public keys) of the agent placing the binding.
-
-### 4. Cipher suite
+### 3. Cipher suite
 
 See above for description.
+
+### 4. Binder MUID 
+
+The full MUID (hash algorithm byte + file hash) of the MEOC object containing the identity (the public keys) of the agent placing the binding.
 
 ### 5. Target MUID
 
 The MUID of the MEOC resource to bind to.
 
-### 6. Override flag
-
-If flagged (0x1), this MOBS must include the static MUID of a debind request to override. If unflagged (0x0), it must proceed directly to the address algorithm.
-
-Included to ease MOBS processing.
-
-### 7. Override MUID
-
-Must be included if (and only if) the override flag is set.
-
-Indicates that this MOBS is overriding a debind request. Required for protection against replay attacks. When used, this field is the static MUID of the debind request to override.
-
-### 3. Address algorithm
+### 6. Address algorithm
 
 See above for description.
 
-### 4. File hash
+### 7. File hash
 
 The file hash is used only for the signature. It is **not** used for addressing the static binding. See above for further description.
 
-### 7. Binder signature
+### 8. Binder signature
 
 See Author Signature above.
 
@@ -184,8 +170,8 @@ Note that the static MUID applies to *this particular frame*.
 | ------            | ---------                | ------------------- | -----------         |
 | 0                 | 4B                       | Magic number        | 0x 4D 4F 42 44      |
 | 4                 | 4B                       | Version number      | Unsigned 32-bit int |
-| 8                 | 65B                      | Binder MUID         | Bytes               |
-| 73                | 1B                       | Cipher suite        | Unsigned 8-bit int  |
+| 8                 | 1B                       | Cipher suite        | Unsigned 8-bit int  |
+| 9                 | 65B                      | Binder MUID         | Bytes               |
 | 74                | 1B                       | Frame count *F*     | Unsigned 8-bit int  |
 | 75                | *LR* = 65B * min(*F*, 1) | Historical frames   | Bytes               |
 | 75 + *LR*         | 2B                       | MUID count *N*      | Unsigned 16-bit int |
@@ -201,13 +187,13 @@ ASCII "MOBD" (4D 4F 42 44)
 
 ### 2. Version
 
-See above for description. **Currently 10.**
+See above for description. **Currently 11.**
 
-### 3. Binder MUID 
+### 3. Cipher suite
 
 See above for description.
 
-### 4. Cipher suite
+### 4. Binder MUID 
 
 See above for description.
 
@@ -249,16 +235,6 @@ See above for description.
 
 See above for description.
 
-## Conditions for acceptance
-
-Persistence providers must accept updated bindings if and only if:
-
-1. binder is identical across all frames
-2. 
-+ 
-+ persistence provider's current frame's static MUID is contained within the historical frames
-Persistence providers must only accept such new dynamic bindings if they have no existing frames for that dynamic address.
-
 # Debind record (MDXX)
 
 + Preferred stored file extension: no extension
@@ -272,16 +248,17 @@ Note that the static MUID applies to *this particular debinding*.
 
 ## Format
 
-| Decimal Offset | Decimal Length | Name                | Format              |
-| ------         | ---------      | ------------------- | -----------         |
-| 0              | 4B             | Magic number        | 0x 4D 44 58 58      |
-| 4              | 4B             | Version number      | Unsigned 32-bit int |
-| 8              | 65B            | Debinder MUID       | Bytes               |
-| 73             | 1B             | Cipher suite        | Unsigned 8-bit int  |
-| 74             | 65B            | Target MUID         | Bytes               |
-| 139            | 1B             | Address algorithm   | Unsigned 8-bit int  |
-| 140            | 64B            | File hash           | Bytes               |
-| 204            | 512B           | Debinder signature  | Bytes               |
+| Decimal Offset | Decimal Length   | Name                    | Format              |
+| ------         | ---------        | -------------------     | -----------         |
+| 0              | 4B               | Magic number            | 0x 4D 44 58 58      |
+| 4              | 4B               | Version number          | Unsigned 32-bit int |
+| 8              | 1B               | Cipher suite            | Unsigned 8-bit int  |
+| 9              | 65B              | Debinder MUID           | Bytes               |
+| 74             | 1B               | Target chain length *C* | Unsigned 8-bit int  |
+| 75             | *LT* = 65B * *C* | Target MUID chain       | Bytes               |
+| 75 + *LT*      | 1B               | Address algorithm       | Unsigned 8-bit int  |
+| 76 + *LT*      | 64B              | File hash               | Bytes               |
+| 140 + *LT*     | 512B             | Debinder signature      | Bytes               |
 
 ### 1. Magic number
 
@@ -289,38 +266,42 @@ ASCII "MDXX" (4D 44 58 58)
 
 ### 2. Version
 
-See above for description. **Currently 5.**
+See above for description. **Currently 7.**
 
-### 3. Debinder MUID 
+### 3. Cipher suite
+
+See above for description.
+
+### 4. Debinder MUID 
 
 The full MUID (hash algorithm byte + file hash) of the MEOC object containing the identity (the public keys) of the debinding agent.
 
-### 4. Cipher suite
+### 6. Target chain length
+
+The number of records covered by the debinding. See below.
+
+### 7. Target MUID chain
+
+Only one object can be debound, but static objects may be bound, debound, rebound, and so on. In this case, the chain will always reference:
+
+1. **Static** MUID for MEOC or MOBD being debound
+2. Static MUID for initial debinding
+3. Static MUID for MEOC for MOBD being re-debound
+4. Static MUID for second debinding
+
+And so forth. At a minimum, each rebind cycle must include the most recent binding and the most recent debinding, but it need not include the entire chain. This chaining is required for protection against replay attacks.
+
+### 8. Address algorithm
 
 See above for description.
 
-### 5. Target MUID
-
-The static MUID of the resource to debind.
-
-### 6. Address algorithm
+### 9. File hash
 
 See above for description.
 
-### 7. File hash
-
-See above for description.
-
-### 8. Debinder signature
+### 10. Debinder signature
 
 See Binder Signature above.
-
-## Conditions for acceptance
-
-Debind requesters must remove:
-
-1. Static and dynamic bindings, only at the request of the binder
-2. Pipe requesters, pipe ACKs, and pipe NAKs, only at the request of their recipient
 
 # Muse encrypted pipe request (MEPR)
 
@@ -342,8 +323,8 @@ Note that the author is the entity-agent requesting the pipe.
 | ------         | ---------      | -------------------        | -----------         |
 | 0              | 4B             | Magic number               | 0x 4D 45 50 52      |
 | 4              | 4B             | Version number             | Unsigned 32-bit int |
-| 8              | 65B            | Recipient MUID             | Bytes               |
-| 139            | 1B             | Cipher suite               | Unsigned 8-bit int  |
+| 8              | 1B             | Cipher suite               | Unsigned 8-bit int  |
+| 9              | 65B            | Recipient MUID             | Bytes               |
 | 140            | 512B           | Private inner container    | Bytes               |
 | 652            | 1B             | Address algorithm          | Unsigned 8-bit int  |
 | 653            | 64B            | File hash                  | Bytes               |
@@ -363,15 +344,15 @@ ASCII "MEPR" (4D 45 50 52)
 
 ### 2. Version
 
-See above for description. **Currently 10.**
+See above for description. **Currently 11.**
 
-### 3. Recipient MUID 
-
-The MUID of the recipient.
-
-### 4. Cipher suite
+### 3. Cipher suite
 
 See above for description.
+
+### 4. Recipient MUID 
+
+The MUID of the recipient.
 
 ### 5. Private inner container
 
@@ -417,8 +398,8 @@ Note that here, the author is the entity-agent acknowledging the pipe -- ie, the
 | ------         | ---------      | -------------------        | -----------         |
 | 0              | 4B             | Magic number               | 0x 4D 50 41 4B      |
 | 4              | 4B             | Version number             | Unsigned 32-bit int |
-| 8              | 65B            | Recipient MUID             | Bytes               |
-| 139            | 1B             | Cipher suite               | Unsigned 8-bit int  |
+| 8              | 1B             | Cipher suite               | Unsigned 8-bit int  |
+| 9              | 65B            | Recipient MUID             | Bytes               |
 | 140            | 512B           | Private inner container    | Bytes               |
 | 652            | 1B             | Address algorithm          | Unsigned 8-bit int  |
 | 653            | 64B            | File hash                  | Bytes               |
@@ -438,15 +419,15 @@ ASCII "MPAK" (4D 50 41 4B)
 
 ### 2. Version
 
-See above for description. **Currently 5.**
+See above for description. **Currently 6.**
 
-### 3. Recipient MUID 
-
-The MUID of the recipient.
-
-### 4. Cipher suite
+### 3. Cipher suite
 
 See above for description.
+
+### 4. Recipient MUID 
+
+The MUID of the recipient.
 
 ### 5. Private inner container
 
@@ -487,8 +468,8 @@ Note that here, the author is the entity-agent non-acknowledging the pipe -- ie,
 | ------         | ---------      | -------------------        | -----------         |
 | 0              | 4B             | Magic number               | 0x 4D 50 4E 4B      |
 | 4              | 4B             | Version number             | Unsigned 32-bit int |
-| 8              | 65B            | Recipient MUID             | Bytes               |
-| 139            | 1B             | Cipher suite               | Unsigned 8-bit int  |
+| 8              | 1B             | Cipher suite               | Unsigned 8-bit int  |
+| 9              | 65B            | Recipient MUID             | Bytes               |
 | 140            | 512B           | Private inner container    | Bytes               |
 | 652            | 1B             | Address algorithm          | Unsigned 8-bit int  |
 | 653            | 64B            | File hash                  | Bytes               |
@@ -508,15 +489,15 @@ ASCII "MPNK" (4D 50 4E 4B)
 
 ### 2. Version
 
-See above for description. **Currently 5.**
+See above for description. **Currently 6.**
 
-### 3. Recipient MUID 
-
-The MUID of the recipient.
-
-### 4. Cipher suite
+### 3. Cipher suite
 
 See above for description.
+
+### 4. Recipient MUID 
+
+The MUID of the recipient.
 
 ### 5. Private inner container
 
@@ -663,9 +644,68 @@ There is no return response from ```A```. Retries are initiated with a new list 
 
 ```B``` should not require this from ```A```; persistence providers should also include a timeout (or other connection termination) method. This command is included to allow ```B``` to log off a particular device securely.
 
+# Object verification
+
+The following section outlines the order of operations while verifying objects, and the conditions under which Muse objects are considered valid. Items with strict execution order are numbered.
+
+## MEOC
+
+Order of verification:
+
+1. Verify magic number
+2. Verify version
+3. Verify cipher suite
+
++ Author retrieval
+    1. Verify author exists at persistence provider
+    2. Retrieve author's identity file
+    3. Verify author's identity file includes public signature key for cipher suite
++ Digest remaining file
+    1. Verify payload length is correct for properly-formatted file
+    2. Verify address algorithm
+    3. Verify file hash
+
+4. Verify signature
+
+## MOBS
+
+Order of verification:
+
+1. Verify magic number
+2. Verify version
+3. Verify cipher suite
+
++ Binder retrieval
+    1. Verify binder exists at persistence provider
+    2. Retrieve binder's identity file
+    3. Verify binder's identity file includes public signature key for cipher suite
++ Digest remaining file
+    1. Verify payload length is correct for properly-formatted file
+    2. Verify address algorithm
+    3. Verify file hash
+
+4. Verify signature
 
 
 
+## Conditions for acceptance
+
+Persistence providers must accept updated dynamic bindings if and only if:
+
+1. binder is identical across all frames
+2. 
++ 
++ persistence provider's current frame's static MUID is contained within the historical frames
+Persistence providers must only accept such new dynamic bindings if they have no existing frames for that dynamic address.
+
+
+
+## Conditions for acceptance
+
+Debind requesters must remove:
+
+1. Static and dynamic bindings, only at the request of the binder
+2. Pipe requesters, pipe ACKs, and pipe NAKs, only at the request of their recipient
 
 
 
