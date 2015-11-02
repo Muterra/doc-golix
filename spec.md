@@ -9,6 +9,8 @@
 + Preferred stored file extension: no extension
 + Secondary stored file extension: .meoc
 
+MEOCs must be stored by a persistence provider if, and only if, they are referenced in a MOBS or MOBD stored at the same persistence provider.
+
 **Terminology:**
 
 + Author: the entity-agent creating the MEOC
@@ -100,6 +102,8 @@ This field is always an asymmetric cryptographic signature of the file hash fiel
 + Preferred stored file extension: no extension
 + Secondary stored file extension: .mobs
 
+MOBS must be stored by a persistence provider until, and only until, they are cleared by a debinding.
+
 **Terminology:**
 
 + Binder: the entity-agent creating the binding (not necessarily the same as the bound MEOC's author)
@@ -157,6 +161,8 @@ See Author Signature above.
 + Preferred stored file extension: no extension
 + Secondary stored file extension: .mobd
 
+MOBDs must be stored until, and only until, they are cleared by a debinding, or successfully updated by their binder.
+
 **Terminology:**
 
 + Dynamic MUID, dynamic address: The secondary address for this binding. Static for the lifetime of the binding.
@@ -175,7 +181,7 @@ Note that the static MUID applies to *this particular frame*.
 | 74                | 1B                       | Frame count *F*     | Unsigned 8-bit int  |
 | 75                | *LR* = 65B * min(*F*, 1) | Historical frames   | Bytes               |
 | 75 + *LR*         | 2B                       | MUID count *N*      | Unsigned 16-bit int |
-| 77 + *LR*         | *LN* = 65B * *N*         | Bound MUIDs         | Bytes               |
+| 77 + *LR*         | *LN* = 65B * *N*         | Target MUIDs        | Bytes               |
 | 77 + *LR* + *LN*  | 1B                       | Address algorithm   | Unsigned 8-bit int  |
 | 78 + *LR* + *LN*  | 64B                      | Dynamic hash        | Bytes               |
 | 142 + *LR* + *LN* | 64B                      | File hash           | Bytes               |
@@ -213,9 +219,9 @@ We recommend using a sufficiently strong random number generator to produce a 32
 
 An integer count of the bound MUIDs.
 
-### 8. Bound MUIDs
+### 8. Target MUIDs
 
-An ordered list of the MUIDs for each frame. If the dynamic binding is being used as a buffered object, the most recent frame should be first.
+An ordered list of the MUIDs for each frame. If the dynamic binding is being used as a buffered object, sort in ascending order of recency (ie, oldest first).
 
 ### 9. Address algorithm
 
@@ -239,6 +245,8 @@ See above for description.
 
 + Preferred stored file extension: no extension
 + Secondary stored file extension: .mdxx
+
+MDXXs must be stored until, and only until, they are cleared by a subsequent chained debinding. Note that, due to the risk of a replay attack, debindings should only be chained when an entity-agent is ready to rebind. Furthermore, since multiple rebindings with partial chains can potentially create conflicting network states, best practices dictate that the full binding/debinding/rebinding/etc chain **should always** be stated explicitly.
 
 **Terminology:**
 
@@ -307,6 +315,8 @@ See Binder Signature above.
 
 + Preferred stored file extension: no extension
 + Secondary stored file extension: .mepr
+
+MEPRs must be stored until, and only until, they are cleared by a debinding from their recipient.
 
 **Terminology:**
 
@@ -384,6 +394,8 @@ The material for input into the signature algorithm is the entire preceding file
 + Preferred stored file extension: no extension
 + Secondary stored file extension: .mpak
 
+MPAKs must be stored until, and only until, they are cleared by a debinding from their recipient.
+
 Pipe ACKs should only be used during pipe negotiation. They most commonly indicate a successful closure or initiation of a half-pipe. They must only be used to indicate problems incurred during pipe management, not, for example, acknowledging messages within the pipe itself.
 
 **Terminology:**
@@ -453,6 +465,8 @@ See above for description.
 
 + Preferred stored file extension: no extension
 + Secondary stored file extension: .mpnk
+
+MPNKs must be stored until, and only until, they are cleared by a debinding from their recipient.
 
 Pipe non-acknowledgements (NAKs) should only be used during pipe negotiation. They most commonly indicate a rejection of the pipe request, but may also indicate an error in opening the pipe (wrong key, etc). They must only be used to indicate problems incurred during pipe management, not, for example, malformed messages within the pipe itself.
 
@@ -648,66 +662,181 @@ There is no return response from ```A```. Retries are initiated with a new list 
 
 The following section outlines the order of operations while verifying objects, and the conditions under which Muse objects are considered valid. Items with strict execution order are numbered.
 
-## MEOC
+Note that in all cases, if a Muse object is successfully received, verified, and stored, a persistence provider **must** issue an ACK, even if the persistence provider already had a copy of the object.
 
-Order of verification:
+## MEOC order of verification
 
 1. Verify magic number
 2. Verify version
 3. Verify cipher suite
+4. Verify length is correct for properly-formatted file
+5. (The following steps may be done in parallel)
+    + Author retrieval
+        1. Verify author exists at persistence provider
+        2. Retrieve author's identity file
+        3. Verify author's identity file includes public signature key for cipher suite
+    + Digest remaining file
+        1. Verify address algorithm
+        2. Verify file hash
+6. Verify signature
 
-+ Author retrieval
-    1. Verify author exists at persistence provider
+## MOBS order of verification
+
+1. Verify magic number
+2. Verify version
+3. Verify cipher suite
+4. Verify length is correct for properly-formatted file
+5. (The following steps may be done in parallel)
+    + MOBS status check
+        1. Verify no unchained debinding exists from the binder for the target address. If one exists, check fails; issue NAK
+        2. If chained debinding exists from the binder for the target address, verify that chain permits rebinding. If not, check fails; issue NAK
+    + Binder retrieval
+        1. Verify binder exists at persistence provider
+        2. Retrieve binder's identity file
+        3. Verify binder's identity file includes public signature key for cipher suite
+    + Digest remaining file
+        1. Verify target MUID exists at persistence provider
+        2. Verify address algorithm
+        3. Verify file hash
+6. Verify signature
+
+## MOBD order of verification
+
+1. Verify magic number
+2. Verify version
+3. Verify cipher suite
+4. Verify length is correct for properly-formatted file
+5. (The following steps may be done in parallel)
+    + MOBD consistency check
+        1. Check if dynamic address already exists at persistence provider. If so:
+            1. If frame count is zero, check fails. Issue NAK.
+            2. If binder MUID differs from existing dynamic address binding, check fails. Issue NAK.
+            3. If preexisting binding's static MUID is not contained within historical frames, check fails. Issue NAK.
+        2. If dynamic address does not exist at persistence provider,
+            1. Verify no unchained debinding exists from the binder for the target address. If one exists, check fails; issue NAK
+            2. If chained debinding exists from the binder for the target address, verify that chain permits rebinding. If not, check fails; issue NAK
+    + Binder retrieval
+        1. Verify binder exists at persistence provider
+        2. Retrieve binder's identity file
+        3. Verify binder's identity file includes public signature key for cipher suite
+    + Digest remaining file
+        1. Verify at least one target MUID exists at persistence provider
+        2. Verify address algorithm
+        3. Verify dynamic hash
+        4. Verify file hash
+6. Verify signature
+
+## MDXX order of verification
+
+1. Verify magic number
+2. Verify version
+3. Verify cipher suite
+4. Verify length is correct for properly formatted file
+5. (The following steps may be done in parallel)
+    + MDXX status check
+        1. If static MUID for the in-verification MDXX already exists at persistence provider, check passes; continue (new state identical to old state if rest of verification passes)
+        2. If static MUID for the in-verification MDXX exists within an existing debinding chain, check fails; issue NAK
+        3. If the in-verification MDXX has a chain length greater than one, and the persistence provider does not have at least one target MUID in storage, check fails; issue NAK
+    + MDXX reference check
+        1. Verify at least one target MUID exists at persistence provider
+        2. Verify binder MUID matches author MUID (for MOBS, MOBD, MDXX) or recipient MUID (for MEPR, MPAK, MPNK)
+    + Binder retrieval
+        1. Verify binder exists at persistence provider
+        2. Retrieve binder's identity file
+        3. Verify binder's identity file includes public signature key for cipher suite
+    + Digest remaining file
+        1. Verify address algorithm
+        2. Verify file hash
+6. Verify signature
+
+Note that, since persistence providers are required to keep only their most recent MOBD frame, to successfully debind a MOBD requires the MDXX to reference the most recent available frame.
+
+## MEPR order of verification
+
+**Public verification:**
+
+1. Verify magic number
+2. Verify version
+3. Verify cipher suite
+4. Verify length is correct for properly formatted file
+5. (The following steps may be done in parallel)
+    + Recipient retrieval
+        1. Verify recipient exists at persistence provider
+        2. Retrieve recipient's identity file
+        3. Verify recipient's identity file includes public encryption key and Diffie-Hellman public key for cipher suite
+    + Digest remaining file
+        1. Verify address algorithm
+        2. Verify file hash
+6. Verify signature
+
+**Private verification:**
+
+1. Public verification (see above)
+2. Decrypt private inner container
+3. Author verification
+    1. Verify author exists
     2. Retrieve author's identity file
-    3. Verify author's identity file includes public signature key for cipher suite
-+ Digest remaining file
-    1. Verify payload length is correct for properly-formatted file
-    2. Verify address algorithm
-    3. Verify file hash
+    3. Verify author's identity file includes Diffie-Hellman public key for cipher suite
+4. Perform symmetric signature key agreement procedure (see "Author symmetric signature" above)
+5. Verify author symmetric signature
 
-4. Verify signature
+## MPAK order of verification
 
-## MOBS
-
-Order of verification:
+**Public verification:**
 
 1. Verify magic number
 2. Verify version
 3. Verify cipher suite
+4. Verify length is correct for properly formatted file
+5. (The following steps may be done in parallel)
+    + Recipient retrieval
+        1. Verify recipient exists at persistence provider
+        2. Retrieve recipient's identity file
+        3. Verify recipient's identity file includes public encryption key and Diffie-Hellman public key for cipher suite
+    + Digest remaining file
+        1. Verify address algorithm
+        2. Verify file hash
+6. Verify signature
 
-+ Binder retrieval
-    1. Verify binder exists at persistence provider
-    2. Retrieve binder's identity file
-    3. Verify binder's identity file includes public signature key for cipher suite
-+ Digest remaining file
-    1. Verify payload length is correct for properly-formatted file
-    2. Verify address algorithm
-    3. Verify file hash
+**Private verification:**
 
-4. Verify signature
+1. Public verification (see above)
+2. Decrypt private inner container
+3. Author verification
+    1. Verify author exists
+    2. Retrieve author's identity file
+    3. Verify author's identity file includes Diffie-Hellman public key for cipher suite
+4. Perform symmetric signature key agreement procedure (see "Author symmetric signature" above)
+5. Verify author symmetric signature
 
+## MPNK order of verification
 
+**Public verification:**
 
-## Conditions for acceptance
+1. Verify magic number
+2. Verify version
+3. Verify cipher suite
+4. Verify length is correct for properly formatted file
+5. (The following steps may be done in parallel)
+    + Recipient retrieval
+        1. Verify recipient exists at persistence provider
+        2. Retrieve recipient's identity file
+        3. Verify recipient's identity file includes public encryption key and Diffie-Hellman public key for cipher suite
+    + Digest remaining file
+        1. Verify address algorithm
+        2. Verify file hash
+6. Verify signature
 
-Persistence providers must accept updated dynamic bindings if and only if:
+**Private verification:**
 
-1. binder is identical across all frames
-2. 
-+ 
-+ persistence provider's current frame's static MUID is contained within the historical frames
-Persistence providers must only accept such new dynamic bindings if they have no existing frames for that dynamic address.
-
-
-
-## Conditions for acceptance
-
-Debind requesters must remove:
-
-1. Static and dynamic bindings, only at the request of the binder
-2. Pipe requesters, pipe ACKs, and pipe NAKs, only at the request of their recipient
-
-
+1. Public verification (see above)
+2. Decrypt private inner container
+3. Author verification
+    1. Verify author exists
+    2. Retrieve author's identity file
+    3. Verify author's identity file includes Diffie-Hellman public key for cipher suite
+4. Perform symmetric signature key agreement procedure (see "Author symmetric signature" above)
+5. Verify author symmetric signature
 
 --------------------
 
@@ -715,8 +844,6 @@ Debind requesters must remove:
 
 --------------------
 
-+ Need to define specific sequence for accepting or rejecting all objects
-+ Need to define required components for identity containers
 + Need to define deniable aliasing
 + Need to add nonce generation
 + Need to review whitepaper for anything I missed
