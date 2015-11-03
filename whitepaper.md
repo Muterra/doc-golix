@@ -237,6 +237,8 @@ Given principal identities BobPrincipal and AlicePrincipal, and alias identity A
 + AliceAlias contacts BobPrincipal
 + AliceAlias sends BobPrincipal the shared secret from a Diffie-Hellman exchange between BobPrincipal and AlicePrincipal.
 
+This mechanism is outlined in detail in a Muse overlay proposal.
+
 ## We three keys
 
 Agent identity MEOCs must therefore contain three public keys:

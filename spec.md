@@ -1,8 +1,8 @@
-**WARNING:** This is a draft document dated 1 November. It is under review and is definitely **not finalized!** If you'd like to stay updated, consider joining our [mailing list](https://www.ethyr.net/mailing-signup.html).
+**WARNING:** This is a draft document dated 2 November. It is under review and is definitely **not finalized!** If you'd like to stay updated, consider joining our [mailing list](https://www.ethyr.net/mailing-signup.html).
 
 **SPECIAL WARNING:** This should not be implemented in a production environment until subjected to security reviews.
 
-**NOTE:** This is a purely implementation document. For design discussion, see our [design document](/design_philosophy.md). For technical discussion, see our [whitepaper](/whitepaper.md). For security discussion, stay tuned for our security excerpt.
+**NOTE:** This is a purely implementation document. For design discussion, see our [design document](/design_philosophy.md). For technical discussion, see our [whitepaper](/whitepaper.md). For security discussion, stay tuned for a detailed threat model and state-based analysis.
 
 # Object container (MEOC)
 
@@ -45,19 +45,7 @@ The version number is an incrementing unsigned integer. It is not intended for h
 
 Muse plans to support multiple cipher suites. They are represented as an 8-bit integer.
 
-Cipher suites, by representation:
-
-1. **0x1:** SHA512/AES256/RSA4096.  
-   **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537.  
-   **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537.  
-   **Symmetric encryption:** AES-256 in CTR mode with nonce prepended to payload ciphertext. Nonce generation is described below.  
-   **Symmetric shared secrets:** 2048-bit Diffie-Hellman [Group #14](http://www.ietf.org/rfc/rfc3526.txt) with a generator of 2.  
-   **Key agreement from shared secret:** HKDF+SHA512. Salt is application-specific.  
-   **Symmetric signatures / MAC:** HMAC+SHA512
-
-**Quick note:** Why not elliptic curves first? Basically, development resource allocation. There was a reasonably large amount of thought put into this decision, and I stand by it. We need a prototype that works and is suitably secure for alpha testing. ECC is a very high priority for the production standard, as is a serious consideration of moving the address algorithm to a concatenation of SHA256 and SHA3 for the same input bytes. If you want to discuss this further, please [get in contact directly](mailto:badg@muterra.io).
-
-**Quick note 2:** Why not an AE/AEAD block mode? The added complexity doesn't make sense in this application. Dynamic bindings don't use symmetric encryption, and everything else is non-malleable. There's already a hash, and a signature, on top of the existing non-malleability, for MEOC records. CTR is very simple, which makes it much harder to screw up.
+See "Cipher suites and address algorithms" below for details.
 
 ### 4. Author MUID
 
@@ -75,9 +63,7 @@ The payload follows the public header immediately, with no padding. It is encryp
 
 Muse may eventually need multiple hash algorithms. They are represented as an 8-bit integer immediately following the magic number. The protocol specification defines which algorithm corresponds to which integer. The 1-byte address algorithm field is prepended to the file hash to form the MUID.
 
-Address hash algorithms, by integer representation:
-
-1. **0x1:** SHA-512.
+See "Cipher suites and address algorithms" below for details.
 
 ### 8. File hash
 
@@ -838,12 +824,57 @@ Note that, since persistence providers are required to keep only their most rece
 4. Perform symmetric signature key agreement procedure (see "Author symmetric signature" above)
 5. Verify author symmetric signature
 
---------------------
+# Cipher suites and address algorithms
 
---------------------
+**Note that this is not a substitute for a proper threat model or security analysis.** Those documents have been separated from the protocol specification for readability and digestibility purposes.
 
---------------------
+## Cipher suites
 
-+ Need to define deniable aliasing
-+ Need to add nonce generation
-+ Need to review whitepaper for anything I missed
+By Muse integer representation:
+
++ **0x0:** None. Reserved for testing and development purposes.
++ **0x1:** SHA512/AES256/RSA4096.  
+  **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537.  
+  **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537.  
+  **Symmetric encryption:** AES-256 in CTR mode with nonce prepended to payload ciphertext. Deterministic nonce generation is described below.  
+  **Symmetric shared secrets:** 2048-bit Diffie-Hellman [Group #14](http://www.ietf.org/rfc/rfc3526.txt) with a generator of 2.  
+  **Key agreement from shared secret:** HKDF+SHA512. Salt is application-specific.  
+  **Symmetric signatures / MAC:** HMAC+SHA512
+
+**Quick note:** Why not elliptic curves first? Basically, development resource allocation. There was a reasonably large amount of thought put into this decision, and I stand by it. We need a prototype that works and is suitably secure for alpha testing. ECC is a very high priority for the production standard. If you want to discuss this further, please [get in contact directly](mailto:badg@muterra.io).
+
+**Quick note 2:** Why not an AE/AEAD block mode? The added complexity doesn't make sense in this application. Dynamic bindings don't use symmetric encryption, and everything else is non-malleable. There's already a hash, and a signature, on top of the existing non-malleability, for MEOC records. CTR is very simple, which makes it much harder to screw up.
+
+**Quick note 3:** Non-deterministic nonce generation will be implemented at a later date, in a different cipher suite, for performance-sensitive applications. It may also use ChaCha20. This is on the horizon, but it's a bit of a ways out. For now, the best route for performant streams is to use Muse to negotiate secret keys for lower-level transport sockets (etc) directly between hardware.
+
+### Deterministic nonce generation
+
+**Note that this applies only to nonce generation, not to initialization vectors (IVs), which must always be random.**
+
+Because the encryption of the payload affects the final content address, to simplify local state management and deduplicate network files, deterministic encryption (for any particular key) is highly desirable. Within the Muse spec, and for reasons that will be highlighted in a detailed security analysis, some (currently all) cipher suites use deterministic nonce generation as per the following procedure:
+
+1. Take hash (as defined by the cipher suite, not the address algorithm) of full, final plaintext
+2. Truncate result to block size of symmetric cipher, keeping the first portion
+3. Pass the result through a single round of the symmetric cipher (technically no block mode, since there are multiple blocks, but in practice this is ECB)
+4. Use the result as the nonce for the standard symmetric encryption. Prepend the nonce to the ciphertext when inserting into MEOC.
+
+Implementations of cipher suites using deterministic nonce generation should (but are not required to) verify the nonce's construction for added security, immediately following symmetric decryption.
+
+## Address algorithms
+
+By Muse integer representation:
+
++ **0x0:** None. Reserved for testing and development purposes.
++ **0x1:** SHA-512.
+
+**Not-so-quick note:** Why not SHA-256? Two primary reasons. The first is to reduce the possibility of an accidental (or malicious) birthday attack against the hash itself. That does sound a little ridiculous, to be fair, given the sense of scale:
+
++ In 2013 the internet [reached approximately 4E21 bytes](https://en.wikipedia.org/wiki/Zettabyte)
++ Muse headers consume ~1kB per file. Taking this as a minimum filesize yields 4e18 possible files in 2013
++ The internet is expanding rapidly, and will [probably double in size within the next 5 years](http://www.forbes.com/sites/gilpress/2014/08/22/internet-of-things-by-the-numbers-market-estimates-and-forecasts/). 
++ Taking 2020 with 1E19 bytes as a baseline, and a 5-year doubling period (approximately 13.9% yearly growth), and extrapolating to a 2040 design life (making Muse approximately as old as the internet is today), yields 1.6E20 files
++ Combine all of that and the formula for [birthday attack probability](https://en.wikipedia.org/wiki/Birthday_attack), and you get p≈1-10^-10^-38 for 256 bits, which is just vanishingly small.
+
+However, this kind of analysis is grossly misleading. It is wholly predicated on the strength of the hash function, and by this kind of analysis, MD5 still looks acceptable (please do *not* mistake that as an argument for MD5). Point is: giving ourselves some headroom for such a potentially large application seems prudent.
+
+Secondly, and much less importantly, we are considering defining 0x2 as a concatenation of SHA256 and SHA3-256 (operating independently over the same input bytes; this is a whole separate discussion). This allows us some version-independent wiggle room, though we could also just reserve an extra 256 bits in the standard to accomplish the same end result.
