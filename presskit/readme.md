@@ -1,6 +1,6 @@
 # Muse protocol overview
 
-![Muse logo](logo-full.svg)
+![Muse logo](logo-full.png)
 
 **Description:** Muse is an encrypted content and sharing management protocol that gives you all the convenience of the cloud with none of the privacy concerns.
 
