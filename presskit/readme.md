@@ -14,18 +14,36 @@ Muse's first application, a modernized email replacement called Ethyr, will be h
 
 # Protocol explanation graphics
 
-Most websites today offer, at best, to protect your data from other people on the web, while they themselves read anything they want.
-
 ![Privacy on the web](web-privacy.png)
 
-Muse, on the other hand, protects your information from the moment you create it until the moment it's read. No one in between -- not even advertisers -- can access your data.
+Most websites today offer, at best, to protect your data from other people on the web, while they themselves read anything they want.
+
+------------
 
 ![Privacy on Muse](muse-privacy.png)
 
-Websites have single-purpose logins that force you to remember usernames and passwords from every site you visit.
+Muse, on the other hand, protects your information from the moment you create it until the moment it's read. No one in between -- not even advertisers -- can access your data.
+
+------------
 
 ![Login to the web](web-login.png)
 
-Your Muse service has a single username and password for all applications, and unlike "Sign in with (website)", different applications can't share any information without your permission.
+Websites have single-purpose logins that force you to remember usernames and passwords from every site you visit.
+
+------------
 
 ![Login to Muse](muse-login.png)
+
+Your Muse service has a single username and password for all applications, and unlike "Sign in with (website)", different applications can't share any information without your permission.
+
+------------
+
+![Points of contact on the web](web-point_of_contact.png)
+
+On the web, it's tough to know exactly how to talk to someone, or even what your options are. There are countless sites out there, and each one goes to a different inbox.
+
+------------
+
+![Points of contact with Muse](muse-point_of_contact.png)
+
+With Muse, if you want to send someone a message, there's only one place to go. It's all going to the same place, and every application has the same inbox.
