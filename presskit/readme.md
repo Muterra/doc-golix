@@ -10,7 +10,7 @@ The Muse protocol changes that. Unlike websites, Muse doesn't protect your priva
 
 Unlike traditional web applications, Muse apps can always be accessed offline (though some functionality may be unavailable). Not just that, depending on the implementation service, they can switch seamlessly between local networks and the internet, enabling fine-grained control over data dissemination.
 
-Muse's first application, a modernized email replacement called Ethyr, will be hitting Kickstarter soon. More details are available at [https://ethyr.net](https://www.ethyr.net).
+Technical details on the Muse protocol can be found [on Github](https://github.com/Muterra/doc-muse/). Muse's first application, a modernized email replacement called Ethyr, will be hitting Kickstarter soon. More details on that are available at [https://ethyr.net](https://www.ethyr.net).
 
 # Protocol explanation graphics
 
