@@ -2,6 +2,8 @@
 
 ![Muse logo](logo-full.png)
 
+**[Download presskit as zip](https://github.com/Muterra/doc-muse/raw/master/presskit/presskit.zip)**
+
 **Description:** Muse is an encrypted content and sharing management protocol that gives you all the convenience of the cloud with none of the privacy concerns.
 
 **How it works:** Most of the web today is public by default. When you upload something, it's like you're putting your mail in a shared mailbox and trusting the other 3 billion mailbox users not to look. And though sites like Facebook and Google use accounts to give everyone their own individual mailboxes, as the postmen, they're free to snoop at will.
