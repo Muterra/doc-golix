@@ -8,19 +8,23 @@ It is currently under development by [Muterra, Inc](https://www.muterra.io), co-
 
 # Okay, too simple
 
-In practice, Muse looks like this:
+In practice, the Muse application stack looks like this:
 
 ![Muse application stack](muse-technical-diagram.png)
 
-Muse is an open, encrypted, and trustless protocol for arbitrary social applications. It consolidates and standardizes content, sharing, and identity management into a common, shared infrastructure that maintains privacy regardless of physical data storage location or transport technology. This minimizes barriers to social application creation and greatly simplifies application development.
+The goal of the protocol is to give any Muse application a device-independent, cryptographically-enforced, private-by-default representation of:
 
-Crucially, **all operations on Muse are cryptographically enforced**. The protocol eschews "privacy by promise" and opts instead to create a general-purpose, many-to-many encrypted network with asynchronous/offline retrieval and real-time capability. This allows scalable, platform-based information storage without compromising personal agency or privacy.
+1. an entity, such as Alice (*identity management*)
+2. the content that this entity creates (*content management*), and
+3. the process to share that content (*sharing management*).
 
-Like the Rust programming language, Muse aspires to be a [zero-cost abstraction](http://blog.rust-lang.org/2015/05/11/traits.html). Unlike previous federated social protocols like Diaspora, Tent, or Hubzilla, Muse operates in a highly-restricted scope: it produces authenticated, confidential, verified binary messages from arbitrary, insecure binary sources, but places no restrictions or specifications on what those messages might be.
+Muse itself is asynchronous, transport agnostic, and [limited in scope](http://blog.rust-lang.org/2015/05/11/traits.html). This allows a device's protocol implementation service to dynamically propagate content across any transport infrastructure with an available asynchronous buffer service. These *persistence providers* may be used for indefinite-length storage, and objects are garbage collected only when freed from use. An individual persistence provider may operate over an arbitrary number of physical data transports, but must support a common command set to be Muse-compliant.
+
+Taken as a whole, the Muse stack allows applications to be simply and securely developed on a common social infrastructure. This alleviates the need for costly user acquisition while drastically improving individual privacy and decreasing application security footprints.
 
 # What does Muse do differently?
 
-In short, Muse is an overlay network standard that encrypts everything *not just from device to device*, but from entity to entity. The protocol assumes that all transported data is vulnerable, relying only on universal encryption to limit data access. Applications built on Muse can therefore addresses communications directly between the participants' digital identities (essentially their public keys) without regard to the transport layer. Protocol implementations then distribute that information to transport-specific persistence providers, who deliver it to the conversation partner as soon as she is available.
+Muse is an overlay network standard that encrypts everything *not just from device to device*, but from entity to entity. The protocol assumes that all transported data is vulnerable, relying only on universal encryption to limit data access. Applications built on Muse can therefore addresses communications directly between the participants' digital identities (essentially their public keys) without regard to the transport layer. Protocol implementations then distribute that information to transport-specific persistence providers, who deliver it to the conversation partner as soon as she is available.
 
 More concretely, and using TCP/IP as an example, most existing transports are *network-oriented*:
 
@@ -38,7 +42,7 @@ The Muse protocol divides this into two strictly separated processes. Applicatio
     3. (Paypal at <paypalkey>) asks (<Wells Fargo at <wellskey>) to withdraw from Alice's account
     4. (Alice at <alicekey>) orders TP from (Amazon at <amazonkey>)
 
-Meanwhile, protocol implementations transparently pass this conversation across content-agnostic, network-oriented physical transports, storing files in pluggable "buffering" services:
+Meanwhile, protocol implementations transparently pass this conversation across content-agnostic, network-oriented physical transports, storing files in pluggable persistence providers:
 
     1. 73.36.202.142 sends <encrypted blob with ID=hash1> to (persistence provider at 55.194.11.158) 
     2. 88.41.145.167 requests <encrypted blob with ID=hash1> from (persistence provider at 55.194.11.158)
@@ -51,12 +55,11 @@ Meanwhile, protocol implementations transparently pass this conversation across 
 
 # Why is this better?
 
-+ **Protocol-protected individual agency.** By far the most important change, and yet for political reasons, I'm not yet ready to explain its implications.
-+ **Platform-independent privacy.** Cloud-stored information is unavailable to anyone you don't explicitly share with, including the cloud owner.
-+ **Application-independent communication security.** The protocol can't guarantee applications are running safe code, but it separates most communication security into open-source, vetted protocol implementations that are independent from the applications built on them.
++ **Protocol-protected individual agency.** This is a more meaningful benefit than platform-independent privacy; cloud-stored information is unavailable to anyone you don't explicitly share with, including the cloud owner.
++ **Application-independent content security.** The protocol can't guarantee applications are running safe code, but it separates content authenticity, integrity, and confidentiality enforcement into open-source, vetted protocol implementations that are independent from the applications built on them.
 + **Hosting modularity.** Container format is standardized, minimizing switching costs between hosting providers. Each file transfer takes exactly two API calls.
 + **Transport flexibility.** Muse applications don't deal directly with the transport layer. This job is left to protocol implementations. Applications can switch between implementations seamlessly, making cross-transport redundancy incredibly simple for application developers. This also makes it substantially easier to experiment with new transport technologies.
-+ **Application agility.** Instead of getting bogged down in incredibly difficult network implementation details, applications can focus on their core value propositions. Even asynchrony and authentication are handled at the implementation level: from an application development perspective, they're free.
++ **Application agility.** Instead of getting bogged down in incredibly difficult network implementation details, applications can focus on their core value propositions.
 + **Personal identity management.** Identity, *including usernames and passwords*, are synchronized across the entire protocol. If you only want one identity, you only need one set of credentials -- for any and all Muse applications.
 + **Anonymous, pseudonymous, and eponymous identities coexisting.** Identities carry no inherent physical meaning. Applications are free to place restrictions on verification (ex: your bank needs to know it's you), but this is handled elsewhere. The protocol itself supports anything.
 
