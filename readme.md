@@ -8,6 +8,10 @@ It is currently under development by [Muterra, Inc](https://www.muterra.io), co-
 
 # Okay, too simple
 
+In practice, Muse looks like this:
+
+![Muse application stack](muse-technical-diagram.png)
+
 Muse is an open, encrypted, and trustless protocol for arbitrary social applications. It consolidates and standardizes content, sharing, and identity management into a common, shared infrastructure that maintains privacy regardless of physical data storage location or transport technology. This minimizes barriers to social application creation and greatly simplifies application development.
 
 Crucially, **all operations on Muse are cryptographically enforced**. The protocol eschews "privacy by promise" and opts instead to create a general-purpose, many-to-many encrypted network with asynchronous/offline retrieval and real-time capability. This allows scalable, platform-based information storage without compromising personal agency or privacy.
