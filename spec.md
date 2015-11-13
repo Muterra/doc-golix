@@ -836,7 +836,14 @@ By Muse integer representation:
 + **0x1:** SHA512/AES256/RSA4096.  
   **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537.  
   **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537.  
-  **Symmetric encryption:** AES-256 in CTR mode with nonce prepended to payload ciphertext. Deterministic nonce generation is described below.  
+  **Symmetric encryption:** AES-256 in **SIV mode (formally AEAD_AES_SIV_CMAC_512)**  
+  **Symmetric shared secrets:** 2048-bit Diffie-Hellman [Group #14](http://www.ietf.org/rfc/rfc3526.txt) with a generator of 2.  
+  **Key agreement from shared secret:** HKDF+SHA512. Salt is application-specific.  
+  **Symmetric signatures / MAC:** HMAC+SHA512
++ **0x2:** SHA512/AES256/RSA4096.  
+  **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537.  
+  **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537.  
+  **Symmetric encryption:** AES-256 in **CTR mode with nonce distributed privately with the key**  
   **Symmetric shared secrets:** 2048-bit Diffie-Hellman [Group #14](http://www.ietf.org/rfc/rfc3526.txt) with a generator of 2.  
   **Key agreement from shared secret:** HKDF+SHA512. Salt is application-specific.  
   **Symmetric signatures / MAC:** HMAC+SHA512
@@ -847,18 +854,53 @@ By Muse integer representation:
 
 **Quick note 3:** Non-deterministic nonce generation will be implemented at a later date, in a different cipher suite, for performance-sensitive applications. It may also use ChaCha20. This is on the horizon, but it's a bit of a ways out. For now, the best route for performant streams is to use Muse to negotiate secret keys for lower-level transport sockets (etc) directly between hardware.
 
-### Deterministic nonce generation
+### CTR vs SIV
 
-**Note that this applies only to nonce generation, not to initialization vectors (IVs), which must always be random.**
+Relevant details:
 
-Because the encryption of the payload affects the final content address, to simplify local state management and deduplicate network files, deterministic encryption (for any particular key) is highly desirable. Within the Muse spec, and for reasons that will be highlighted in a detailed security analysis, some (currently all) cipher suites use deterministic nonce generation as per the following procedure:
+1. key/access control is separate from content containers
+2. all resources are content-addressed by their hash digests
+3. the protocol is transport agnostic, so traffic analysis, etc are deliberately out-of-scope
 
-1. Take hash (as defined by the cipher suite, not the address algorithm) of full, final plaintext
-2. Truncate result to block size of symmetric cipher, keeping the first portion
-3. Pass the result through a single round of the symmetric cipher (technically no block mode, since there are multiple blocks, but in practice this is ECB)
-4. Use the result as the nonce for the standard symmetric encryption. Prepend the nonce to the ciphertext when inserting into MEOC.
+Because everything is hash addressed, and content is retained asynchronously (potentially indefinitely; note that key persistence is handled separately), we're very concerned about data deduplication. "Ideally" (ie, ignoring security, which we're obviously not doing), to minimize network clutter, every (plaintext + key) combination would result in identical ciphertext.
 
-Implementations of cipher suites using deterministic nonce generation should (but are not required to) verify the nonce's construction for added security, immediately following symmetric decryption.
+Of course, in practice, we need to be extremely concerned about reusing a (key + nonce) combination. Replay attacks are meaningless to this specific protocol[1] -- so the thought is, we can generate the nonce from a manipulation of the hash of the plaintext. This way an identical (key + nonce) combination will by definition result in an identical file.
+
+[1] Without going into a ton of detail, replays for the symmetric containers (MEOCs) are indistinguishable to re-uploading the file. Because retention is handled by the bindings, which have replay protection, a replay of the container without the binding would be automatically garbage-collected by the persistence provider. If the persistence provider already has the MEOC, a second upload is meaningless. This ignores traffic analysis and the like, which again, is out-of-scope for the protocol.
+
+**SIV mode**:
+
+Note: in SIV mode, the MAC tag must be prepended to the ciphertext in the MEOC payload.
+
+Advantages:
+
++ Network simplicity and deduplication
++ Does not rely upon strength of random number generation
++ [Well-documented](http://web.cs.ucdavis.edu/~rogaway/papers/siv.pdf); also, [good security properties](https://www.iacr.org/archive/eurocrypt2006/40040377/40040377.pdf)
++ Places no restrictions on keys (ie, compatible with reuse, ratcheting, new keys, etc)
+
+Disadvantages:
+
++ Slow, and requires 2 passes
++ Relatively new, bringing the potential for buggy implementation code
++ Less availability in off-the-shelf crypto libraries
++ Doubles key size, unless using a secondary KDF
+
+**CTR mode**:
+
+Note: in SIV mode, the nonce should not be prepended to the ciphertext in the MEOC payload. It should be considered a functional component of the key, and must be distributed therewith. It may be random, but must never be reused for the same key. New key generation should be accompanied by new nonce generation to emphasize their equivalence and discourage accidental content duplication.
+
+Advantages:
+
++ Fast, and may be totally precomputed
++ Compromise between deduplication and performance
++ Cryptographic simplicity
++ Library availability
+
+Disadvantages:
+
++ Relies on the strength of the random number generator for birthday resistance
++ **Note that this places restrictions on keys, as the new nonce must be distributed in a new key exchange for new content.** This makes it unsuitable for API pipes.
 
 ## Address algorithms
 

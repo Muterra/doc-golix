@@ -1,12 +1,46 @@
 **Warning:** this repo is considered public pre-release information and is in varying levels of completeness. If you have questions or comments, please [contact us](mailto:badg@muterra.io).
 
-# Keep it simple, stupid
+# I don't have time to read your whole readme
 
 Muse is an open social protocol that uses encryption to protect individual privacy on unknown, untrusted servers.
 
 It is currently under development by [Muterra, Inc](https://www.muterra.io), co-evolving with the [Ethyr](https://www.ethyr.net) social network. More information about Muse, Muterra, and Ethyr can be found at our [blog](https://www.ethyr.net/blog). If you'd like to stay updated, consider joining our [mailing list](https://www.ethyr.net/mailing-signup.html).
 
-# Okay, too simple
+> What is a "social protocol"?
+
+By "social protocol", we mean something that mediates between "Alice" and her IP address, regardless of which device(s) she uses.
+
+> What exactly *is* Muse?
+
+Muse manages identity, content, and sharing at a protocol level. It defines 
+
+1. How to digitally represent the entity Alice
+2. How Alice creates private content
+3. How Alice shares that content
+
+Muse is a shared, consolidated social infrastructure that addresses those problems [without overhead](http://blog.rust-lang.org/2015/05/11/traits.html) and doesn't require trusted servers.
+
+> What is this an alternative to?
+
+Trusting a third party server with account management, identity verification, etc. You get all the convenience of the cloud with none of the privacy and security concerns. It isn't replacing any one protocol, it's a total retooling of social application creation.
+
+> What's an example use-case?
+
+Our [demonstration application](https://github.com/Muterra/doc-ethyr) is a private "email" (not SMTP) service with a very powerful API. The protocol handles the addresses, the sending, and the storage; all that the email service needs to do is define a message format and a UI.
+
+A planned future development is a Dropbox clone that fluidly transitions between local, LAN, and internet storage. The protocol (implementation) handles the local/LAN/internet, as well as security and account management, and all the application needs to do is manage folder state.
+
+> How would it apply to, say, Yelp?
+
+Yelp would be relieved of the vast majority of account management. Yelp defines their account API (```profile picture```, ```name```, ```location```, etc), and everything else with account management magically works. The protocol manages credentials and authentication; Yelp never handles usernames or passwords.
+
+Along these lines, Muse mostly eliminates user acquisition as a pain point: once someone creates an account for any service on the Muse network, they can use those credentials for any other service. 
+
+There's a single point of contact for everything on Muse. Yelp itself has a single "mailbox", the bar down the street has a single "mailbox", and the disgruntled reviewer has a single "mailbox". A Muse-powered Yelp app doesn't have to worry about how data gets from point A to point B, it just magically does, at no cost to application development.
+
+Most crucially, the Muse protocol protects privacy for everyone involved, at no cost to application development. In a world of very high profile attacks against large corporations, this is an enormous risk reduction.
+
+# Okay, still listening
 
 In practice, the Muse application stack looks like this:
 
