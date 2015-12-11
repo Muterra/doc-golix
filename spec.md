@@ -1,4 +1,4 @@
-**WARNING:** This is a draft document dated 2 November. It is under review and is definitely **not finalized!** If you'd like to stay updated, consider joining our [mailing list](https://www.ethyr.net/mailing-signup.html).
+**WARNING:** This is a draft document dated 11 December 2015. It is under review and is definitely **not finalized!** If you'd like to stay updated, consider joining our [mailing list](https://www.muterra.io/mailing-signup.html).
 
 **SPECIAL WARNING:** This should not be implemented in a production environment until subjected to security reviews.
 

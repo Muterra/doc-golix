@@ -1,4 +1,4 @@
-**Draft warning:** this is a public draft dated 27 Oct 2015, but should not be considered final. If you'd like to stay updated, consider joining our [mailing list](https://www.ethyr.net/mailing-signup.html). Our previous whitepaper was very shy on technical details and has been moved to a [design philosophy](/design_philosopy.md) document.
+**Draft warning:** this is a public draft dated 27 Oct 2015, but should not be considered final. If you'd like to stay updated, consider joining the Muterra [mailing list](https://www.muterra.io/mailing-signup.html). Our previous whitepaper was very shy on technical details and has been moved to a [design philosophy](/design_philosopy.md) document.
 
 # Introduction
 
