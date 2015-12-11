@@ -370,7 +370,7 @@ See above for description.
 
 The symmetric signature / MAC of the author. The key for the signature is derived by:
 
-1. DHE shared secret between author and recipient
+1. (EC)DH shared secret between author and recipient
 2. Expand shared secret into key material using the file hash as salt. (Ex: cipher suite 0x1 would use HKDF+SHA512)
 
 The material for input into the signature algorithm is the entire preceding file (including the file hash).
@@ -837,14 +837,14 @@ By Muse integer representation:
   **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537.  
   **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537.  
   **Symmetric encryption:** AES-256 in **SIV mode (formally AEAD_AES_SIV_CMAC_512)**  
-  **Symmetric shared secrets:** 2048-bit Diffie-Hellman [Group #14](http://www.ietf.org/rfc/rfc3526.txt) with a generator of 2.  
+  **Symmetric shared secrets:** Elliptic curve Diffie-Hellman using Curve25519.  
   **Key agreement from shared secret:** HKDF+SHA512. Salt is application-specific.  
   **Symmetric signatures / MAC:** HMAC+SHA512
 + **0x2:** SHA512/AES256/RSA4096.  
   **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537.  
   **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537.  
   **Symmetric encryption:** AES-256 in **CTR mode with nonce distributed privately with the key**  
-  **Symmetric shared secrets:** 2048-bit Diffie-Hellman [Group #14](http://www.ietf.org/rfc/rfc3526.txt) with a generator of 2.  
+  **Symmetric shared secrets:** Elliptic curve Diffie-Hellman using Curve25519.  
   **Key agreement from shared secret:** HKDF+SHA512. Salt is application-specific.  
   **Symmetric signatures / MAC:** HMAC+SHA512
 
