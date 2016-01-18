@@ -1,6 +1,8 @@
-**WARNING:** This is a draft document dated 11 December 2015. It is under review and is definitely **not finalized!** If you'd like to stay updated, consider joining our [mailing list](https://www.muterra.io/mailing-signup.html).
+**Shameless plug:** We're dangerously low on funding and are [on IndieGoGo](https://www.indiegogo.com/projects/ethyr-modern-encrypted-email) through 12 Feb 2016 with a proof-of-concept Muse application.
 
-**SPECIAL WARNING:** This should not be implemented in a production environment until subjected to security reviews.
+**WARNING:** This is a draft document dated 18 January 2016. It is under review and is definitely **not finalized!** If you'd like to stay updated, consider joining our [mailing list](https://www.muterra.io/mailing-signup.html).
+
+**SPECIAL WARNING:** This should not be used for private data in a production environment until subjected to a third-party audit. Until that time, consider all Muse-stored information to be fully public.
 
 **NOTE:** This is a purely implementation document. For design discussion, see our [design document](/design_philosophy.md). For technical discussion, see our [whitepaper](/whitepaper.md). For security discussion, stay tuned for a detailed threat model and state-based analysis.
 
@@ -834,14 +836,14 @@ By Muse integer representation:
 
 + **0x0:** None. Reserved for testing and development purposes.
 + **0x1:** SHA512/AES256/RSA4096.  
-  **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537.  
+  **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537. Salt length 64 bytes.  
   **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537.  
   **Symmetric encryption:** AES-256 in **SIV mode (formally AEAD_AES_SIV_CMAC_512)**  
   **Symmetric shared secrets:** Elliptic curve Diffie-Hellman using Curve25519.  
   **Key agreement from shared secret:** HKDF+SHA512. Salt is application-specific.  
   **Symmetric signatures / MAC:** HMAC+SHA512
 + **0x2:** SHA512/AES256/RSA4096.  
-  **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537.  
+  **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537. Salt length 64 bytes.  
   **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537.  
   **Symmetric encryption:** AES-256 in **CTR mode with nonce distributed privately with the key**  
   **Symmetric shared secrets:** Elliptic curve Diffie-Hellman using Curve25519.  

@@ -1,9 +1,14 @@
-# Current revision: 11 Dec 2015
+# Current revision: 18 Jan 2016
+
++ Clarified spec re: salt length in signature (should match hash length = 64 bytes)
++ Added some shameless [IndieGoGo campaign](https://www.indiegogo.com/projects/ethyr-modern-encrypted-email) plugs
+
+# Previous revisions
+
+## 11 Dec 2015, #9a6e2ff
 
 + Changed all DH from 2048-bit/Group #14 to ECDH/Curve25519
 + Changed external links to reflect muterra.io and ethyr.net reorganization
-
-# Previous revisions
 
 ## 13 Nov 2015, #10d6a60
 

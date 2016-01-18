@@ -1,3 +1,5 @@
+**Shameless plug:** We're dangerously low on funding and are [on IndieGoGo](https://www.indiegogo.com/projects/ethyr-modern-encrypted-email) through 12 Feb 2016 with a proof-of-concept Muse application.
+
 **Draft warning:** this is a public draft dated 27 Oct 2015, but should not be considered final. If you'd like to stay updated, consider joining the Muterra [mailing list](https://www.muterra.io/mailing-signup.html). Our previous whitepaper was very shy on technical details and has been moved to a [design philosophy](/design_philosopy.md) document.
 
 # Introduction
