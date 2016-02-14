@@ -1,9 +1,19 @@
-# Current revision: 18 Jan 2016
+# Current revision: 14 Feb 2016
 
-+ Clarified spec re: salt length in signature (should match hash length = 64 bytes)
-+ Added some shameless [IndieGoGo campaign](https://www.indiegogo.com/projects/ethyr-modern-encrypted-email) plugs
++ Removed shameless plugs
++ Switched numeric identification of ciphersuites 1 and 2 in preparation for possible removal of SIV mode
++ Changed lengths of any MUID lists into absolute lengths, to ease support of potential future address algorithms of different lengths. Updated version numbers accordingly.
++ Moved all of the asymmetric operations into a single primitive (MEAR) with differing payloads. Added another payload definition for arbitrary content, to support future protocol development.
++ Clarified available size of asymmetric payload and appropriateness of use
++ Changed all secondary file extensions to .muid and tertiary to object identifiers (ex .meoc)
++ Added support for different static/dynamic address algorithms in dynamic binding
 
 # Previous revisions
+
+## 18 Jan 2016, #4fcba8f
+
++ Clarified spec re: salt length in signature (should match hash length = 64 bytes)
++ Added some shameless plugs
 
 ## 11 Dec 2015, #9a6e2ff
 

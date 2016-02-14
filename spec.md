@@ -1,6 +1,4 @@
-**Shameless plug:** We're dangerously low on funding and are [on IndieGoGo](https://www.indiegogo.com/projects/ethyr-modern-encrypted-email) through 12 Feb 2016 with a proof-of-concept Muse application.
-
-**WARNING:** This is a draft document dated 18 January 2016. It is under review and is definitely **not finalized!** If you'd like to stay updated, consider joining our [mailing list](https://www.muterra.io/mailing-signup.html).
+**WARNING:** This is a draft document dated 14 February 2016. It is under review and is definitely **not finalized!** If you'd like to stay updated, consider joining our [mailing list](https://www.muterra.io/mailing-signup.html).
 
 **SPECIAL WARNING:** This should not be used for private data in a production environment until subjected to a third-party audit. Until that time, consider all Muse-stored information to be fully public.
 
@@ -9,7 +7,8 @@
 # Object container (MEOC)
 
 + Preferred stored file extension: no extension
-+ Secondary stored file extension: .meoc
++ Secondary stored file extension: .muid
++ Tertiary stored file extension: .meoc
 
 MEOCs must be stored by a persistence provider if, and only if, they are referenced in a MOBS or MOBD stored at the same persistence provider.
 
@@ -88,7 +87,8 @@ This field is always an asymmetric cryptographic signature of the file hash fiel
 # Static binding (MOBS)
 
 + Preferred stored file extension: no extension
-+ Secondary stored file extension: .mobs
++ Secondary stored file extension: .muid
++ Tertiary stored file extension: .mobs
 
 MOBS must be stored by a persistence provider until, and only until, they are cleared by a debinding.
 
@@ -147,7 +147,8 @@ See Author Signature above.
 # Dynamic binding (MOBD)
 
 + Preferred stored file extension: no extension
-+ Secondary stored file extension: .mobd
++ Secondary stored file extension: .muid
++ Tertiary stored file extension: .mobd
 
 MOBDs must be stored until, and only until, they are cleared by a debinding, or successfully updated by their binder.
 
@@ -160,20 +161,21 @@ Note that the static MUID applies to *this particular frame*.
 
 ## Format
 
-| Decimal Offset    | Decimal Length           | Name                | Format              |
-| ------            | ---------                | ------------------- | -----------         |
-| 0                 | 4B                       | Magic number        | 0x 4D 4F 42 44      |
-| 4                 | 4B                       | Version number      | Unsigned 32-bit int |
-| 8                 | 1B                       | Cipher suite        | Unsigned 8-bit int  |
-| 9                 | 65B                      | Binder MUID         | Bytes               |
-| 74                | 1B                       | Frame count *F*     | Unsigned 8-bit int  |
-| 75                | *LR* = 65B * min(*F*, 1) | Historical frames   | Bytes               |
-| 75 + *LR*         | 2B                       | MUID count *N*      | Unsigned 16-bit int |
-| 77 + *LR*         | *LN* = 65B * *N*         | Target MUIDs        | Bytes               |
-| 77 + *LR* + *LN*  | 1B                       | Address algorithm   | Unsigned 8-bit int  |
-| 78 + *LR* + *LN*  | 64B                      | Dynamic hash        | Bytes               |
-| 142 + *LR* + *LN* | 64B                      | File hash           | Bytes               |
-| 206 + *LR* + *LN* | 512B                     | Binder signature    | Bytes               |
+| Decimal Offset    | Decimal Length | Name                      | Format              |
+| ------            | ---------      | -------------------       | -----------         |
+| 0                 | 4B             | Magic number              | 0x 4D 4F 42 44      |
+| 4                 | 4B             | Version number            | Unsigned 32-bit int |
+| 8                 | 1B             | Cipher suite              | Unsigned 8-bit int  |
+| 9                 | 65B            | Binder MUID               | Bytes               |
+| 74                | 2B             | History length *LR*       | Unsigned 16-bit int |
+| 76                | *LR*           | Historical frames         | Bytes               |
+| 76 + *LR*         | 4B             | Targets length *LN*       | Unsigned 32-bit int |
+| 80 + *LR*         | *LN*           | Target MUIDs              | Bytes               |
+| 80 + *LR* + *LN*  | 1B             | Dynamic address algorithm | Unsigned 8-bit int  |
+| 81 + *LR* + *LN*  | 64B            | Dynamic hash              | Bytes               |
+| 145 + *LR* + *LN* | 1B             | File address algorithm    | Unsigned 8-bit int  |
+| 146 + *LR* + *LN* | 64B            | File hash                 | Bytes               |
+| 210 + *LR* + *LN* | 512B           | Binder signature          | Bytes               |
 
 ### 1. Magic number
 
@@ -181,7 +183,7 @@ ASCII "MOBD" (4D 4F 42 44)
 
 ### 2. Version
 
-See above for description. **Currently 11.**
+See above for description. **Currently 13.**
 
 ### 3. Cipher suite
 
@@ -191,9 +193,9 @@ See above for description.
 
 See above for description.
 
-### 5. Frame count
+### 5. History length
 
-The length of the MUID history included in the binding. If zero, this is the first frame.
+The length, in bytes, of the MUID history included in the binding. If zero, this is the first frame.
 
 ### 6. Historical frames
 
@@ -203,17 +205,17 @@ If (and only if) the frame count is zero will this indicate a new dynamic bindin
 
 We recommend using a sufficiently strong random number generator to produce a 32-bit nonce, padding the result out with zeros to achieve 65B-length. The availability of the resultant dynamic address should then be verified against the binder's preferred persistence providers. The weaker the random number generator, the more important the verification.
 
-### 7. MUID count
+### 7. Targets length
 
-An integer count of the bound MUIDs.
+The length, in bytes, of the list of targets.
 
 ### 8. Target MUIDs
 
 An ordered list of the MUIDs for each frame. If the dynamic binding is being used as a buffered object, sort in ascending order of recency (ie, oldest first).
 
-### 9. Address algorithm
+### 9. Dynamic address algorithm
 
-See above for description.
+See above for description. Applies to the dynamic hash.
 
 ### 10. Dynamic hash
 
@@ -221,18 +223,23 @@ The MUID hash for the secondary address for the dynamic object. Remains static f
 
 Like a file hash, generated from the concatenation of the entire preceding file of the original frame in the binding using the hash algorithm described in the Address Algorithm field.
 
-### 11. File hash
+### 11. File address algorithm
+
+See above for description. Applies to the file hash.
+
+### 12. File hash
 
 See above for description.
 
-### 12. Binder signature
+### 13. Binder signature
 
 See above for description.
 
 # Debind record (MDXX)
 
 + Preferred stored file extension: no extension
-+ Secondary stored file extension: .mdxx
++ Secondary stored file extension: .muid
++ Tertiary stored file extension: .mdxx
 
 MDXXs must be stored until, and only until, they are cleared by a subsequent chained debinding. Note that, due to the risk of a replay attack, debindings should only be chained when an entity-agent is ready to rebind. Furthermore, since multiple rebindings with partial chains can potentially create conflicting network states, best practices dictate that the full binding/debinding/rebinding/etc chain **should always** be stated explicitly.
 
@@ -299,18 +306,19 @@ See above for description.
 
 See Binder Signature above.
 
-# Muse encrypted pipe request (MEPR)
+# Muse encrypted asymmetric request (MEAR)
 
 + Preferred stored file extension: no extension
-+ Secondary stored file extension: .mepr
++ Secondary stored file extension: .muid
++ Tertiary stored file extension: .mear
 
-MEPRs must be stored until, and only until, they are cleared by a debinding from their recipient.
+MEARs must be stored until, and only until, they are cleared by a debinding from their recipient.
 
 **Terminology:**
 
 + Pipe: a bidirectional channel between (usually two) agents
 + Half-pipe: a unidirectional channel, from one agent to another.
-+ Recipient: the entity-agent against whose public key the MEPR was encrypted. If Alice is the author and she wants to open a half-pipe to Bob, then Bob is the recipient.
++ Recipient: the entity-agent against whose public key the MEAR was encrypted. If Alice is the author and she wants to open a half-pipe to Bob, then Bob is the recipient.
 + Target: the address for the half-pipe (usually dynamic)
 
 Note that the author is the entity-agent requesting the pipe.
@@ -330,19 +338,20 @@ Note that the author is the entity-agent requesting the pipe.
 
 **Asymmetrically encrypted inner container format:**
 
-| Offset | Length    | Name                 | Format      |
-| ------ | --------- | -------------------  | ----------- |
-| 0      | 65B       | Author MUID          | Bytes       |
-| 65     | 65B       | Target MUID          | Bytes       |
-| 130    | 32B       | Target symmetric key | Bytes       |
+| Offset | Length    | Name                 | Format              |
+| ------ | --------- | -------------------  | -----------         |
+| 0      | 65B       | Author MUID          | Bytes               |
+| 65     | 2B        | Payload identifier   | Bytes               |
+| 67     | 2B        | Payload length, *LA* | Unsigned 16-bit int |
+| 69     | *LA*      | Payload              | Bytes               |
 
 ### 1. Magic number
 
-ASCII "MEPR" (4D 45 50 52)
+ASCII "MEAR" (4D 45 41 52)
 
 ### 2. Version
 
-See above for description. **Currently 11.**
+See above for description. **Currently 12.**
 
 ### 3. Cipher suite
 
@@ -354,11 +363,18 @@ The MUID of the recipient.
 
 ### 5. Private inner container
 
-Encrypted asymmetrically against the public key for the recipient. Once decrypted, the plaintext contents include:
+Encrypted asymmetrically against the public key for the recipient. Once decrypted, the plaintext contents are defined as:
 
-1. Author MUID
-2. Target MUID
-3. Target symmetric key
+1. The MUID of the MEAR author.
+2. A 2-byte identifier for the payload contents
+3. The length, in bytes, of the payload
+4. The payload
+
+See "Asymmetric request types" below.
+
+**Note that certain cryptosystems (ex: RSA) may impose limits on the size of the payload.** Asymmetric requests are not intended to be used as communication channels, but rather as handshakes in their establishment.
+
++ RSA-OAEP [can encrypt](https://www.ietf.org/rfc/rfc2437.txt) at most ``` modulus_size - 2 - 2 * hash_size ``` bytes *total*. With the internal header overhead also accounted for, ciphersuites 1 and 2 can therefore handle a maximum payload of ```512 - 2 - 2 * 64 - 69 == 313``` bytes.
 
 ### 6. Address algorithm
 
@@ -377,14 +393,27 @@ The symmetric signature / MAC of the author. The key for the signature is derive
 
 The material for input into the signature algorithm is the entire preceding file (including the file hash).
 
-# Muse pipe acknowledgement (MPAK)
+## Asymmetric request types
 
-+ Preferred stored file extension: no extension
-+ Secondary stored file extension: .mpak
+Though the outer container of asymmetric requests is always identical, the internals may differ. The Muse standard currently defines four different objects for use in asymmetric requests:
 
-MPAKs must be stored until, and only until, they are cleared by a debinding from their recipient.
+### Pipe request (PR)
+
+Pipe requests are used (primarily) to establish a dynamically-bound MEOC pipe between two Muse identities. They are really only intended to be used once between any particular entity-entity pairing; best practice is to immediately construct a *symmetric* share between the two entities, and use that to bootstrap any additional pipes.
+
+Pipe requests are identified by the ASCII string "PR" ( 0x 50 52 ).
+
+| Offset | Length    | Name                 | Format      |
+| ------ | --------- | -------------------  | ----------- |
+| 69     | 65B       | Target MUID          | Bytes       |
+| 134    | 1B        | Key length, *LK*     | Bytes       |
+| 135    | *LK*      | Target symmetric key | Bytes       |
+
+### Pipe acknowledgement (AK)
 
 Pipe ACKs should only be used during pipe negotiation. They most commonly indicate a successful closure or initiation of a half-pipe. They must only be used to indicate problems incurred during pipe management, not, for example, acknowledging messages within the pipe itself.
+
+Pipe acknowledgements are identified by the ASCII string "AK" ( 0x 41 4B ).
 
 **Terminology:**
 
@@ -392,134 +421,33 @@ Pipe ACKs should only be used during pipe negotiation. They most commonly indica
 
 Note that here, the author is the entity-agent acknowledging the pipe -- ie, the recipient of the pipe request. Likewise, the MPAK recipient is the author of the original pipe request.
 
-## Format
-
-| Decimal Offset | Decimal Length | Name                       | Format              |
-| ------         | ---------      | -------------------        | -----------         |
-| 0              | 4B             | Magic number               | 0x 4D 50 41 4B      |
-| 4              | 4B             | Version number             | Unsigned 32-bit int |
-| 8              | 1B             | Cipher suite               | Unsigned 8-bit int  |
-| 9              | 65B            | Recipient MUID             | Bytes               |
-| 140            | 512B           | Private inner container    | Bytes               |
-| 652            | 1B             | Address algorithm          | Unsigned 8-bit int  |
-| 653            | 64B            | File hash                  | Bytes               |
-| 717            | 64B            | Author symmetric signature | Bytes               |
-
-**Asymmetrically encrypted inner container format:**
-
 | Offset | Length    | Name                   | Format      |
 | ------ | --------- | -------------------    | ----------- |
-| 0      | 65B       | Author MUID            | Bytes       |
-| 65     | 65B       | Requested MUID         | Bytes       |
-| 130    | 32B       | Status code (optional) | Bytes       |
+| 69     | 65B       | Requested MUID         | Bytes       |
+| 134    | 32B       | Status code (optional) | Bytes       |
 
-### 1. Magic number
-
-ASCII "MPAK" (4D 50 41 4B)
-
-### 2. Version
-
-See above for description. **Currently 6.**
-
-### 3. Cipher suite
-
-See above for description.
-
-### 4. Recipient MUID 
-
-The MUID of the recipient.
-
-### 5. Private inner container
-
-Encrypted asymmetrically against the public key for the recipient. Once decrypted, the plaintext contents include:
-
-1. Author MUID
-2. Requested MUID
-3. An application-specific status/exit code. Entirely optional, potentially very helpful.
-
-### 6. Address algorithm
-
-See above for description.
-
-### 7. File hash
-
-See above for description.
-
-### 8. Author symmetric signature
-
-See above for description.
-
-# Muse pipe non-acknowledgement (NPNK)
-
-+ Preferred stored file extension: no extension
-+ Secondary stored file extension: .mpnk
-
-MPNKs must be stored until, and only until, they are cleared by a debinding from their recipient.
+### Pipe non-acknowledgement (NK)
 
 Pipe non-acknowledgements (NAKs) should only be used during pipe negotiation. They most commonly indicate a rejection of the pipe request, but may also indicate an error in opening the pipe (wrong key, etc). They must only be used to indicate problems incurred during pipe management, not, for example, malformed messages within the pipe itself.
 
-**Terminology:**
-
-No new.
+Pipe acknowledgements are identified by the ASCII string "NK" ( 0x 4E 4B ).
 
 Note that here, the author is the entity-agent non-acknowledging the pipe -- ie, the recipient of the pipe request. Likewise, the MPAK recipient is the author of the original pipe request.
 
-## Format
+| Offset | Length    | Name                   | Format      |
+| ------ | --------- | -------------------    | ----------- |
+| 69     | 65B       | Requested MUID         | Bytes       |
+| 134    | 32B       | Status code (optional) | Bytes       |
 
-| Decimal Offset | Decimal Length | Name                       | Format              |
-| ------         | ---------      | -------------------        | -----------         |
-| 0              | 4B             | Magic number               | 0x 4D 50 4E 4B      |
-| 4              | 4B             | Version number             | Unsigned 32-bit int |
-| 8              | 1B             | Cipher suite               | Unsigned 8-bit int  |
-| 9              | 65B            | Recipient MUID             | Bytes               |
-| 140            | 512B           | Private inner container    | Bytes               |
-| 652            | 1B             | Address algorithm          | Unsigned 8-bit int  |
-| 653            | 64B            | File hash                  | Bytes               |
-| 717            | 64B            | Author symmetric signature | Bytes               |
+### Arbitrary content (0x0000)
 
-**Asymmetrically encrypted inner container format:**
+Arbitrary asymmetric content is primarily reserved for Muse spec development purposes. It is, once again, explicitly **not** intended for general-purpose use. Application-level communication should **always** be conducted within symmetric pipes.
+
+Pipe acknowledgements are identified by the bytestring ```0x0000```.
 
 | Offset | Length    | Name                   | Format      |
 | ------ | --------- | -------------------    | ----------- |
-| 0      | 65B       | Author MUID            | Bytes       |
-| 65     | 65B       | Requested MUID         | Bytes       |
-| 130    | 32B       | Status code (optional) | Bytes       |
-
-### 1. Magic number
-
-ASCII "MPNK" (4D 50 4E 4B)
-
-### 2. Version
-
-See above for description. **Currently 6.**
-
-### 3. Cipher suite
-
-See above for description.
-
-### 4. Recipient MUID 
-
-The MUID of the recipient.
-
-### 5. Private inner container
-
-Encrypted asymmetrically against the public key for the recipient. Once decrypted, the plaintext contents include:
-
-1. Author MUID
-2. Requested MUID
-3. An application-specific status/error code. Entirely optional, potentially very helpful.
-
-### 6. Address algorithm
-
-See above for description.
-
-### 7. File hash
-
-See above for description.
-
-### 8. Author symmetric signature
-
-See above for description.
+| 69     | *LA*      | Payload                | Bytes       |
 
 # Persistence provider commands
 
@@ -838,14 +766,14 @@ By Muse integer representation:
 + **0x1:** SHA512/AES256/RSA4096.  
   **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537. Salt length 64 bytes.  
   **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537.  
-  **Symmetric encryption:** AES-256 in **SIV mode (formally AEAD_AES_SIV_CMAC_512)**  
+  **Symmetric encryption:** AES-256 in **CTR mode with nonce distributed privately with the key**  
   **Symmetric shared secrets:** Elliptic curve Diffie-Hellman using Curve25519.  
   **Key agreement from shared secret:** HKDF+SHA512. Salt is application-specific.  
   **Symmetric signatures / MAC:** HMAC+SHA512
 + **0x2:** SHA512/AES256/RSA4096.  
   **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537. Salt length 64 bytes.  
   **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537.  
-  **Symmetric encryption:** AES-256 in **CTR mode with nonce distributed privately with the key**  
+  **Symmetric encryption:** AES-256 in **SIV mode (formally AEAD_AES_SIV_CMAC_512)**  
   **Symmetric shared secrets:** Elliptic curve Diffie-Hellman using Curve25519.  
   **Key agreement from shared secret:** HKDF+SHA512. Salt is application-specific.  
   **Symmetric signatures / MAC:** HMAC+SHA512
@@ -890,7 +818,7 @@ Disadvantages:
 
 **CTR mode**:
 
-Note: in SIV mode, the nonce should not be prepended to the ciphertext in the MEOC payload. It should be considered a functional component of the key, and must be distributed therewith. It may be random, but must never be reused for the same key. New key generation should be accompanied by new nonce generation to emphasize their equivalence and discourage accidental content duplication.
+Note: in SIV mode, the nonce should not be prepended to the ciphertext in the MEOC payload. It should be considered a functional component of the key, and must be distributed therewith. It may be random, but must never be reused for the same key. New key generation should be accompanied by new nonce generation to emphasize their equivalence and discourage accidental content duplication. Note that the nonce size must match the block size for the underlying symmetric cipher.
 
 Advantages:
 
