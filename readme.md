@@ -2,63 +2,45 @@
 
 # I don't have time to read your whole readme
 
-Muse is an open social protocol that uses encryption to protect individual privacy on unknown, untrusted servers.
+It's unlikely we'll ever live in a world where every digital identity is hosted on its own private server. Given that assumption, we're left with a simple question:
+
+> How do I, as a first party, maintain autonomy over data stored on third party servers?
+
+Muse is an open protocol designed to answer that question, without requiring trust. It can be thought of as a fifth layer in the IP suite, falling between the transport layer and the application layer. It provides all compliant applications with a shared, secure account management system. This has the benefits of:
+
++ eliminating session management
++ eliminating API auth tokens
++ creating a "one person, one password" user experience
++ sharing the burden of user acquisition across the entire network
++ eliminating account creation as a barrier to entry
++ etc
+
+The Muse protocol uses cryptography to enforce:
+
++ Information creation, as private-by-default (all information is encrypted at all times and unknown to the server)
++ Information sharing (secure key distribution)
+
+It also uses social consensus to enforce:
+
++ Information lifetimes (information must only be retained when being used)
+
+Muse is an alternative to trusting a third party server with account management, identity verification, etc. You get all the convenience of the cloud with none of the privacy and security concerns. It isn't replacing any one protocol, it's a total retooling of social application creation.
 
 It is currently under development by [Muterra, Inc](https://www.muterra.io), co-evolving with the [Ethyr](https://www.ethyr.net) secure email system. More information about Muse, Muterra, and Ethyr can be found at our [blog](https://www.muterra.io/blog). If you'd like to stay updated, consider joining the Muterra [mailing list](https://www.muterra.io/mailing-signup.html).
 
-> What is a "social protocol"?
+**How would Muse apply to, say, Yelp?**
 
-By "social protocol", we mean something that mediates between "Alice" and her IP address, regardless of which device(s) she uses.
+Yelp would be relieved of the vast majority of account management. Yelp defines their account API (```profile picture```, ```name```, ```location```, etc), and the rest *just works*. The protocol manages credentials and authentication; Yelp never handles usernames or passwords.
 
-> What exactly *is* Muse?
+Yelp wants reviews to be available publicly, so it creates a community sharing service. This is, loosely speaking, an unrestricted key escrow server: any content shared with the public sharing service will be indiscriminately made available to anyone who requests it.
 
-Muse manages identity, content, and sharing at a protocol level. It defines 
+Yelp's reviews will then seamlessly integrate with anyone who follows their review API. If I, a business owner, wanted to integrate a "Post a Yelp review!" form on my website, I would be trivially capable of doing so.
 
-1. How to digitally represent the entity Alice
-2. How Alice creates private content
-3. How Alice shares that content
-
-Muse is a shared, consolidated social infrastructure that addresses those problems [without overhead](http://blog.rust-lang.org/2015/05/11/traits.html) and doesn't require trusted servers.
-
-> What is this an alternative to?
-
-Trusting a third party server with account management, identity verification, etc. You get all the convenience of the cloud with none of the privacy and security concerns. It isn't replacing any one protocol, it's a total retooling of social application creation.
-
-> What's an example use-case?
-
-Our [demonstration application](https://github.com/Muterra/doc-ethyr) is a private "email" (not SMTP) service with a very powerful API. The protocol handles the addresses, the sending, and the storage; all that the email service needs to do is define a message format and a UI.
-
-A planned future development is a Dropbox clone that fluidly transitions between local, LAN, and internet storage. The protocol (implementation) handles the local/LAN/internet, as well as security and account management, and all the application needs to do is manage folder state.
-
-> How would it apply to, say, Yelp?
-
-Yelp would be relieved of the vast majority of account management. Yelp defines their account API (```profile picture```, ```name```, ```location```, etc), and everything else with account management magically works. The protocol manages credentials and authentication; Yelp never handles usernames or passwords.
-
-Along these lines, Muse mostly eliminates user acquisition as a pain point: once someone creates an account for any service on the Muse network, they can use those credentials for any other service. 
-
-There's a single point of contact for everything on Muse. Yelp itself has a single "mailbox", the bar down the street has a single "mailbox", and the disgruntled reviewer has a single "mailbox". A Muse-powered Yelp app doesn't have to worry about how data gets from point A to point B, it just magically does, at no cost to application development.
-
-Most crucially, the Muse protocol protects privacy for everyone involved, at no cost to application development. In a world of very high profile attacks against large corporations, this is an enormous risk reduction.
-
-# Okay, still listening
-
-In practice, the Muse application stack looks like this:
-
-![Muse application stack](muse-technical-diagram.png)
-
-The goal of the protocol is to give any Muse application a device-independent, cryptographically-enforced, private-by-default representation of:
-
-1. an entity, such as Alice (*identity management*)
-2. the content that this entity creates (*content management*), and
-3. the process to share that content (*sharing management*).
-
-Muse itself is asynchronous, transport agnostic, and [limited in scope](http://blog.rust-lang.org/2015/05/11/traits.html). This allows a device's protocol implementation service to dynamically propagate content across any transport infrastructure with an available asynchronous buffer service. These *persistence providers* may be used for indefinite-length storage, and objects are garbage collected only when freed from use. An individual persistence provider may operate over an arbitrary number of physical data transports, but must support a common command set to be Muse-compliant.
-
-Taken as a whole, the Muse stack allows applications to be simply and securely developed on a common social infrastructure. This alleviates the need for costly user acquisition while drastically improving individual privacy and decreasing application security footprints.
+From a user's perspective, I log in once to my Muse-enabled browser. From there, I can participate in any Muse-enabled service, **while maintaining explicit and exclusive control over my privacy.** I no longer need to authenticate to Yelp; if I'd like to post or rate a review, I simply do it. From the moment I start using Muse to the moment I log out, I have a single coherent identity experience.
 
 # What does Muse do differently?
 
-Muse is an overlay network standard that encrypts everything *not just from device to device*, but from entity to entity. The protocol assumes that all transported data is vulnerable, relying only on universal encryption to limit data access. Applications built on Muse can therefore addresses communications directly between the participants' digital identities (essentially their public keys) without regard to the transport layer. Protocol implementations then distribute that information to transport-specific persistence providers, who deliver it to the conversation partner as soon as she is available.
+Muse is an overlay network standard that encrypts everything *not just from device to device*, but from entity to entity. That is to say, authentication is performed not based upon IP address, network location, or session cookie, but by possession of private keys. If you possess the private keys for an entity-agent's identity, you can always receive encrypted content as that identity, and if you do not, you cannot. Physical network topology is wholly ignored.
 
 More concretely, and using TCP/IP as an example, most existing transports are *network-oriented*:
 

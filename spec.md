@@ -68,12 +68,12 @@ See "Cipher suites and address algorithms" below for details.
 
 ### 8. File hash
 
-The hash digest of the file, using the algorithm described by the Address Algorithm field. For all Muse objects, input to the hash function is the concatenation of all previous fields, in this case:
+The hash digest of the file, using the algorithm described by the Address Algorithm field. For **all** Muse objects, input to the hash function is the concatenation of all previous fields. For example, in the case of a MEOC, the file hash is the concatenation of:
 
 1. Magic number
 2. Version
-3. Author MUID
-4. Cipher suite
+3. Cipher suite
+4. Author MUID
 5. Payload length
 6. Encrypted payload
 7. Address algorithm

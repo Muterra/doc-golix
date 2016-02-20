@@ -1,5 +1,6 @@
-# Current revision: 14 Feb 2016
+# Current revision: 14 Feb 2016 to present
 
++ Major readme revision for better expressibility
 + Removed shameless plugs
 + Switched numeric identification of ciphersuites 1 and 2 in preparation for possible removal of SIV mode
 + Changed lengths of any MUID lists into absolute lengths, to ease support of potential future address algorithms of different lengths. Updated version numbers accordingly.
