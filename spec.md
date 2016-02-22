@@ -1,4 +1,4 @@
-**WARNING:** This is a draft document dated 14 February 2016. It is under review and is definitely **not finalized!** If you'd like to stay updated, consider joining our [mailing list](https://www.muterra.io/mailing-signup.html).
+**WARNING:** This is a draft document dated 21 February 2016. It is under review and is definitely **not finalized!** If you'd like to stay updated, consider joining our [mailing list](https://www.muterra.io/mailing-signup.html).
 
 **SPECIAL WARNING:** This should not be used for private data in a production environment until subjected to a third-party audit. Until that time, consider all Muse-stored information to be fully public.
 
@@ -403,11 +403,11 @@ Pipe requests are used (primarily) to establish a dynamically-bound MEOC pipe be
 
 Pipe requests are identified by the ASCII string "PR" ( 0x 50 52 ).
 
-| Offset | Length    | Name                 | Format      |
-| ------ | --------- | -------------------  | ----------- |
-| 69     | 65B       | Target MUID          | Bytes       |
-| 134    | 1B        | Key length, *LK*     | Bytes       |
-| 135    | *LK*      | Target symmetric key | Bytes       |
+| Offset | Length    | Name                | Format      |
+| ------ | --------- | ------------------- | ----------- |
+| 69     | 65B       | Target MUID         | Bytes       |
+| 134    | 1B        | Secret length, *LK* | Bytes       |
+| 135    | *LK*      | Target secret       | Bytes       |
 
 ### Pipe acknowledgement (AK)
 
@@ -448,6 +448,39 @@ Pipe acknowledgements are identified by the bytestring ```0x0000```.
 | Offset | Length    | Name                   | Format      |
 | ------ | --------- | -------------------    | ----------- |
 | 69     | *LA*      | Payload                | Bytes       |
+
+# Ancillary binary formats
+
+Two additional binary objects are considered network-critical and included in the Muse standard to facilitate network operations and interoperability. They are:
+
++ A specific serialization for secret sharing (keys, nonces, etc)
++ A specific serialization for identities (asymmetric signing, asymmetric encryption, and ECDH exchange public keys)
+
+## Secret sharing
+
+Secrets are generally embedded as the target secret in a MEAR pipe request. They are defined in the Muse spec to ensure implementation interoperability.
+
+Format:
+
+| Offset   | Length    | Name                | Format              |
+| ------   | --------- | ------------------- | -----------         |
+| 0        | 2B        | Identifier          | ASCII "```SH```"    |
+| 2        | 2B        | Version             | Unsigned 16-bit int |
+| 4        | 1B        | Key length, *LE*    | Unsigned 8-bit int  |
+| 5        | 1B        | Seed length, *LF*   | Unsigned 8-bit int  |
+| 6        | *LE*      | Key                 | Bytes               |
+| 6 + *LE* | *LF*      | Seed                | Bytes               |
+
+1. **Identifier:** constant to denote a serialized secret. ASCII "```SH```" (0x 53 48)
+2. **Version:** the version for the secret serialization. Current is 1.
+3. **Key length:** the length, in bytes, of the key.
+4. **Seed length:** the length, in bytes, of the seed.
+5. **Key:** the key material.
+6. **Seed:** the nonce or initialization vector, if any is required by the ciphersuite.
+
+## Identities
+
+
 
 # Persistence provider commands
 
