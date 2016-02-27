@@ -1,4 +1,4 @@
-**WARNING:** This is a draft document dated 21 February 2016. It is under review and is definitely **not finalized!** If you'd like to stay updated, consider joining our [mailing list](https://www.muterra.io/mailing-signup.html).
+**WARNING:** This is a draft document dated 27 February 2016. It is under review and is definitely **not finalized!** If you'd like to stay updated, consider joining our [mailing list](https://www.muterra.io/mailing-signup.html).
 
 **SPECIAL WARNING:** This should not be used for private data in a production environment until subjected to a third-party audit. Until that time, consider all Muse-stored information to be fully public.
 
@@ -373,7 +373,7 @@ ASCII "MOBD" (4D 4F 42 44)
 
 ### 2. Version
 
-See above for description. **Currently 13.**
+See above for description. **Currently 14.**
 
 ### 3. Cipher suite
 
@@ -389,11 +389,7 @@ The length, in bytes, of the MUID history included in the binding. If zero, this
 
 ### 6. Historical frames
 
-A record of the recent history of the dynamic binding's static MUIDs, sorted in ascending order of recency (ie, oldest first). Without this field, dynamic bindings are susceptible to replay attacks. All MOBD records must include at least one historical MUID. There is a balance here between network state management (more history is better) and size optimization (less history is better).
-
-If (and only if) the frame count is zero will this indicate a new dynamic binding. In this case, the historical frames field must be a single unique nonce. This makes it possible to have multiple dynamic bindings with the same (binding agent + original bound MUIDs) seed. This nonce must never be repeated for the same seed.
-
-We recommend using a sufficiently strong random number generator to produce a 32-bit nonce, padding the result out with zeros to achieve 65B-length. The availability of the resultant dynamic address should then be verified against the binder's preferred persistence providers. The weaker the random number generator, the more important the verification.
+A record of the recent history of the dynamic binding's static MUIDs, sorted in ascending order of recency (ie, oldest first). Without this field, dynamic bindings are susceptible to replay attacks. All MOBD records must include at least one historical MUID. There is a balance here between network state management (more history is better) and size optimization (less history is better). If (and only if) the history length is zero will this indicate a new dynamic binding, in which case historical frames will be empty (zero-length).
 
 ### 7. Targets length
 
@@ -401,7 +397,21 @@ The length, in bytes, of the list of targets.
 
 ### 8. Target MUIDs
 
-An ordered list of the MUIDs for each frame. If the dynamic binding is being used as a buffered object, sort in ascending order of recency (ie, oldest first).
+An ordered list of the MUIDs for each frame. Order will be enforced and can be meaningful.
+
+Note that it is impossible to have two *different* dynamic bindings with identical initial target lists. It is therefore also impossible to preallocate multiple dynamic "branches". Applications seeking such functionality should create a new dynamic binding at the branch point, updating downstream references to point to the new binding where appropriate. Alternatively, they may immediately create two dynamic bindings with no history, but different target lists, for example:
+
+Binding A:
+
+1. MUID #1
+2. MUID #2
+3. MUID #3**a**
+
+Binding B:
+
+1. MUID #1
+2. MUID #2
+3. MUID #3**b**
 
 ### 9. Dynamic address algorithm
 

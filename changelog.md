@@ -1,10 +1,14 @@
-# Current revision: 26 Feb 2016
+# Current revision: 27 Feb 2016
+
++ Updated dynamic binding to remove support for multiple identical start points, and removed old wording surrounding random seed for that purpose. Upped version number accordingly.
+
+# Previous revisions
+
+## 26 Feb 2016, #4bf3e65
 
 + Reorganized spec documentation to list cipher suites and address algos first
 + Added dedicated identity container (MIDC)
 + Added ancillary format for secret sharing
-
-# Previous revisions
 
 ## 20 Feb 2016, #e27e7bf
 
