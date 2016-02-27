@@ -4,6 +4,208 @@
 
 **NOTE:** This is a purely implementation document. For design discussion, see our [design document](/design_philosophy.md). For technical discussion, see our [whitepaper](/whitepaper.md). For security discussion, stay tuned for a detailed threat model and state-based analysis.
 
+# Cipher suites and address algorithms
+
+**Note that this is not a substitute for a proper threat model or security analysis.** Those documents have been separated from the protocol specification for readability and digestibility purposes.
+
+## Cipher suites
+
+By Muse integer representation:
+
++ **0x0:** None. Reserved for testing and development purposes.
++ **0x1:** SHA512/AES256/RSA4096.  
+  **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537. Salt length 64 bytes.  
+  **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537.  
+  **Symmetric encryption:** AES-256 in **CTR mode with nonce distributed privately with the key**  
+  **Symmetric shared secrets:** Elliptic curve Diffie-Hellman using Curve25519.  
+  **Key agreement from shared secret:** HKDF+SHA512. Salt is application-specific.  
+  **Symmetric signatures / MAC:** HMAC+SHA512
++ **0x2:** SHA512/AES256/RSA4096.  
+  **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537. Salt length 64 bytes.  
+  **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537.  
+  **Symmetric encryption:** AES-256 in **SIV mode (formally AEAD_AES_SIV_CMAC_512)**  
+  **Symmetric shared secrets:** Elliptic curve Diffie-Hellman using Curve25519.  
+  **Key agreement from shared secret:** HKDF+SHA512. Salt is application-specific.  
+  **Symmetric signatures / MAC:** HMAC+SHA512
+
+**Quick note:** Why not elliptic curves first? Basically, development resource allocation. There was a reasonably large amount of thought put into this decision, and I stand by it. We need a prototype that works and is suitably secure for alpha testing. ECC is a very high priority for the production standard. If you want to discuss this further, please [get in contact directly](mailto:badg@muterra.io).
+
+**Quick note 2:** Why not an AE/AEAD block mode? The added complexity doesn't make sense in this application. Dynamic bindings don't use symmetric encryption, and everything else is non-malleable. There's already a hash, and a signature, on top of the existing non-malleability, for MEOC records. CTR is very simple, which makes it much harder to screw up.
+
+**Quick note 3:** Investigating alternative stream ciphers is on our long-term horizon, as are highly-performant (symmetric only) one-to-one pipes. For now, the best route for performant streams is to use Muse to negotiate secret keys for lower-level transport sockets (etc) directly between hardware.
+
+### CTR vs SIV
+
+Relevant details:
+
+1. key/access control is separate from content containers
+2. all resources are content-addressed by their hash digests
+3. the protocol is transport agnostic, so traffic analysis, etc are deliberately out-of-scope
+
+Because everything is hash addressed, and content is retained asynchronously (potentially indefinitely; note that key persistence is handled separately), we're very concerned about data deduplication. "Ideally" (ie, ignoring security, which we're obviously not doing), to minimize network clutter, every (plaintext + key) combination would result in identical ciphertext.
+
+Of course, in practice, we need to be extremely concerned about reusing a (key + nonce) combination. Replay attacks are meaningless to this specific protocol[1] -- so the thought is, we can generate the nonce from a manipulation of the hash of the plaintext. This way an identical (key + nonce) combination will by definition result in an identical file.
+
+[1] Without going into a ton of detail, replays for the symmetric containers (MEOCs) are indistinguishable to re-uploading the file. Because retention is handled by the bindings, which have replay protection, a replay of the container without the binding would be automatically garbage-collected by the persistence provider. If the persistence provider already has the MEOC, a second upload is meaningless. This ignores traffic analysis and the like, which again, is out-of-scope for the protocol.
+
+**SIV mode**:
+
+Note: in SIV mode, the MAC tag must be prepended to the ciphertext in the MEOC payload.
+
+Advantages:
+
++ Network simplicity and deduplication
++ Does not rely upon strength of random number generation
++ [Well-documented](http://web.cs.ucdavis.edu/~rogaway/papers/siv.pdf); also, [good security properties](https://www.iacr.org/archive/eurocrypt2006/40040377/40040377.pdf)
++ Places no restrictions on keys (ie, compatible with reuse, ratcheting, new keys, etc)
+
+Disadvantages:
+
++ Slow, and requires 2 passes
++ Relatively new, bringing the potential for buggy implementation code
++ Less availability in off-the-shelf crypto libraries
++ Doubles key size, unless using a secondary KDF
+
+**CTR mode**:
+
+Note: in SIV mode, the nonce should not be prepended to the ciphertext in the MEOC payload. It should be considered a functional component of the key, and must be distributed therewith. It may be random, but must never be reused for the same key. New key generation should be accompanied by new nonce generation to emphasize their equivalence and discourage accidental content duplication. Note that the nonce size must match the block size for the underlying symmetric cipher.
+
+Advantages:
+
++ Fast, and may be totally precomputed
++ Compromise between deduplication and performance
++ Cryptographic simplicity
++ Library availability
+
+Disadvantages:
+
++ Relies on the strength of the random number generator for birthday resistance
++ **Note that this places restrictions on keys, as the new nonce must be distributed in a new key exchange for new content.** This makes it unsuitable for API pipes.
+
+## Address algorithms
+
+By Muse integer representation:
+
++ **0x0:** None. Reserved for testing and development purposes., and bootstrapping identity containers.
++ **0x1:** SHA-512.
+
+**Not-so-quick note:** Why not SHA-256? Two primary reasons. The first is to reduce the possibility of an accidental (or malicious) birthday attack against the hash itself. That does sound a little ridiculous, to be fair, given the sense of scale:
+
++ In 2013 the internet [reached approximately 4E21 bytes](https://en.wikipedia.org/wiki/Zettabyte)
++ Muse headers consume ~1kB per file. Taking this as a minimum filesize yields 4e18 possible files in 2013
++ The internet is expanding rapidly, and will [probably double in size within the next 5 years](http://www.forbes.com/sites/gilpress/2014/08/22/internet-of-things-by-the-numbers-market-estimates-and-forecasts/). 
++ Taking 2020 with 1E19 bytes as a baseline, and a 5-year doubling period (approximately 13.9% yearly growth), and extrapolating to a 2040 design life (making Muse approximately as old as the internet is today), yields 1.6E20 files
++ Combine all of that and the formula for [birthday attack probability](https://en.wikipedia.org/wiki/Birthday_attack), and you get p≈1-10^-10^-38 for 256 bits, which is just vanishingly small.
+
+However, this kind of analysis is grossly misleading. It is wholly predicated on the strength of the hash function, and by this kind of analysis, MD5 still looks acceptable (please do *not* mistake that as an argument for MD5). Point is: giving ourselves some headroom for such a potentially large application seems prudent.
+
+Secondly, and much less importantly, we are considering defining 0x2 as a concatenation of SHA256 and SHA3-256 (operating independently over the same input bytes; this is a whole separate discussion). This allows us some version-independent wiggle room, though we could also just reserve an extra 256 bits in the standard to accomplish the same end result.
+
+# Identity containers (MIDC)
+
++ Preferred stored file extension: no extension
++ Secondary stored file extension: .muid
++ Tertiary stored file extension: .midc
+
+Identities are contained within specially-formatted container objects. Unlike other Muse objects, identity containers do not require a binding to persist. A persistence provider should only remove an identity container under extreme circumstances; they should be considered, generally speaking, to be indefinitely persistent. However, they may be bound by dynamic bindings, and that dynamic address may be used as a proxy for the author's MUID.
+
+Because they may have different versions, identity containers are not necessarily deterministically reproducible; rebuilding them from the base public keys without knowing what identity container version was originally used will generally result in a different author MUID. Furthermore, each individual identity container can only support a single ciphersuite.
+
+An author using multiple author MUIDs for the same public keys may have catastrophic consequences for that author, but will leave the network unaffected. Given the difficulty of identity recreation, Muse best practices are to **always** wrap identity containers within a dynamic binding as a proxy, *even if there is only a single MIDC associated with that entity.*
+
+The file hash of the MIDC container (or, again, its dynamic binding proxy) is the Author/Recipient MUID for all other objects.
+
+## Format
+
+| Decimal Offset | Decimal Length | Name                    | Format              |
+| ------         | ---------      | -------------------     | -----------         |
+| 0              | 4B             | Magic number            | 0x 4D 49 44 43      |
+| 4              | 4B             | Version number          | Unsigned 32-bit int |
+| 8              | 1B             | Cipher suite            | Unsigned 8-bit int  |
+| 9              | ...            | Signature key material  | (See below)         |
+| ...            | ...            | Encryption key material | (See below)         |
+| ...            | ...            | Exchange key material   | (See below)         |
+| ...            | 1B             | Address algorithm       | Unsigned 8-bit int  |
+| ...            | 64B            | File hash               | Bytes               |
+
+**Why not ASN.1 / DER / PEM encoding?** In a nutshell, this decision is made out of a strong aversion to upstream dependencies. To elaborate: typical DER encodings for ASN.1 key material don't support multiple key serializations. Because identity files are a collection of three public keys, this means they cannot be immediately used as-is without additional code. That leaves three options: 
+
+1. using DER for the entire identity container, introducing an upstream dependency or downstream adaptation
+2. using DER for the key material, and embedding those three blobs within another encoding
+3. avoiding DER / ASN.1 entirely.
+
+Given the very rigid Muse requirements for identity files, and the inherent simplicity of the encoding (public keys are simply large integers), it makes sense for us to define a basic, explicit, versioned container for the public keys. Furthermore, until the Muse protocol reaches maturity, we would like to strongly disincentivize reuse of Muse private keys with other cryptographic systems. In other words, explicitly breaking compatibility with existing key storage standards helps insulate Muse users from protocol and implementation vulnerabilities.
+
+### 1. Magic number
+
+ASCII "```MIDC```" (0x 4D 49 44 43)
+
+### 2. Version number
+
+The version number is an incrementing unsigned integer. It is not intended for human use; particular version numbers will be tagged with semantic version numbers.
+
+**The current MIDC version is 2.**
+
+### 3. Cipher suite
+
+Muse supports multiple cipher suites. They are represented as an 8-bit integer. See "Cipher suites and address algorithms" above for details. For MIDC objects, this represents the ciphersuite supported by the identity. This determines the lengths of the key material fields. Currently, identities can only support a single ciphersuite, even if those ciphersuites use the same public keys. This may change in the future.
+
+### 4-6. Key material
+
+Key material formatting, including length, is determined by the declared ciphersuite. Each key is used as follows:
+
++ **Signature key material:** the key material for object signature verification.
++ **Encryption key material:** the key material for asymmetric encryption, as used in the MEAR object.
++ **Exchange key material:** the key material for symmetric identity exchange, as used for MEAR "signatures" (key agreement for HMAC) and deniable identity aliasing.
+
+#### Ciphersuite 1
+
+| Offset | Length    | Name                               | Format      |
+| ------ | --------- | -------------------                | ----------- |
+| 9      | 512       | Signature key material (RSA-4096)  | Bytes       |
+| 521    | 512       | Encryption key material (RSA-4096) | Bytes       |
+| 1033   | 32        | Exchange key material (Curve25519) | Bytes       |
+
+**Notes:**
+
+1. RSA key material (the signature and encryption key) consists only of the RSA public modulus. The public exponent is defined within the ciphersuite, and excluded from the identity file. It must be encoded as a big-endian 4096-bit integer.
+2. Curve25519 key material (the exchange key) consists of the uncompressed, unpadded concatenation of the public elliptic curve point *Q* = (*x*, *y*). Both *x* and *y* must be encoded as big-endian 128-bit integers.
+
+#### Ciphersuite 2
+
+**Note:** ciphersuite 2 (differs from CS1 only by using SIV mode on AES) may soon be removed from the Muse standard.
+
+| Offset | Length    | Name                               | Format      |
+| ------ | --------- | -------------------                | ----------- |
+| 9      | 512       | Signature key material (RSA-4096)  | Bytes       |
+| 521    | 512       | Encryption key material (RSA-4096) | Bytes       |
+| 1033   | 32        | Exchange key material (Curve25519) | Bytes       |
+
+**Notes:**
+
+1. RSA key material (the signature and encryption key) consists only of the RSA public modulus. The public exponent is defined within the ciphersuite, and excluded from the identity file. It must be encoded as a big-endian 4096-bit integer.
+2. Curve25519 key material (the exchange key) consists of the uncompressed, unpadded concatenation of the public elliptic curve point *Q* = (*x*, *y*). Both *x* and *y* must be encoded as big-endian 128-bit integers.
+
+### 7. Address algorithm
+
+Muse may eventually need multiple hash algorithms. They are represented as an 8-bit integer immediately following the magic number. The protocol specification defines which algorithm corresponds to which integer. The 1-byte address algorithm field is prepended to the file hash to form the MUID.
+
+See "Cipher suites and address algorithms" above for details.
+
+### 8. File hash
+
+The hash digest of the file, using the algorithm described by the Address Algorithm field. For **all** Muse objects, input to the hash function is the concatenation of all previous fields. For example, in the case of a MIDC, the file hash is the concatenation of:
+
+1. Magic number
+2. Version
+3. Cipher suite
+4. Signature key material
+5. Encryption key material
+6. Exchange key material
+7. Address algorithm
+
+The file hash is appended to the 1-byte address algorithm field to construct a static MUID.
+
 # Object container (MEOC)
 
 + Preferred stored file extension: no extension
@@ -44,9 +246,9 @@ The version number is an incrementing unsigned integer. It is not intended for h
 
 ### 3. Cipher suite
 
-Muse plans to support multiple cipher suites. They are represented as an 8-bit integer.
+Muse supports multiple cipher suites. They are represented as an 8-bit integer.
 
-See "Cipher suites and address algorithms" below for details.
+See "Cipher suites and address algorithms" above for details.
 
 ### 4. Author MUID
 
@@ -62,23 +264,11 @@ The payload follows the public header immediately, with no padding. It is encryp
 
 ### 7. Address algorithm
 
-Muse may eventually need multiple hash algorithms. They are represented as an 8-bit integer immediately following the magic number. The protocol specification defines which algorithm corresponds to which integer. The 1-byte address algorithm field is prepended to the file hash to form the MUID.
-
-See "Cipher suites and address algorithms" below for details.
+See above for description.
 
 ### 8. File hash
 
-The hash digest of the file, using the algorithm described by the Address Algorithm field. For **all** Muse objects, input to the hash function is the concatenation of all previous fields. For example, in the case of a MEOC, the file hash is the concatenation of:
-
-1. Magic number
-2. Version
-3. Cipher suite
-4. Author MUID
-5. Payload length
-6. Encrypted payload
-7. Address algorithm
-
-The file hash is appended to the 1-byte address algorithm field to construct a static MUID.
+See above for description.
 
 ### 9. Author signature
 
@@ -462,25 +652,35 @@ Secrets are generally embedded as the target secret in a MEAR pipe request. They
 
 Format:
 
-| Offset   | Length    | Name                | Format              |
-| ------   | --------- | ------------------- | -----------         |
-| 0        | 2B        | Identifier          | ASCII "```SH```"    |
-| 2        | 2B        | Version             | Unsigned 16-bit int |
-| 4        | 1B        | Key length, *LE*    | Unsigned 8-bit int  |
-| 5        | 1B        | Seed length, *LF*   | Unsigned 8-bit int  |
-| 6        | *LE*      | Key                 | Bytes               |
-| 6 + *LE* | *LF*      | Seed                | Bytes               |
+| Offset | Length    | Name                | Format              |
+| ------ | --------- | ------------------- | -----------         |
+| 0      | 2B        | Identifier          | ASCII "```SH```"    |
+| 2      | 2B        | Version             | Unsigned 16-bit int |
+| 4      | 1B        | Cipher suite        | Unsigned 8-bit int  |
+| 5      | ...       | Key                 | Bytes               |
+| ...    | ...       | Seed                | Bytes               |
 
 1. **Identifier:** constant to denote a serialized secret. ASCII "```SH```" (0x 53 48)
-2. **Version:** the version for the secret serialization. Current is 1.
-3. **Key length:** the length, in bytes, of the key.
-4. **Seed length:** the length, in bytes, of the seed.
-5. **Key:** the key material.
-6. **Seed:** the nonce or initialization vector, if any is required by the ciphersuite.
+2. **Version:** the version for the secret serialization. Current is 2.
+3. **Cipher suite:** the integer representation of the cipher suite used by the corresponding MEOC object. This determines the key and seed lengths.
+4. **Key:** the key material. Length is defined on a per-ciphersuite basis.
+5. **Seed:** the nonce or initialization vector, if any is required by the ciphersuite. Length is defined on a per-ciphersuite basis.
 
-## Identities
+### Ciphersuite 1
 
+| Offset | Length    | Name                | Format      |
+| ------ | --------- | ------------------- | ----------- |
+| 5      | 32        | Key                 | Bytes       |
+| 37     | 16        | Seed                | Bytes       |
 
+### Ciphersuite 2
+
+**Note:** ciphersuite 2 (differs from CS1 only by using SIV mode on AES) may soon be removed from the Muse standard.
+
+| Offset | Length    | Name                | Format      |
+| ------ | --------- | ------------------- | ----------- |
+| 5      | 64        | Key                 | Bytes       |
+| XX     | 0         | Seed                | Unused      |
 
 # Persistence provider commands
 
@@ -786,100 +986,3 @@ Note that, since persistence providers are required to keep only their most rece
     3. Verify author's identity file includes Diffie-Hellman public key for cipher suite
 4. Perform symmetric signature key agreement procedure (see "Author symmetric signature" above)
 5. Verify author symmetric signature
-
-# Cipher suites and address algorithms
-
-**Note that this is not a substitute for a proper threat model or security analysis.** Those documents have been separated from the protocol specification for readability and digestibility purposes.
-
-## Cipher suites
-
-By Muse integer representation:
-
-+ **0x0:** None. Reserved for testing and development purposes.
-+ **0x1:** SHA512/AES256/RSA4096.  
-  **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537. Salt length 64 bytes.  
-  **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537.  
-  **Symmetric encryption:** AES-256 in **CTR mode with nonce distributed privately with the key**  
-  **Symmetric shared secrets:** Elliptic curve Diffie-Hellman using Curve25519.  
-  **Key agreement from shared secret:** HKDF+SHA512. Salt is application-specific.  
-  **Symmetric signatures / MAC:** HMAC+SHA512
-+ **0x2:** SHA512/AES256/RSA4096.  
-  **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537. Salt length 64 bytes.  
-  **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537.  
-  **Symmetric encryption:** AES-256 in **SIV mode (formally AEAD_AES_SIV_CMAC_512)**  
-  **Symmetric shared secrets:** Elliptic curve Diffie-Hellman using Curve25519.  
-  **Key agreement from shared secret:** HKDF+SHA512. Salt is application-specific.  
-  **Symmetric signatures / MAC:** HMAC+SHA512
-
-**Quick note:** Why not elliptic curves first? Basically, development resource allocation. There was a reasonably large amount of thought put into this decision, and I stand by it. We need a prototype that works and is suitably secure for alpha testing. ECC is a very high priority for the production standard. If you want to discuss this further, please [get in contact directly](mailto:badg@muterra.io).
-
-**Quick note 2:** Why not an AE/AEAD block mode? The added complexity doesn't make sense in this application. Dynamic bindings don't use symmetric encryption, and everything else is non-malleable. There's already a hash, and a signature, on top of the existing non-malleability, for MEOC records. CTR is very simple, which makes it much harder to screw up.
-
-**Quick note 3:** Non-deterministic nonce generation will be implemented at a later date, in a different cipher suite, for performance-sensitive applications. It may also use ChaCha20. This is on the horizon, but it's a bit of a ways out. For now, the best route for performant streams is to use Muse to negotiate secret keys for lower-level transport sockets (etc) directly between hardware.
-
-### CTR vs SIV
-
-Relevant details:
-
-1. key/access control is separate from content containers
-2. all resources are content-addressed by their hash digests
-3. the protocol is transport agnostic, so traffic analysis, etc are deliberately out-of-scope
-
-Because everything is hash addressed, and content is retained asynchronously (potentially indefinitely; note that key persistence is handled separately), we're very concerned about data deduplication. "Ideally" (ie, ignoring security, which we're obviously not doing), to minimize network clutter, every (plaintext + key) combination would result in identical ciphertext.
-
-Of course, in practice, we need to be extremely concerned about reusing a (key + nonce) combination. Replay attacks are meaningless to this specific protocol[1] -- so the thought is, we can generate the nonce from a manipulation of the hash of the plaintext. This way an identical (key + nonce) combination will by definition result in an identical file.
-
-[1] Without going into a ton of detail, replays for the symmetric containers (MEOCs) are indistinguishable to re-uploading the file. Because retention is handled by the bindings, which have replay protection, a replay of the container without the binding would be automatically garbage-collected by the persistence provider. If the persistence provider already has the MEOC, a second upload is meaningless. This ignores traffic analysis and the like, which again, is out-of-scope for the protocol.
-
-**SIV mode**:
-
-Note: in SIV mode, the MAC tag must be prepended to the ciphertext in the MEOC payload.
-
-Advantages:
-
-+ Network simplicity and deduplication
-+ Does not rely upon strength of random number generation
-+ [Well-documented](http://web.cs.ucdavis.edu/~rogaway/papers/siv.pdf); also, [good security properties](https://www.iacr.org/archive/eurocrypt2006/40040377/40040377.pdf)
-+ Places no restrictions on keys (ie, compatible with reuse, ratcheting, new keys, etc)
-
-Disadvantages:
-
-+ Slow, and requires 2 passes
-+ Relatively new, bringing the potential for buggy implementation code
-+ Less availability in off-the-shelf crypto libraries
-+ Doubles key size, unless using a secondary KDF
-
-**CTR mode**:
-
-Note: in SIV mode, the nonce should not be prepended to the ciphertext in the MEOC payload. It should be considered a functional component of the key, and must be distributed therewith. It may be random, but must never be reused for the same key. New key generation should be accompanied by new nonce generation to emphasize their equivalence and discourage accidental content duplication. Note that the nonce size must match the block size for the underlying symmetric cipher.
-
-Advantages:
-
-+ Fast, and may be totally precomputed
-+ Compromise between deduplication and performance
-+ Cryptographic simplicity
-+ Library availability
-
-Disadvantages:
-
-+ Relies on the strength of the random number generator for birthday resistance
-+ **Note that this places restrictions on keys, as the new nonce must be distributed in a new key exchange for new content.** This makes it unsuitable for API pipes.
-
-## Address algorithms
-
-By Muse integer representation:
-
-+ **0x0:** None. Reserved for testing and development purposes.
-+ **0x1:** SHA-512.
-
-**Not-so-quick note:** Why not SHA-256? Two primary reasons. The first is to reduce the possibility of an accidental (or malicious) birthday attack against the hash itself. That does sound a little ridiculous, to be fair, given the sense of scale:
-
-+ In 2013 the internet [reached approximately 4E21 bytes](https://en.wikipedia.org/wiki/Zettabyte)
-+ Muse headers consume ~1kB per file. Taking this as a minimum filesize yields 4e18 possible files in 2013
-+ The internet is expanding rapidly, and will [probably double in size within the next 5 years](http://www.forbes.com/sites/gilpress/2014/08/22/internet-of-things-by-the-numbers-market-estimates-and-forecasts/). 
-+ Taking 2020 with 1E19 bytes as a baseline, and a 5-year doubling period (approximately 13.9% yearly growth), and extrapolating to a 2040 design life (making Muse approximately as old as the internet is today), yields 1.6E20 files
-+ Combine all of that and the formula for [birthday attack probability](https://en.wikipedia.org/wiki/Birthday_attack), and you get p≈1-10^-10^-38 for 256 bits, which is just vanishingly small.
-
-However, this kind of analysis is grossly misleading. It is wholly predicated on the strength of the hash function, and by this kind of analysis, MD5 still looks acceptable (please do *not* mistake that as an argument for MD5). Point is: giving ourselves some headroom for such a potentially large application seems prudent.
-
-Secondly, and much less importantly, we are considering defining 0x2 as a concatenation of SHA256 and SHA3-256 (operating independently over the same input bytes; this is a whole separate discussion). This allows us some version-independent wiggle room, though we could also just reserve an extra 256 bits in the standard to accomplish the same end result.

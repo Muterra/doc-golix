@@ -1,4 +1,12 @@
-# Current revision: 14 Feb 2016 to present
+# Current revision: 26 Feb 2016
+
++ Reorganized spec documentation to list cipher suites and address algos first
++ Added dedicated identity container (MIDC)
++ Added ancillary format for secret sharing
+
+# Previous revisions
+
+## 20 Feb 2016, #e27e7bf
 
 + Major readme revision for better expressibility
 + Removed shameless plugs
@@ -8,8 +16,6 @@
 + Clarified available size of asymmetric payload and appropriateness of use
 + Changed all secondary file extensions to .muid and tertiary to object identifiers (ex .meoc)
 + Added support for different static/dynamic address algorithms in dynamic binding
-
-# Previous revisions
 
 ## 18 Jan 2016, #4fcba8f
 
