@@ -1,13 +1,20 @@
-# Current revision: 27 Feb 2016
+# Current revision: 28 Feb 2016
 
-+ Updated dynamic binding to remove support for multiple identical start points, and removed old wording surrounding random seed for that purpose. Upped version number accordingly.
++ Rebranded Muse -> Golix. No version changes as a result, though. Corrected some minor glaring errors in the process, and noted some things in the spec as deprecated (but did not redocument them yet).
++ Added text explicitly forbidding dynamic binding to anything other than a static GEOC
++ Fixed overlooked update in GDXX record re: chain count vs chain length. Updated version accordingly.
++ Changed pipe request identifier to ASCII "RQ"
 
 # Previous revisions
+
+## 27 Feb 2016, #6aff066
+
++ Updated dynamic binding to remove support for multiple identical start points, and removed old wording surrounding random seed for that purpose. Upped version number accordingly.
 
 ## 26 Feb 2016, #4bf3e65
 
 + Reorganized spec documentation to list cipher suites and address algos first
-+ Added dedicated identity container (MIDC)
++ Added dedicated identity container (GIDC)
 + Added ancillary format for secret sharing
 
 ## 20 Feb 2016, #e27e7bf
@@ -15,10 +22,10 @@
 + Major readme revision for better expressibility
 + Removed shameless plugs
 + Switched numeric identification of ciphersuites 1 and 2 in preparation for possible removal of SIV mode
-+ Changed lengths of any MUID lists into absolute lengths, to ease support of potential future address algorithms of different lengths. Updated version numbers accordingly.
-+ Moved all of the asymmetric operations into a single primitive (MEAR) with differing payloads. Added another payload definition for arbitrary content, to support future protocol development.
++ Changed lengths of any GUID lists into absolute lengths, to ease support of potential future address algorithms of different lengths. Updated version numbers accordingly.
++ Moved all of the asymmetric operations into a single primitive (GARQ) with differing payloads. Added another payload definition for arbitrary content, to support future protocol development.
 + Clarified available size of asymmetric payload and appropriateness of use
-+ Changed all secondary file extensions to .muid and tertiary to object identifiers (ex .meoc)
++ Changed all secondary file extensions to .guid and tertiary to object identifiers (ex .geoc)
 + Added support for different static/dynamic address algorithms in dynamic binding
 
 ## 18 Jan 2016, #4fcba8f

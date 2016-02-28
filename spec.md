@@ -1,6 +1,6 @@
-**WARNING:** This is a draft document dated 27 February 2016. It is under review and is definitely **not finalized!** If you'd like to stay updated, consider joining our [mailing list](https://www.muterra.io/mailing-signup.html).
+**WARNING:** This is a draft document dated 28 February 2016. It is under review and is definitely **not finalized!** If you'd like to stay updated, consider joining our [mailing list](https://www.muterra.io/mailing-signup.html).
 
-**SPECIAL WARNING:** This should not be used for private data in a production environment until subjected to a third-party audit. Until that time, consider all Muse-stored information to be fully public.
+**SPECIAL WARNING:** This protocol should not be used for private data in a production environment until subjected to a third-party audit. Until that time, consider all Golix information to be fully public.
 
 **NOTE:** This is a purely implementation document. For design discussion, see our [design document](/design_philosophy.md). For technical discussion, see our [whitepaper](/whitepaper.md). For security discussion, stay tuned for a detailed threat model and state-based analysis.
 
@@ -10,7 +10,7 @@
 
 ## Cipher suites
 
-By Muse integer representation:
+By Golix integer representation:
 
 + **0x0:** None. Reserved for testing and development purposes.
 + **0x1:** SHA512/AES256/RSA4096.  
@@ -30,9 +30,9 @@ By Muse integer representation:
 
 **Quick note:** Why not elliptic curves first? Basically, development resource allocation. There was a reasonably large amount of thought put into this decision, and I stand by it. We need a prototype that works and is suitably secure for alpha testing. ECC is a very high priority for the production standard. If you want to discuss this further, please [get in contact directly](mailto:badg@muterra.io).
 
-**Quick note 2:** Why not an AE/AEAD block mode? The added complexity doesn't make sense in this application. Dynamic bindings don't use symmetric encryption, and everything else is non-malleable. There's already a hash, and a signature, on top of the existing non-malleability, for MEOC records. CTR is very simple, which makes it much harder to screw up.
+**Quick note 2:** Why not an AE/AEAD block mode? The added complexity doesn't make sense in this application. Dynamic bindings don't use symmetric encryption, and everything else is non-malleable. There's already a hash, and a signature, on top of the existing non-malleability, for GEOC records. CTR is very simple, which makes it much harder to screw up.
 
-**Quick note 3:** Investigating alternative stream ciphers is on our long-term horizon, as are highly-performant (symmetric only) one-to-one pipes. For now, the best route for performant streams is to use Muse to negotiate secret keys for lower-level transport sockets (etc) directly between hardware.
+**Quick note 3:** Investigating alternative stream ciphers is on our long-term horizon, as are highly-performant (symmetric only) one-to-one pipes. For now, the best route for performant streams is to use Golix to negotiate secret keys for lower-level transport sockets (etc) directly between hardware.
 
 ### CTR vs SIV
 
@@ -46,11 +46,11 @@ Because everything is hash addressed, and content is retained asynchronously (po
 
 Of course, in practice, we need to be extremely concerned about reusing a (key + nonce) combination. Replay attacks are meaningless to this specific protocol[1] -- so the thought is, we can generate the nonce from a manipulation of the hash of the plaintext. This way an identical (key + nonce) combination will by definition result in an identical file.
 
-[1] Without going into a ton of detail, replays for the symmetric containers (MEOCs) are indistinguishable to re-uploading the file. Because retention is handled by the bindings, which have replay protection, a replay of the container without the binding would be automatically garbage-collected by the persistence provider. If the persistence provider already has the MEOC, a second upload is meaningless. This ignores traffic analysis and the like, which again, is out-of-scope for the protocol.
+[1] Without going into a ton of detail, replays for the symmetric containers (GEOCs) are indistinguishable to re-uploading the file. Because retention is handled by the bindings, which have replay protection, a replay of the container without the binding would be automatically garbage-collected by the persistence provider. If the persistence provider already has the GEOC, a second upload is meaningless. This ignores traffic analysis and the like, which again, is out-of-scope for the protocol.
 
 **SIV mode**:
 
-Note: in SIV mode, the MAC tag must be prepended to the ciphertext in the MEOC payload.
+Note: in SIV mode, the MAC tag must be prepended to the ciphertext in the GEOC payload.
 
 Advantages:
 
@@ -68,7 +68,7 @@ Disadvantages:
 
 **CTR mode**:
 
-Note: in SIV mode, the nonce should not be prepended to the ciphertext in the MEOC payload. It should be considered a functional component of the key, and must be distributed therewith. It may be random, but must never be reused for the same key. New key generation should be accompanied by new nonce generation to emphasize their equivalence and discourage accidental content duplication. Note that the nonce size must match the block size for the underlying symmetric cipher.
+Note: in SIV mode, the nonce should not be prepended to the ciphertext in the GEOC payload. It should be considered a functional component of the key, and must be distributed therewith. It may be random, but must never be reused for the same key. New key generation should be accompanied by new nonce generation to emphasize their equivalence and discourage accidental content duplication. Note that the nonce size must match the block size for the underlying symmetric cipher.
 
 Advantages:
 
@@ -84,7 +84,7 @@ Disadvantages:
 
 ## Address algorithms
 
-By Muse integer representation:
+By Golix integer representation:
 
 + **0x0:** None. Reserved for testing and development purposes., and bootstrapping identity containers.
 + **0x1:** SHA-512.
@@ -92,34 +92,34 @@ By Muse integer representation:
 **Not-so-quick note:** Why not SHA-256? Two primary reasons. The first is to reduce the possibility of an accidental (or malicious) birthday attack against the hash itself. That does sound a little ridiculous, to be fair, given the sense of scale:
 
 + In 2013 the internet [reached approximately 4E21 bytes](https://en.wikipedia.org/wiki/Zettabyte)
-+ Muse headers consume ~1kB per file. Taking this as a minimum filesize yields 4e18 possible files in 2013
++ Golix headers consume ~1kB per file. Taking this as a minimum filesize yields 4e18 possible files in 2013
 + The internet is expanding rapidly, and will [probably double in size within the next 5 years](http://www.forbes.com/sites/gilpress/2014/08/22/internet-of-things-by-the-numbers-market-estimates-and-forecasts/). 
-+ Taking 2020 with 1E19 bytes as a baseline, and a 5-year doubling period (approximately 13.9% yearly growth), and extrapolating to a 2040 design life (making Muse approximately as old as the internet is today), yields 1.6E20 files
++ Taking 2020 with 1E19 bytes as a baseline, and a 5-year doubling period (approximately 13.9% yearly growth), and extrapolating to a 2040 design life (making Golix approximately as old as the internet is today), yields 1.6E20 files
 + Combine all of that and the formula for [birthday attack probability](https://en.wikipedia.org/wiki/Birthday_attack), and you get p≈1-10^-10^-38 for 256 bits, which is just vanishingly small.
 
 However, this kind of analysis is grossly misleading. It is wholly predicated on the strength of the hash function, and by this kind of analysis, MD5 still looks acceptable (please do *not* mistake that as an argument for MD5). Point is: giving ourselves some headroom for such a potentially large application seems prudent.
 
 Secondly, and much less importantly, we are considering defining 0x2 as a concatenation of SHA256 and SHA3-256 (operating independently over the same input bytes; this is a whole separate discussion). This allows us some version-independent wiggle room, though we could also just reserve an extra 256 bits in the standard to accomplish the same end result.
 
-# Identity containers (MIDC)
+# Identity containers (GIDC)
 
 + Preferred stored file extension: no extension
-+ Secondary stored file extension: .muid
-+ Tertiary stored file extension: .midc
++ Secondary stored file extension: .guid
++ Tertiary stored file extension: .gidc
 
-Identities are contained within specially-formatted container objects. Unlike other Muse objects, identity containers do not require a binding to persist. A persistence provider should only remove an identity container under extreme circumstances; they should be considered, generally speaking, to be indefinitely persistent. However, they may be bound by dynamic bindings, and that dynamic address may be used as a proxy for the author's MUID.
+Identities are contained within specially-formatted container objects. Unlike other Golix objects, identity containers do not require a binding to persist. A persistence provider should only remove an identity container under extreme circumstances; they should be considered, generally speaking, to be indefinitely persistent. However, they may be bound by dynamic bindings, and that dynamic address may be used as a proxy for the author's GUID.
 
-Because they may have different versions, identity containers are not necessarily deterministically reproducible; rebuilding them from the base public keys without knowing what identity container version was originally used will generally result in a different author MUID. Furthermore, each individual identity container can only support a single ciphersuite.
+Because they may have different versions, identity containers are not necessarily deterministically reproducible; rebuilding them from the base public keys without knowing what identity container version was originally used will generally result in a different author GUID. Furthermore, each individual identity container can only support a single ciphersuite.
 
-An author using multiple author MUIDs for the same public keys may have catastrophic consequences for that author, but will leave the network unaffected. Given the difficulty of identity recreation, Muse best practices are to **always** wrap identity containers within a dynamic binding as a proxy, *even if there is only a single MIDC associated with that entity.*
+An author using multiple author GUIDs for the same public keys may have catastrophic consequences for that author, but will leave the network unaffected. Given the difficulty of identity recreation, Golix best practices are to **always** wrap identity containers within a dynamic binding as a proxy, *even if there is only a single GIDC associated with that entity.*
 
-The file hash of the MIDC container (or, again, its dynamic binding proxy) is the Author/Recipient MUID for all other objects.
+The file hash of the GIDC container (or, again, its dynamic binding proxy) is the Author/Recipient GUID for all other objects.
 
 ## Format
 
 | Decimal Offset | Decimal Length | Name                    | Format              |
 | ------         | ---------      | -------------------     | -----------         |
-| 0              | 4B             | Magic number            | 0x 4D 49 44 43      |
+| 0              | 4B             | Magic number            | 0x 47 49 44 43      |
 | 4              | 4B             | Version number          | Unsigned 32-bit int |
 | 8              | 1B             | Cipher suite            | Unsigned 8-bit int  |
 | 9              | ...            | Signature key material  | (See below)         |
@@ -134,29 +134,29 @@ The file hash of the MIDC container (or, again, its dynamic binding proxy) is th
 2. using DER for the key material, and embedding those three blobs within another encoding
 3. avoiding DER / ASN.1 entirely.
 
-Given the very rigid Muse requirements for identity files, and the inherent simplicity of the encoding (public keys are simply large integers), it makes sense for us to define a basic, explicit, versioned container for the public keys. Furthermore, until the Muse protocol reaches maturity, we would like to strongly disincentivize reuse of Muse private keys with other cryptographic systems. In other words, explicitly breaking compatibility with existing key storage standards helps insulate Muse users from protocol and implementation vulnerabilities.
+Given the very rigid Golix requirements for identity files, and the inherent simplicity of the encoding (public keys are simply large integers), it makes sense for us to define a basic, explicit, versioned container for the public keys. Furthermore, until the Golix protocol reaches maturity, we would like to strongly disincentivize reuse of Golix private keys with other cryptographic systems. In other words, explicitly breaking compatibility with existing key storage standards helps insulate Golix users from protocol and implementation vulnerabilities.
 
 ### 1. Magic number
 
-ASCII "```MIDC```" (0x 4D 49 44 43)
+ASCII "```GIDC```" (0x 47 49 44 43)
 
 ### 2. Version number
 
 The version number is an incrementing unsigned integer. It is not intended for human use; particular version numbers will be tagged with semantic version numbers.
 
-**The current MIDC version is 2.**
+**The current GIDC version is 2.**
 
 ### 3. Cipher suite
 
-Muse supports multiple cipher suites. They are represented as an 8-bit integer. See "Cipher suites and address algorithms" above for details. For MIDC objects, this represents the ciphersuite supported by the identity. This determines the lengths of the key material fields. Currently, identities can only support a single ciphersuite, even if those ciphersuites use the same public keys. This may change in the future.
+Golix supports multiple cipher suites. They are represented as an 8-bit integer. See "Cipher suites and address algorithms" above for details. For GIDC objects, this represents the ciphersuite supported by the identity. This determines the lengths of the key material fields. Currently, identities can only support a single ciphersuite, even if those ciphersuites use the same public keys. This may change in the future.
 
 ### 4-6. Key material
 
 Key material formatting, including length, is determined by the declared ciphersuite. Each key is used as follows:
 
 + **Signature key material:** the key material for object signature verification.
-+ **Encryption key material:** the key material for asymmetric encryption, as used in the MEAR object.
-+ **Exchange key material:** the key material for symmetric identity exchange, as used for MEAR "signatures" (key agreement for HMAC) and deniable identity aliasing.
++ **Encryption key material:** the key material for asymmetric encryption, as used in the GARQ object.
++ **Exchange key material:** the key material for symmetric identity exchange, as used for GARQ "signatures" (key agreement for HMAC) and deniable identity aliasing.
 
 #### Ciphersuite 1
 
@@ -173,7 +173,7 @@ Key material formatting, including length, is determined by the declared ciphers
 
 #### Ciphersuite 2
 
-**Note:** ciphersuite 2 (differs from CS1 only by using SIV mode on AES) may soon be removed from the Muse standard.
+**Note:** ciphersuite 2 (differs from CS1 only by using SIV mode on AES) may soon be removed from the Golix standard.
 
 | Offset | Length    | Name                               | Format      |
 | ------ | --------- | -------------------                | ----------- |
@@ -188,13 +188,13 @@ Key material formatting, including length, is determined by the declared ciphers
 
 ### 7. Address algorithm
 
-Muse may eventually need multiple hash algorithms. They are represented as an 8-bit integer immediately following the magic number. The protocol specification defines which algorithm corresponds to which integer. The 1-byte address algorithm field is prepended to the file hash to form the MUID.
+Golix may eventually need multiple hash algorithms. They are represented as an 8-bit integer immediately following the magic number. The protocol specification defines which algorithm corresponds to which integer. The 1-byte address algorithm field is prepended to the file hash to form the GUID.
 
 See "Cipher suites and address algorithms" above for details.
 
 ### 8. File hash
 
-The hash digest of the file, using the algorithm described by the Address Algorithm field. For **all** Muse objects, input to the hash function is the concatenation of all previous fields. For example, in the case of a MIDC, the file hash is the concatenation of:
+The hash digest of the file, using the algorithm described by the Address Algorithm field. For **all** Golix objects, input to the hash function is the concatenation of all previous fields. For example, in the case of a GIDC, the file hash is the concatenation of:
 
 1. Magic number
 2. Version
@@ -204,30 +204,30 @@ The hash digest of the file, using the algorithm described by the Address Algori
 6. Exchange key material
 7. Address algorithm
 
-The file hash is appended to the 1-byte address algorithm field to construct a static MUID.
+The file hash is appended to the 1-byte address algorithm field to construct a static GUID.
 
-# Object container (MEOC)
+# Object container (GEOC)
 
 + Preferred stored file extension: no extension
-+ Secondary stored file extension: .muid
-+ Tertiary stored file extension: .meoc
++ Secondary stored file extension: .guid
++ Tertiary stored file extension: .geoc
 
-MEOCs must be stored by a persistence provider if, and only if, they are referenced in a MOBS or MOBD stored at the same persistence provider.
+GEOCs must be stored by a persistence provider if, and only if, they are referenced in a GOBS or GOBD stored at the same persistence provider.
 
 **Terminology:**
 
-+ Author: the entity-agent creating the MEOC
++ Author: the entity-agent creating the GEOC
 + Payload: all information to be protected by the container
-+ Static MUID: the immutable, unique identifier for this particular object. It is always the (address algorithm + file hash) combination for that object.
++ Static GUID: the immutable, unique identifier for this particular object. It is always the (address algorithm + file hash) combination for that object.
 
 ## Format
 
 | Decimal Offset | Decimal Length | Name                | Format              |
 | ------         | ---------      | ------------------- | -----------         |
-| 0              | 4B             | Magic number        | 0x 4D 45 4F 43      |
+| 0              | 4B             | Magic number        | 0x 47 45 4F 43      |
 | 4              | 4B             | Version number      | Unsigned 32-bit int |
 | 8              | 1B             | Cipher suite        | Unsigned 8-bit int  |
-| 9              | 65B            | Author MUID         | Bytes               |
+| 9              | 65B            | Author GUID         | Bytes               |
 | 74             | 8B             | Payload length, *N* | Unsigned 64-bit int |
 | 82             | *N*            | Private payload     | Encrypted blob      |
 | 82 + *N*       | 1B             | Address algorithm   | Unsigned 8-bit int  |
@@ -236,23 +236,23 @@ MEOCs must be stored by a persistence provider if, and only if, they are referen
 
 ### 1. Magic number
 
-ASCII "MEOC" (4D 45 4F 43)
+ASCII "GEOC" (47 45 4F 43)
 
 ### 2. Version number
 
 The version number is an incrementing unsigned integer. It is not intended for human use; particular version numbers will be tagged with semantic version numbers.
 
-**The current MEOC version is 14.**
+**The current GEOC version is 14.**
 
 ### 3. Cipher suite
 
-Muse supports multiple cipher suites. They are represented as an 8-bit integer.
+Golix supports multiple cipher suites. They are represented as an 8-bit integer.
 
 See "Cipher suites and address algorithms" above for details.
 
-### 4. Author MUID
+### 4. Author GUID
 
-The full MUID of the MEOC object containing the author's identity (her public keys).
+The full GUID of the GEOC object containing the author's identity (her public keys).
 
 ### 5. Payload length
 
@@ -274,37 +274,37 @@ See above for description.
 
 This field is always an asymmetric cryptographic signature of the file hash field. The signature algorithm is defined by the cipher suite field.
 
-# Static binding (MOBS)
+# Static binding (GOBS)
 
 + Preferred stored file extension: no extension
-+ Secondary stored file extension: .muid
-+ Tertiary stored file extension: .mobs
++ Secondary stored file extension: .guid
++ Tertiary stored file extension: .gobs
 
-MOBS must be stored by a persistence provider until, and only until, they are cleared by a debinding.
+GOBS must be stored by a persistence provider until, and only until, they are cleared by a debinding.
 
 **Terminology:**
 
-+ Binder: the entity-agent creating the binding (not necessarily the same as the bound MEOC's author)
-+ Target MUID: the static MUID for the bound MEOC
++ Binder: the entity-agent creating the binding (not necessarily the same as the bound GEOC's author)
++ Target GUID: the static GUID for the bound GEOC
 
-Note that the static MUID applies to this particular binding, not to the target.
+Note that the static GUID applies to this particular binding, not to the target.
 
 ## Format
 
 | Decimal Offset | Decimal Length | Name                | Format              |
 | ------         | ---------      | ------------------- | -----------         |
-| 0              | 4B             | Magic number        | 0x 4D 4F 42 53      |
+| 0              | 4B             | Magic number        | 0x 47 4F 42 53      |
 | 4              | 4B             | Version number      | Unsigned 32-bit int |
 | 8              | 1B             | Cipher suite        | Unsigned 8-bit int  |
-| 9              | 65B            | Binder MUID         | Bytes               |
-| 74             | 65B            | Target MUID         | Bytes               |
+| 9              | 65B            | Binder GUID         | Bytes               |
+| 74             | 65B            | Target GUID         | Bytes               |
 | 139            | 1B             | Address algorithm   | Unsigned 8-bit int  |
 | 140            | 64B            | File hash           | Bytes               |
 | 204            | 512B           | Binder signature    | Bytes               |
 
 ### 1. Magic number
 
-ASCII "MOBS" (4D 4F 42 53)
+ASCII "GOBS" (47 4F 42 53)
 
 ### 2. Version
 
@@ -314,13 +314,13 @@ See above for description. **Currently 6.**
 
 See above for description.
 
-### 4. Binder MUID 
+### 4. Binder GUID 
 
-The full MUID (hash algorithm byte + file hash) of the MEOC object containing the identity (the public keys) of the agent placing the binding.
+The full GUID (hash algorithm byte + file hash) of the GEOC object containing the identity (the public keys) of the agent placing the binding.
 
-### 5. Target MUID
+### 5. Target GUID
 
-The MUID of the MEOC resource to bind to.
+The GUID of the GEOC resource to bind to.
 
 ### 6. Address algorithm
 
@@ -334,33 +334,33 @@ The file hash is used only for the signature. It is **not** used for addressing 
 
 See Author Signature above.
 
-# Dynamic binding (MOBD)
+# Dynamic binding (GOBD)
 
 + Preferred stored file extension: no extension
-+ Secondary stored file extension: .muid
-+ Tertiary stored file extension: .mobd
++ Secondary stored file extension: .guid
++ Tertiary stored file extension: .gobd
 
-MOBDs must be stored until, and only until, they are cleared by a debinding, or successfully updated by their binder.
+GOBDs must be stored until, and only until, they are cleared by a debinding, or successfully updated by their binder.
 
 **Terminology:**
 
-+ Dynamic MUID, dynamic address: The secondary address for this binding. Static for the lifetime of the binding.
-+ Frame: Any particular version of the binding with this dynamic MUID.
++ Dynamic GUID, dynamic address: The secondary address for this binding. Static for the lifetime of the binding.
++ Frame: Any particular version of the binding with this dynamic GUID.
 
-Note that the static MUID applies to *this particular frame*.
+Note that the static GUID applies to *this particular frame*.
 
 ## Format
 
 | Decimal Offset    | Decimal Length | Name                      | Format              |
 | ------            | ---------      | -------------------       | -----------         |
-| 0                 | 4B             | Magic number              | 0x 4D 4F 42 44      |
+| 0                 | 4B             | Magic number              | 0x 47 4F 42 44      |
 | 4                 | 4B             | Version number            | Unsigned 32-bit int |
 | 8                 | 1B             | Cipher suite              | Unsigned 8-bit int  |
-| 9                 | 65B            | Binder MUID               | Bytes               |
+| 9                 | 65B            | Binder GUID               | Bytes               |
 | 74                | 2B             | History length *LR*       | Unsigned 16-bit int |
 | 76                | *LR*           | Historical frames         | Bytes               |
 | 76 + *LR*         | 4B             | Targets length *LN*       | Unsigned 32-bit int |
-| 80 + *LR*         | *LN*           | Target MUIDs              | Bytes               |
+| 80 + *LR*         | *LN*           | Target GUIDs              | Bytes               |
 | 80 + *LR* + *LN*  | 1B             | Dynamic address algorithm | Unsigned 8-bit int  |
 | 81 + *LR* + *LN*  | 64B            | Dynamic hash              | Bytes               |
 | 145 + *LR* + *LN* | 1B             | File address algorithm    | Unsigned 8-bit int  |
@@ -369,7 +369,7 @@ Note that the static MUID applies to *this particular frame*.
 
 ### 1. Magic number
 
-ASCII "MOBD" (4D 4F 42 44)
+ASCII "GOBD" (47 4F 42 44)
 
 ### 2. Version
 
@@ -379,39 +379,39 @@ See above for description. **Currently 14.**
 
 See above for description.
 
-### 4. Binder MUID 
+### 4. Binder GUID 
 
 See above for description.
 
 ### 5. History length
 
-The length, in bytes, of the MUID history included in the binding. If zero, this is the first frame.
+The length, in bytes, of the GUID history included in the binding. If zero, this is the first frame.
 
 ### 6. Historical frames
 
-A record of the recent history of the dynamic binding's static MUIDs, sorted in ascending order of recency (ie, oldest first). Without this field, dynamic bindings are susceptible to replay attacks. All MOBD records must include at least one historical MUID. There is a balance here between network state management (more history is better) and size optimization (less history is better). If (and only if) the history length is zero will this indicate a new dynamic binding, in which case historical frames will be empty (zero-length).
+A record of the recent history of the dynamic binding's static GUIDs, sorted in ascending order of recency (ie, oldest first). Without this field, dynamic bindings are susceptible to replay attacks. All GOBD records must include at least one historical GUID. There is a balance here between network state management (more history is better) and size optimization (less history is better). If (and only if) the history length is zero will this indicate a new dynamic binding, in which case historical frames will be empty (zero-length).
 
 ### 7. Targets length
 
 The length, in bytes, of the list of targets.
 
-### 8. Target MUIDs
+### 8. Target GUIDs
 
-An ordered list of the MUIDs for each frame. Order will be enforced and can be meaningful.
+An ordered list of the GUIDs for each frame. Order will be enforced and can be meaningful. Note that targets must only address static GEOC addresses; however, this condition may be unenforced by persistence providers. Violating this constraint is highly likely to break applications, and so may be harmful to the binder, but will not otherwise effect the network.
 
 Note that it is impossible to have two *different* dynamic bindings with identical initial target lists. It is therefore also impossible to preallocate multiple dynamic "branches". Applications seeking such functionality should create a new dynamic binding at the branch point, updating downstream references to point to the new binding where appropriate. Alternatively, they may immediately create two dynamic bindings with no history, but different target lists, for example:
 
 Binding A:
 
-1. MUID #1
-2. MUID #2
-3. MUID #3**a**
+1. GUID #1
+2. GUID #2
+3. GUID #3**a**
 
 Binding B:
 
-1. MUID #1
-2. MUID #2
-3. MUID #3**b**
+1. GUID #1
+2. GUID #2
+3. GUID #3**b**
 
 ### 9. Dynamic address algorithm
 
@@ -419,7 +419,7 @@ See above for description. Applies to the dynamic hash.
 
 ### 10. Dynamic hash
 
-The MUID hash for the secondary address for the dynamic object. Remains static for the life of the binding. Is used to address the binding.
+The GUID hash for the secondary address for the dynamic object. Remains static for the life of the binding. Is used to address the binding.
 
 Like a file hash, generated from the concatenation of the entire preceding file of the original frame in the binding using the hash algorithm described in the Address Algorithm field.
 
@@ -435,62 +435,62 @@ See above for description.
 
 See above for description.
 
-# Debind record (MDXX)
+# Debind record (GDXX)
 
 + Preferred stored file extension: no extension
-+ Secondary stored file extension: .muid
-+ Tertiary stored file extension: .mdxx
++ Secondary stored file extension: .guid
++ Tertiary stored file extension: .gdxx
 
-MDXXs must be stored until, and only until, they are cleared by a subsequent chained debinding. Note that, due to the risk of a replay attack, debindings should only be chained when an entity-agent is ready to rebind. Furthermore, since multiple rebindings with partial chains can potentially create conflicting network states, best practices dictate that the full binding/debinding/rebinding/etc chain **should always** be stated explicitly.
+GDXXs must be stored until, and only until, they are cleared by a subsequent chained debinding. Note that, due to the risk of a replay attack, debindings should only be chained when an entity-agent is ready to rebind. Furthermore, since multiple rebindings with partial chains can potentially create conflicting network states, best practices dictate that the full binding/debinding/rebinding/etc chain **should always** be stated explicitly.
 
 **Terminology:**
 
 + Debinder: The entity-agent removing a binding.
 
-Note that the static MUID applies to *this particular debinding*.
+Note that the static GUID applies to *this particular debinding*.
 
 ## Format
 
-| Decimal Offset | Decimal Length   | Name                    | Format              |
-| ------         | ---------        | -------------------     | -----------         |
-| 0              | 4B               | Magic number            | 0x 4D 44 58 58      |
-| 4              | 4B               | Version number          | Unsigned 32-bit int |
-| 8              | 1B               | Cipher suite            | Unsigned 8-bit int  |
-| 9              | 65B              | Debinder MUID           | Bytes               |
-| 74             | 1B               | Target chain length *C* | Unsigned 8-bit int  |
-| 75             | *LT* = 65B * *C* | Target MUID chain       | Bytes               |
-| 75 + *LT*      | 1B               | Address algorithm       | Unsigned 8-bit int  |
-| 76 + *LT*      | 64B              | File hash               | Bytes               |
-| 140 + *LT*     | 512B             | Debinder signature      | Bytes               |
+| Decimal Offset | Decimal Length | Name                     | Format              |
+| ------         | ---------      | -------------------      | -----------         |
+| 0              | 4B             | Magic number             | 0x 47 44 58 58      |
+| 4              | 4B             | Version number           | Unsigned 32-bit int |
+| 8              | 1B             | Cipher suite             | Unsigned 8-bit int  |
+| 9              | 65B            | Debinder GUID            | Bytes               |
+| 74             | 4B             | Target chain length *LT* | Unsigned 32-bit int |
+| 78             | *LT*           | Target GUID chain        | Bytes               |
+| 78 + *LT*      | 1B             | Address algorithm        | Unsigned 8-bit int  |
+| 79 + *LT*      | 64B            | File hash                | Bytes               |
+| 143 + *LT*     | 512B           | Debinder signature       | Bytes               |
 
 ### 1. Magic number
 
-ASCII "MDXX" (4D 44 58 58)
+ASCII "GDXX" (47 44 58 58)
 
 ### 2. Version
 
-See above for description. **Currently 7.**
+See above for description. **Currently 8.**
 
 ### 3. Cipher suite
 
 See above for description.
 
-### 4. Debinder MUID 
+### 4. Debinder GUID 
 
-The full MUID (hash algorithm byte + file hash) of the MEOC object containing the identity (the public keys) of the debinding agent.
+The full GUID (hash algorithm byte + file hash) of the GEOC object containing the identity (the public keys) of the debinding agent.
 
 ### 6. Target chain length
 
-The number of records covered by the debinding. See below.
+The length of the list of records covered by the debinding. See Target GUID chain below.
 
-### 7. Target MUID chain
+### 7. Target GUID chain
 
 Only one object can be debound, but static objects may be bound, debound, rebound, and so on. In this case, the chain will always reference:
 
-1. **Static** MUID for MEOC or MOBD being debound
-2. Static MUID for initial debinding
-3. Static MUID for MEOC for MOBD being re-debound
-4. Static MUID for second debinding
+1. **Static** GUID for GEOC or GOBD being debound
+2. Static GUID for initial debinding
+3. Static GUID for GEOC for GOBD being re-debound
+4. Static GUID for second debinding
 
 And so forth. At a minimum, each rebind cycle must include the most recent binding and the most recent debinding, but it need not include the entire chain. This chaining is required for protection against replay attacks.
 
@@ -506,19 +506,19 @@ See above for description.
 
 See Binder Signature above.
 
-# Muse encrypted asymmetric request (MEAR)
+# Golix encrypted asymmetric request (GARQ)
 
 + Preferred stored file extension: no extension
-+ Secondary stored file extension: .muid
-+ Tertiary stored file extension: .mear
++ Secondary stored file extension: .guid
++ Tertiary stored file extension: .garq
 
-MEARs must be stored until, and only until, they are cleared by a debinding from their recipient.
+GARQs must be stored until, and only until, they are cleared by a debinding from their recipient.
 
 **Terminology:**
 
 + Pipe: a bidirectional channel between (usually two) agents
 + Half-pipe: a unidirectional channel, from one agent to another.
-+ Recipient: the entity-agent against whose public key the MEAR was encrypted. If Alice is the author and she wants to open a half-pipe to Bob, then Bob is the recipient.
++ Recipient: the entity-agent against whose public key the GARQ was encrypted. If Alice is the author and she wants to open a half-pipe to Bob, then Bob is the recipient.
 + Target: the address for the half-pipe (usually dynamic)
 
 Note that the author is the entity-agent requesting the pipe.
@@ -527,10 +527,10 @@ Note that the author is the entity-agent requesting the pipe.
 
 | Decimal Offset | Decimal Length | Name                       | Format              |
 | ------         | ---------      | -------------------        | -----------         |
-| 0              | 4B             | Magic number               | 0x 4D 45 50 52      |
+| 0              | 4B             | Magic number               | 0x 47 41 52 51      |
 | 4              | 4B             | Version number             | Unsigned 32-bit int |
 | 8              | 1B             | Cipher suite               | Unsigned 8-bit int  |
-| 9              | 65B            | Recipient MUID             | Bytes               |
+| 9              | 65B            | Recipient GUID             | Bytes               |
 | 140            | 512B           | Private inner container    | Bytes               |
 | 652            | 1B             | Address algorithm          | Unsigned 8-bit int  |
 | 653            | 64B            | File hash                  | Bytes               |
@@ -540,14 +540,14 @@ Note that the author is the entity-agent requesting the pipe.
 
 | Offset | Length    | Name                 | Format              |
 | ------ | --------- | -------------------  | -----------         |
-| 0      | 65B       | Author MUID          | Bytes               |
+| 0      | 65B       | Author GUID          | Bytes               |
 | 65     | 2B        | Payload identifier   | Bytes               |
 | 67     | 2B        | Payload length, *LA* | Unsigned 16-bit int |
 | 69     | *LA*      | Payload              | Bytes               |
 
 ### 1. Magic number
 
-ASCII "MEAR" (4D 45 41 52)
+ASCII "GARQ" (47 41 52 51)
 
 ### 2. Version
 
@@ -557,15 +557,15 @@ See above for description. **Currently 12.**
 
 See above for description.
 
-### 4. Recipient MUID 
+### 4. Recipient GUID 
 
-The MUID of the recipient.
+The GUID of the recipient.
 
 ### 5. Private inner container
 
 Encrypted asymmetrically against the public key for the recipient. Once decrypted, the plaintext contents are defined as:
 
-1. The MUID of the MEAR author.
+1. The GUID of the GARQ author.
 2. A 2-byte identifier for the payload contents
 3. The length, in bytes, of the payload
 4. The payload
@@ -595,17 +595,17 @@ The material for input into the signature algorithm is the entire preceding file
 
 ## Asymmetric request types
 
-Though the outer container of asymmetric requests is always identical, the internals may differ. The Muse standard currently defines four different objects for use in asymmetric requests:
+Though the outer container of asymmetric requests is always identical, the internals may differ. The Golix standard currently defines four different objects for use in asymmetric requests:
 
-### Pipe request (PR)
+### Pipe request (RQ)
 
-Pipe requests are used (primarily) to establish a dynamically-bound MEOC pipe between two Muse identities. They are really only intended to be used once between any particular entity-entity pairing; best practice is to immediately construct a *symmetric* share between the two entities, and use that to bootstrap any additional pipes.
+Pipe requests are used (primarily) to establish a dynamically-bound GEOC pipe between two Golix identities. They are really only intended to be used once between any particular entity-entity pairing; best practice is to immediately construct a *symmetric* share between the two entities, and use that to bootstrap any additional pipes.
 
-Pipe requests are identified by the ASCII string "PR" ( 0x 50 52 ).
+Pipe requests are identified by the ASCII string "RQ" ( 0x 52 51 ).
 
 | Offset | Length    | Name                | Format      |
 | ------ | --------- | ------------------- | ----------- |
-| 69     | 65B       | Target MUID         | Bytes       |
+| 69     | 65B       | Target GUID         | Bytes       |
 | 134    | 1B        | Secret length, *LK* | Bytes       |
 | 135    | *LK*      | Target secret       | Bytes       |
 
@@ -617,13 +617,13 @@ Pipe acknowledgements are identified by the ASCII string "AK" ( 0x 41 4B ).
 
 **Terminology:**
 
-+ Requested MUID: the MUID used in the original pipe request.
++ Requested GUID: the GUID used in the original pipe request.
 
 Note that here, the author is the entity-agent acknowledging the pipe -- ie, the recipient of the pipe request. Likewise, the MPAK recipient is the author of the original pipe request.
 
 | Offset | Length    | Name                   | Format      |
 | ------ | --------- | -------------------    | ----------- |
-| 69     | 65B       | Requested MUID         | Bytes       |
+| 69     | 65B       | Requested GUID         | Bytes       |
 | 134    | 32B       | Status code (optional) | Bytes       |
 
 ### Pipe non-acknowledgement (NK)
@@ -636,12 +636,12 @@ Note that here, the author is the entity-agent non-acknowledging the pipe -- ie,
 
 | Offset | Length    | Name                   | Format      |
 | ------ | --------- | -------------------    | ----------- |
-| 69     | 65B       | Requested MUID         | Bytes       |
+| 69     | 65B       | Requested GUID         | Bytes       |
 | 134    | 32B       | Status code (optional) | Bytes       |
 
 ### Arbitrary content (0x0000)
 
-Arbitrary asymmetric content is primarily reserved for Muse spec development purposes. It is, once again, explicitly **not** intended for general-purpose use. Application-level communication should **always** be conducted within symmetric pipes.
+Arbitrary asymmetric content is primarily reserved for Golix spec development purposes. It is, once again, explicitly **not** intended for general-purpose use. Application-level communication should **always** be conducted within symmetric pipes.
 
 Pipe acknowledgements are identified by the bytestring ```0x0000```.
 
@@ -651,14 +651,14 @@ Pipe acknowledgements are identified by the bytestring ```0x0000```.
 
 # Ancillary binary formats
 
-Two additional binary objects are considered network-critical and included in the Muse standard to facilitate network operations and interoperability. They are:
+Two additional binary objects are considered network-critical and included in the Golix standard to facilitate network operations and interoperability. They are:
 
 + A specific serialization for secret sharing (keys, nonces, etc)
 + A specific serialization for identities (asymmetric signing, asymmetric encryption, and ECDH exchange public keys)
 
 ## Secret sharing
 
-Secrets are generally embedded as the target secret in a MEAR pipe request. They are defined in the Muse spec to ensure implementation interoperability.
+Secrets are generally embedded as the target secret in a GARQ pipe request. They are defined in the Golix spec to ensure implementation interoperability.
 
 Format:
 
@@ -672,7 +672,7 @@ Format:
 
 1. **Identifier:** constant to denote a serialized secret. ASCII "```SH```" (0x 53 48)
 2. **Version:** the version for the secret serialization. Current is 2.
-3. **Cipher suite:** the integer representation of the cipher suite used by the corresponding MEOC object. This determines the key and seed lengths.
+3. **Cipher suite:** the integer representation of the cipher suite used by the corresponding GEOC object. This determines the key and seed lengths.
 4. **Key:** the key material. Length is defined on a per-ciphersuite basis.
 5. **Seed:** the nonce or initialization vector, if any is required by the ciphersuite. Length is defined on a per-ciphersuite basis.
 
@@ -685,7 +685,7 @@ Format:
 
 ### Ciphersuite 2
 
-**Note:** ciphersuite 2 (differs from CS1 only by using SIV mode on AES) may soon be removed from the Muse standard.
+**Note:** ciphersuite 2 (differs from CS1 only by using SIV mode on AES) may soon be removed from the Golix standard.
 
 | Offset | Length    | Name                | Format      |
 | ------ | --------- | ------------------- | ----------- |
@@ -716,7 +716,7 @@ All of the following commands must be supported by all persistence providers. Ad
 
 ```A``` queries ```B``` to determine reachability.
 
-```A``` sends bare request, or request with a MUID to indicate an update.
+```A``` sends bare request, or request with a GUID to indicate an update.
 
 ```B``` responds with:
 
@@ -727,9 +727,9 @@ This command is also used by ```A``` to initiate a connection with ```B```.
 
 ## Publish
 
-```A``` sends ```B``` a Muse network object.
+```A``` sends ```B``` a Golix network object.
 
-```A``` sends MEOC, MOBS, MOBD, MDXX, MEPR, MPAK, or MPNK
+```A``` sends GIDC, GEOC, GOBS, GOBD, GDXX, GARQ
 
 ```B``` responds with:
 
@@ -740,7 +740,7 @@ This command is also used by ```A``` to initiate a connection with ```B```.
 
 ```A``` requests an object from ```B```.
 
-```A``` sends MUID
+```A``` sends GUID
 
 ```B``` responds with:
 
@@ -753,7 +753,7 @@ There is no return response from ```A```. Retries are initiated with a new get c
 
 ```A``` requests to be subscribed to an address at ```B```.
 
-```A``` sends MUID
+```A``` sends GUID
 
 ```B``` responds with:
 
@@ -762,16 +762,16 @@ There is no return response from ```A```. Retries are initiated with a new get c
 
 If ```B``` receives:
 
-+ An updated copy of a dynamic binding with the indicated dynamic MUID
-+ An asymmetric request with the indicated MUID as recipient
++ An updated copy of a dynamic binding with the indicated dynamic GUID
++ An asymmetric request with the indicated GUID as recipient
 
-then ```B``` starts to ping ```A``` with the MUID only (not the actual object). If unsuccessful, ```B``` *may* repeat ping until successful.
+then ```B``` starts to ping ```A``` with the GUID only (not the actual object). If unsuccessful, ```B``` *may* repeat ping until successful.
 
 ## Unsubscribe
 
 ```A``` requests to be unsubscribed from an object at ```B```.
 
-```A``` sends MUID
+```A``` sends GUID
 
 ```B``` responds with:
 
@@ -780,22 +780,22 @@ then ```B``` starts to ping ```A``` with the MUID only (not the actual object). 
 
 ## List subscribed addresses
 
-```A``` requests a list of subscribed MUIDs from ```B```.
+```A``` requests a list of subscribed GUIDs from ```B```.
 
 ```A``` sends bare command
 
 ```B``` responds with:
 
-+ List of MUIDs if successful
++ List of GUIDs if successful
 + NAK if unsuccessful
 
 There is no return response from ```A```. Retries are initiated with a new list command.
 
 ## List binders
 
-```A``` requests a list of agents who have bound to a specified MUID ```B```.
+```A``` requests a list of agents who have bound to a specified GUID ```B```.
 
-```A``` sends MUID
+```A``` sends GUID
 
 ```B``` responds with:
 
@@ -819,11 +819,11 @@ There is no return response from ```A```. Retries are initiated with a new list 
 
 # Object verification
 
-The following section outlines the order of operations while verifying objects, and the conditions under which Muse objects are considered valid. Items with strict execution order are numbered.
+The following section outlines the order of operations while verifying objects, and the conditions under which Golix objects are considered valid. Items with strict execution order are numbered.
 
-Note that in all cases, if a Muse object is successfully received, verified, and stored, a persistence provider **must** issue an ACK, even if the persistence provider already had a copy of the object.
+Note that in all cases, if a Golix object is successfully received, verified, and stored, a persistence provider **must** issue an ACK, even if the persistence provider already had a copy of the object.
 
-## MEOC order of verification
+## GEOC order of verification
 
 1. Verify magic number
 2. Verify version
@@ -839,14 +839,14 @@ Note that in all cases, if a Muse object is successfully received, verified, and
         2. Verify file hash
 6. Verify signature
 
-## MOBS order of verification
+## GOBS order of verification
 
 1. Verify magic number
 2. Verify version
 3. Verify cipher suite
 4. Verify length is correct for properly-formatted file
 5. (The following steps may be done in parallel)
-    + MOBS status check
+    + GOBS status check
         1. Verify no unchained debinding exists from the binder for the target address. If one exists, check fails; issue NAK
         2. If chained debinding exists from the binder for the target address, verify that chain permits rebinding. If not, check fails; issue NAK
     + Binder retrieval
@@ -854,23 +854,23 @@ Note that in all cases, if a Muse object is successfully received, verified, and
         2. Retrieve binder's identity file
         3. Verify binder's identity file includes public signature key for cipher suite
     + Digest remaining file
-        1. Verify target MUID exists at persistence provider
+        1. Verify target GUID exists at persistence provider
         2. Verify address algorithm
         3. Verify file hash
 6. Verify signature
 
-## MOBD order of verification
+## GOBD order of verification
 
 1. Verify magic number
 2. Verify version
 3. Verify cipher suite
 4. Verify length is correct for properly-formatted file
 5. (The following steps may be done in parallel)
-    + MOBD consistency check
+    + GOBD consistency check
         1. Check if dynamic address already exists at persistence provider. If so:
             1. If frame count is zero, check fails. Issue NAK.
-            2. If binder MUID differs from existing dynamic address binding, check fails. Issue NAK.
-            3. If preexisting binding's static MUID is not contained within historical frames, check fails. Issue NAK.
+            2. If binder GUID differs from existing dynamic address binding, check fails. Issue NAK.
+            3. If preexisting binding's static GUID is not contained within historical frames, check fails. Issue NAK.
         2. If dynamic address does not exist at persistence provider,
             1. Verify no unchained debinding exists from the binder for the target address. If one exists, check fails; issue NAK
             2. If chained debinding exists from the binder for the target address, verify that chain permits rebinding. If not, check fails; issue NAK
@@ -879,26 +879,26 @@ Note that in all cases, if a Muse object is successfully received, verified, and
         2. Retrieve binder's identity file
         3. Verify binder's identity file includes public signature key for cipher suite
     + Digest remaining file
-        1. Verify at least one target MUID exists at persistence provider
+        1. Verify at least one target GUID exists at persistence provider
         2. Verify address algorithm
         3. Verify dynamic hash
         4. Verify file hash
 6. Verify signature
 
-## MDXX order of verification
+## GDXX order of verification
 
 1. Verify magic number
 2. Verify version
 3. Verify cipher suite
 4. Verify length is correct for properly formatted file
 5. (The following steps may be done in parallel)
-    + MDXX status check
-        1. If static MUID for the in-verification MDXX already exists at persistence provider, check passes; continue (new state identical to old state if rest of verification passes)
-        2. If static MUID for the in-verification MDXX exists within an existing debinding chain, check fails; issue NAK
-        3. If the in-verification MDXX has a chain length greater than one, and the persistence provider does not have at least one target MUID in storage, check fails; issue NAK
-    + MDXX reference check
-        1. Verify at least one target MUID exists at persistence provider
-        2. Verify binder MUID matches author MUID (for MOBS, MOBD, MDXX) or recipient MUID (for MEPR, MPAK, MPNK)
+    + GDXX status check
+        1. If static GUID for the in-verification GDXX already exists at persistence provider, check passes; continue (new state identical to old state if rest of verification passes)
+        2. If static GUID for the in-verification GDXX exists within an existing debinding chain, check fails; issue NAK
+        3. If the in-verification GDXX has a chain length greater than one, and the persistence provider does not have at least one target GUID in storage, check fails; issue NAK
+    + GDXX reference check
+        1. Verify at least one target GUID exists at persistence provider
+        2. Verify binder GUID matches author GUID (for GOBS, GOBD, GDXX) or recipient GUID (for MEPR, MPAK, MPNK)
     + Binder retrieval
         1. Verify binder exists at persistence provider
         2. Retrieve binder's identity file
@@ -908,38 +908,9 @@ Note that in all cases, if a Muse object is successfully received, verified, and
         2. Verify file hash
 6. Verify signature
 
-Note that, since persistence providers are required to keep only their most recent MOBD frame, to successfully debind a MOBD requires the MDXX to reference the most recent available frame.
+Note that, since persistence providers are required to keep only their most recent GOBD frame, to successfully debind a GOBD requires the GDXX to reference the most recent available frame.
 
-## MEPR order of verification
-
-**Public verification:**
-
-1. Verify magic number
-2. Verify version
-3. Verify cipher suite
-4. Verify length is correct for properly formatted file
-5. (The following steps may be done in parallel)
-    + Recipient retrieval
-        1. Verify recipient exists at persistence provider
-        2. Retrieve recipient's identity file
-        3. Verify recipient's identity file includes public encryption key and Diffie-Hellman public key for cipher suite
-    + Digest remaining file
-        1. Verify address algorithm
-        2. Verify file hash
-6. Verify signature
-
-**Private verification:**
-
-1. Public verification (see above)
-2. Decrypt private inner container
-3. Author verification
-    1. Verify author exists
-    2. Retrieve author's identity file
-    3. Verify author's identity file includes Diffie-Hellman public key for cipher suite
-4. Perform symmetric signature key agreement procedure (see "Author symmetric signature" above)
-5. Verify author symmetric signature
-
-## MPAK order of verification
+## GARQ order of verification (DEPRECATED)
 
 **Public verification:**
 
@@ -968,7 +939,36 @@ Note that, since persistence providers are required to keep only their most rece
 4. Perform symmetric signature key agreement procedure (see "Author symmetric signature" above)
 5. Verify author symmetric signature
 
-## MPNK order of verification
+## MPAK order of verification (DEPRECATED)
+
+**Public verification:**
+
+1. Verify magic number
+2. Verify version
+3. Verify cipher suite
+4. Verify length is correct for properly formatted file
+5. (The following steps may be done in parallel)
+    + Recipient retrieval
+        1. Verify recipient exists at persistence provider
+        2. Retrieve recipient's identity file
+        3. Verify recipient's identity file includes public encryption key and Diffie-Hellman public key for cipher suite
+    + Digest remaining file
+        1. Verify address algorithm
+        2. Verify file hash
+6. Verify signature
+
+**Private verification:**
+
+1. Public verification (see above)
+2. Decrypt private inner container
+3. Author verification
+    1. Verify author exists
+    2. Retrieve author's identity file
+    3. Verify author's identity file includes Diffie-Hellman public key for cipher suite
+4. Perform symmetric signature key agreement procedure (see "Author symmetric signature" above)
+5. Verify author symmetric signature
+
+## MPNK order of verification (DEPRECATED)
 
 **Public verification:**
 

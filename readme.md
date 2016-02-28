@@ -6,7 +6,7 @@ It's unlikely we'll ever live in a world where every digital identity is hosted 
 
 > How do I, as a first party, maintain autonomy over data stored on third party servers?
 
-Muse is an open protocol designed to answer that question, without requiring trust. It can be thought of as a fifth layer in the IP suite, falling between the transport layer and the application layer. It provides all compliant applications with a shared, secure account management system. This has the benefits of:
+Golix is an open protocol designed to answer that question, without requiring trust. Think of it as a containerized, cryptographic, universal definition of digital identity, that any application can rapidly incorporate for shared, secure account management. This has the benefits of:
 
 + eliminating session management
 + eliminating API auth tokens
@@ -15,7 +15,7 @@ Muse is an open protocol designed to answer that question, without requiring tru
 + eliminating account creation as a barrier to entry
 + etc
 
-The Muse protocol uses cryptography to enforce:
+The Golix protocol uses cryptography to enforce:
 
 + Information creation, as private-by-default (all information is encrypted at all times and unknown to the server)
 + Information sharing (secure key distribution)
@@ -24,11 +24,11 @@ It also uses social consensus to enforce:
 
 + Information lifetimes (information must only be retained when being used)
 
-Muse is an alternative to trusting a third party server with account management, identity verification, etc. You get all the convenience of the cloud with none of the privacy and security concerns. It isn't replacing any one protocol, it's a total retooling of social application creation.
+Golix is an alternative to trusting a third party server with account management, identity verification, etc. You get all the convenience of the cloud with none of the privacy and security concerns. It isn't replacing any one protocol, it's a total retooling of social application creation.
 
-It is currently under development by [Muterra, Inc](https://www.muterra.io), co-evolving with the [Ethyr](https://www.ethyr.net) secure email system. More information about Muse, Muterra, and Ethyr can be found at our [blog](https://www.muterra.io/blog). If you'd like to stay updated, consider joining the Muterra [mailing list](https://www.muterra.io/mailing-signup.html).
+It is currently under development by [Muterra, Inc](https://www.muterra.io), co-evolving with the [Ethyr](https://www.ethyr.net) secure email system. More information about Golix, Muterra, and Ethyr can be found at our [blog](https://www.muterra.io/blog). If you'd like to stay updated, consider joining the Muterra [mailing list](https://www.muterra.io/mailing-signup.html). **Note that the Golix Protocol used to be called "the Muse protocol".** It was re-branded as Golix in February 2016.
 
-**How would Muse apply to, say, Yelp?**
+**How would Golix apply to, say, Yelp?**
 
 Yelp would be relieved of the vast majority of account management. Yelp defines their account API (```profile picture```, ```name```, ```location```, etc), and the rest *just works*. The protocol manages credentials and authentication; Yelp never handles usernames or passwords.
 
@@ -36,11 +36,11 @@ Yelp wants reviews to be available publicly, so it creates a community sharing s
 
 Yelp's reviews will then seamlessly integrate with anyone who follows their review API. If I, a business owner, wanted to integrate a "Post a Yelp review!" form on my website, I would be trivially capable of doing so.
 
-From a user's perspective, I log in once to my Muse-enabled browser. From there, I can participate in any Muse-enabled service, **while maintaining explicit and exclusive control over my privacy.** I no longer need to authenticate to Yelp; if I'd like to post or rate a review, I simply do it. From the moment I start using Muse to the moment I log out, I have a single coherent identity experience.
+From a user's perspective, I log in once to my Golix-enabled browser. From there, I can participate in any Golix-enabled service, **while maintaining explicit and exclusive control over my privacy.** I no longer need to authenticate to Yelp; if I'd like to post or rate a review, I simply do it. From the moment I start using Golix to the moment I log out, I have a single coherent identity experience.
 
-# What does Muse do differently?
+# What does Golix do differently?
 
-Muse is an overlay network standard that encrypts everything *not just from device to device*, but from entity to entity. That is to say, authentication is performed not based upon IP address, network location, or session cookie, but by possession of private keys. If you possess the private keys for an entity-agent's identity, you can always receive encrypted content as that identity, and if you do not, you cannot. Physical network topology is wholly ignored.
+Golix is an overlay network standard that encrypts everything *not just from device to device*, but from entity to entity. That is to say, authentication is performed not based upon IP address, network location, or session cookie, but by possession of private keys. If you possess the private keys for an entity-agent's identity, you can always receive encrypted content as that identity, and if you do not, you cannot. Physical network topology is wholly ignored.
 
 More concretely, and using TCP/IP as an example, most existing transports are *network-oriented*:
 
@@ -51,7 +51,7 @@ More concretely, and using TCP/IP as an example, most existing transports are *n
     5. (www.paypal.com at 66.211.169.66) sends (www.wellsfargo.com at 159.45.2.145) "withdraw money from Alice's account"
     6. (Alice at 88.41.145.167) sends (www.amazon.com at 72.21.206.6) "Alice orders TP"
 
-The Muse protocol divides this into two strictly separated processes. Applications are *agent-oriented*:
+Golix divides this into two strictly separated processes. Applications are *agent-oriented*:
 
     1. (Bob at <bobkey>) sends (Alice at <alicekey>) "We're out of toilet paper"
     2. (Alice at <alicekey>) tells (Paypal at <paypalkey>) to withdraw money from her bank account
@@ -74,16 +74,16 @@ Meanwhile, protocol implementations transparently pass this conversation across 
 + **Protocol-protected individual agency.** This is a more meaningful benefit than platform-independent privacy; cloud-stored information is unavailable to anyone you don't explicitly share with, including the cloud owner.
 + **Application-independent content security.** The protocol can't guarantee applications are running safe code, but it separates content authenticity, integrity, and confidentiality enforcement into open-source, vetted protocol implementations that are independent from the applications built on them.
 + **Hosting modularity.** Container format is standardized, minimizing switching costs between hosting providers. Each file transfer takes exactly two API calls.
-+ **Transport flexibility.** Muse applications don't deal directly with the transport layer. This job is left to protocol implementations. Applications can switch between implementations seamlessly, making cross-transport redundancy incredibly simple for application developers. This also makes it substantially easier to experiment with new transport technologies.
++ **Transport flexibility.** Golix applications don't deal directly with the transport layer. This job is left to protocol implementations. Applications can switch between implementations seamlessly, making cross-transport redundancy incredibly simple for application developers. This also makes it substantially easier to experiment with new transport technologies.
 + **Application agility.** Instead of getting bogged down in incredibly difficult network implementation details, applications can focus on their core value propositions.
-+ **Personal identity management.** Identity, *including usernames and passwords*, are synchronized across the entire protocol. If you only want one identity, you only need one set of credentials -- for any and all Muse applications.
++ **Personal identity management.** Identity, *including usernames and passwords*, are synchronized across the entire protocol. If you only want one identity, you only need one set of credentials -- for any and all Golix applications.
 + **Anonymous, pseudonymous, and eponymous identities coexisting.** Identities carry no inherent physical meaning. Applications are free to place restrictions on verification (ex: your bank needs to know it's you), but this is handled elsewhere. The protocol itself supports anything.
 
 If you want to know more in easily-digestible, not-heavily-technical chunks, now would be a good time to check out our [blog](https://www.ethyr.net/blog/tag/muse.html).
 
-# How does Muse work?
+# How does Golix work?
 
-This outlines, from first principles, the protocol design decisions that lead to the Muse. This does not justify our answers -- for that, read our [whitepaper](/whitepaper.md). However, it does explain the entire protocol architecture.
+This outlines, from first principles, the protocol design decisions that lead to Golix. This does not justify our answers -- for that, read our [whitepaper](/whitepaper.md). However, it does explain the entire protocol architecture.
 
 1. **Problem:** What is content?  
    **Solution:** Content is any arbitrary binary data. All content is encapsulated within containers that assure confidentiality, integrity, and authenticity.
@@ -103,7 +103,7 @@ This outlines, from first principles, the protocol design decisions that lead to
     4. **Problem:** How is the content identified on the network?  
        **Solution:** All containers are deterministically and uniquely content-addressed. In other words, content is identified by a collision-resistant cryptographic hash.
     5. **Problem:** How can this data be made asynchronously-available?  
-       **Solution:** Any Muse-implementing network requires a persistence system. These are transport-specific. A conformant physical network node stores data on agents' behalf(s). Nodes may also bridge between transport-specific Muse implementations to automatically sync network state between them. Uploading is implicit, and the persistence system must understand several commands defined within the Muse spec.
+       **Solution:** Any Golix-implementing network requires a persistence system. These are transport-specific. A conformant physical network node stores data on agents' behalf(s). Nodes may also bridge between transport-specific Golix implementations to automatically sync network state between them. Uploading is implicit, and the persistence system must understand several commands defined within the Golix spec.
 
         1. **Problem:** What commands must a persistence system accept?  
            **Solution:** Publish, get, subscribe, unsubscribe, ack, nak, list node subscriptions, list object binders.
@@ -124,15 +124,15 @@ This outlines, from first principles, the protocol design decisions that lead to
     1. **Problem:** How is this accomplished in a many-to-many network?  
        **Solution:** Separate the key exchange from the content itself. Content is uniquely and trivially addressable, and access is shared one-to-one between agents. Note that agents may be computational, so public information may be automatically shared across communities of any size.
     2. **Problem:** How do you perform secure online key exchange?  
-       **Solution:** Initially, through a special asymmetrically-encrypted handshake object. These are distributed like any other Muse content, but contain a public reference to their agent-target. Unlike standard objects, their author is only named privately, within the container body.
+       **Solution:** Initially, through a special asymmetrically-encrypted handshake object. These are distributed like any other Golix content, but contain a public reference to their agent-target. Unlike standard objects, their author is only named privately, within the container body.
     3. **Problem:** Doesn't this hinge on the secrecy of the target's asymmetric private key? Can we get forward secrecy, etc?  
-       **Solution:** Absolutely. The handshake object *could* be used directly for every key exchange, but that would be both insecure and inefficient. The preferred method is to use the handshake to bootstrap a dynamic bidirectional communication pipe between two agents, and then use that for key exchange. The API definition for that key exchange pipe is out-of-scope for Muse itself, but candidates will be defined within overlay standards. Because it is encapsulated within the Muse symmetric pipe, it can be any binary message format.
+       **Solution:** Absolutely. The handshake object *could* be used directly for every key exchange, but that would be both insecure and inefficient. The preferred method is to use the handshake to bootstrap a dynamic bidirectional communication pipe between two agents, and then use that for key exchange. The API definition for that key exchange pipe is out-of-scope for Golix itself, but candidates will be defined within overlay standards. Because it is encapsulated within the Golix symmetric pipe, it can be any binary message format.
 
 3. **Problem:** What is an agent?  
    **Solution:** An agent produces, accesses, shares, or retains content.
 
     1. **Problem:** An agent must be uniquely identifiable and network-available.  
-       **Solution:** Put the agent's entire identity within a single, standard content container on the network. These containers are themselves encrypted, so if the identity is public, it must then be bootstrapped (this process is defined in an overlay standard). Use their identity container's content address as their unique identifier.
+       **Solution:** Put the agent's entire identity within a single, standard content container on the network. Use their identity container's content address as their unique identifier.
     2. **Problem:** The agent requires an asymmetric public key for signing content.  
        **Solution:** Add that key to the container file.
     3. **Problem:** The agent requires an asymmetric public key for receiving encrypted pipes.  
