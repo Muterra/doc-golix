@@ -328,7 +328,7 @@ See above for description.
 
 ### 7. File hash
 
-The file hash is used only for the signature. It is **not** used for addressing the static binding. See above for further description.
+The file hash is used only for the signature. See above for further description.
 
 ### 8. Binder signature
 
@@ -389,7 +389,57 @@ The length, in bytes, of the GUID history included in the binding. If zero, this
 
 ### 6. Historical frames
 
-A record of the recent history of the dynamic binding's static GUIDs, sorted in ascending order of recency (ie, oldest first). Without this field, dynamic bindings are susceptible to replay attacks. All GOBD records must include at least one historical GUID. There is a balance here between network state management (more history is better) and size optimization (less history is better). If (and only if) the history length is zero will this indicate a new dynamic binding, in which case historical frames will be empty (zero-length).
+A record of the recent history of the dynamic binding's static GUIDs, sorted in ascending order of recency (ie, oldest first). A persistence provider must reject any new dynamic binding frame for an existing binding that does not contain the existing frame in its history list. For example:
+
+**Scenario 1**
+
+```
+Existing #Dynamic123 
+    current frame: #Frame1
+    current history: []
+New #Dynamic123
+    new frame: #Frame2
+    new history: [#Frame1]
+Result: Successful update
+```
+
+**Scenario 2**
+
+```
+Existing #Dynamic123 
+    current frame: #Frame5
+    current history: [#Frame3, #Frame4]
+New #Dynamic123
+    new frame: #Frame7
+    new history: [#Frame5, #Frame6]
+Result: Successful update
+```
+
+**Scenario 3**
+
+```
+Existing #Dynamic123 
+    current frame: #Frame10
+    current history: [#Frame9]
+New #Dynamic123
+    new frame: #Frame8
+    new history: [#Frame7]
+Result: Failed update
+```
+
+**Scenario 4**
+
+```
+Existing #Dynamic123 
+    current frame: #Frame14
+    current history: [#Frame11, #Frame12, #Frame13]
+New #Dynamic123
+    new frame: #Frame16
+    new history: [#Frame15]
+Result: Failed update
+```
+
+**Note:** without this field, dynamic bindings are susceptible to replay attacks. All GOBD records must either include at least one historical GUID, or be the root dynamic binding. There is a balance here between network state management (more history is better) and size optimization (less history is better). If (and only if) the history length is zero will this indicate a new dynamic binding, in which case historical frames will be empty (zero-length).
 
 ### 7. Targets length
 
@@ -441,7 +491,35 @@ See above for description.
 + Secondary stored file extension: .guid
 + Tertiary stored file extension: .gdxx
 
-GDXXs must be stored until, and only until, they are cleared by a subsequent chained debinding. Note that, due to the risk of a replay attack, debindings should only be chained when an entity-agent is ready to rebind. Furthermore, since multiple rebindings with partial chains can potentially create conflicting network states, best practices dictate that the full binding/debinding/rebinding/etc chain **should always** be stated explicitly.
+Note that, without chaining, binding and debinding are subject to replay attacks. Therefore, GDXXs must be stored until, and only until, they are cleared by subsequent debinding. For example (ignoring garbage collection):
+
+1. Create object #Obj1  
+   Bind #BBB1, references (and holds) #Obj1
+2. Debind #XXX1, references (and clears) #BBB1
+3. Debind #XXX2, references (and clears) #XXX1  
+   Bind #BBB1, references (and holds) #Obj1
+4. Debind #XXX3, references (and clears) #XXX2  
+   Debind #XXX1, references (and clears) #BBB1
+5. Debind #XXX4, references (and clears) #XXX3  
+   Debind #XXX2, references (and clears) #XXX1  
+   Bind #BBB1, references (and holds) #Obj1
+
+In each case, the *most recent* set of bindings and debindings must be retained in full by the persistence provider. In other words, ignoring the initial object, the persistence provider state at the end of each exchange above would be:
+
+1. Binding #BBB1  
+   **Result: hold #Obj1**
+2. Debinding #XXX1 (prevents replay of #BBB1)  
+   **Result: release #Obj1**
+3. Debinding #XXX2 (prevents replay of #XXX1)  
+   Binding #BBB1  
+   **Result: hold #Obj1**
+4. Debinding #XXX3 (prevents replay of #XXX2)  
+   Debinding #XXX1 (prevents replay of #BBB1)  
+   **Result: release #Obj1**
+5. Debinding #XXX4 (prevents replay of #XXX3)  
+   Debinding #XXX2  (prevents replay of #XXX1)  
+   Binding #BBB1  
+   **Result: hold #Obj1**
 
 **Terminology:**
 
@@ -451,17 +529,16 @@ Note that the static GUID applies to *this particular debinding*.
 
 ## Format
 
-| Decimal Offset | Decimal Length | Name                     | Format              |
-| ------         | ---------      | -------------------      | -----------         |
-| 0              | 4B             | Magic number             | 0x 47 44 58 58      |
-| 4              | 4B             | Version number           | Unsigned 32-bit int |
-| 8              | 1B             | Cipher suite             | Unsigned 8-bit int  |
-| 9              | 65B            | Debinder GUID            | Bytes               |
-| 74             | 4B             | Target chain length *LT* | Unsigned 32-bit int |
-| 78             | *LT*           | Target GUID chain        | Bytes               |
-| 78 + *LT*      | 1B             | Address algorithm        | Unsigned 8-bit int  |
-| 79 + *LT*      | 64B            | File hash                | Bytes               |
-| 143 + *LT*     | 512B           | Debinder signature       | Bytes               |
+| Decimal Offset | Decimal Length | Name                | Format              |
+| ------         | ---------      | ------------------- | -----------         |
+| 0              | 4B             | Magic number        | 0x 47 44 58 58      |
+| 4              | 4B             | Version number      | Unsigned 32-bit int |
+| 8              | 1B             | Cipher suite        | Unsigned 8-bit int  |
+| 9              | 65B            | Debinder GUID       | Bytes               |
+| 74             | 65B            | Target GUID         | Bytes               |
+| 139            | 1B             | Address algorithm   | Unsigned 8-bit int  |
+| 140            | 64B            | File hash           | Bytes               |
+| 204            | 512B           | Debinder signature  | Bytes               |
 
 ### 1. Magic number
 
@@ -469,7 +546,7 @@ ASCII "GDXX" (47 44 58 58)
 
 ### 2. Version
 
-See above for description. **Currently 8.**
+See above for description. **Currently 9.**
 
 ### 3. Cipher suite
 
@@ -479,20 +556,13 @@ See above for description.
 
 The full GUID (hash algorithm byte + file hash) of the GEOC object containing the identity (the public keys) of the debinding agent.
 
-### 6. Target chain length
+### 7. Target GUID
 
-The length of the list of records covered by the debinding. See Target GUID chain below.
+Only one object can be debound per debinding. The target GUID is the address algorithm + file hash of the particular binding or debinding to remove. The **only** valid debind targets are:
 
-### 7. Target GUID chain
-
-Only one object can be debound, but static objects may be bound, debound, rebound, and so on. In this case, the chain will always reference:
-
-1. **Static** GUID for GEOC or GOBD being debound
-2. Static GUID for initial debinding
-3. Static GUID for GEOC for GOBD being re-debound
-4. Static GUID for second debinding
-
-And so forth. At a minimum, each rebind cycle must include the most recent binding and the most recent debinding, but it need not include the entire chain. This chaining is required for protection against replay attacks.
+1. Static bindings (reference the static binding's GUID, not the object's GUID)
+2. Dynamic binding frames (reference the dynamic GUID, not the individual frame's GUID)
+3. Debindings (reference the debinding's GUID)
 
 ### 8. Address algorithm
 

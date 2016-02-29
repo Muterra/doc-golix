@@ -1,11 +1,17 @@
-# Current revision: 28 Feb 2016
+# Current revision: 29 Feb 2016
+
++ Clarified use of dynamic binding historical frames
++ Updated debindings to be stateless, incremented version accordingly.
++ Explained debinding chains
+
+# Previous revisions
+
+## 28 Feb 2016, #8b925e8
 
 + Rebranded Muse -> Golix. No version changes as a result, though. Corrected some minor glaring errors in the process, and noted some things in the spec as deprecated (but did not redocument them yet).
 + Added text explicitly forbidding dynamic binding to anything other than a static GEOC
 + Fixed overlooked update in GDXX record re: chain count vs chain length. Updated version accordingly.
 + Changed pipe request identifier to ASCII "RQ"
-
-# Previous revisions
 
 ## 27 Feb 2016, #6aff066
 
