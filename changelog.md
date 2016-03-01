@@ -1,8 +1,12 @@
-# Current revision: 29 Feb 2016
+# Current revision: 1 March 2016
 
 + Clarified use of dynamic binding historical frames
-+ Updated debindings to be stateless, incremented version accordingly.
++ Removed support for multiple targets in dynamic bindings; incremented version accordingly.
++ Updated debindings to be stateless; incremented version accordingly.
 + Explained debinding chains
++ Added salt definition in key agreement
++ Clarified requested GUID and author/recipient in asymmetric requests.
++ Clarified valid targets for static bindings
 
 # Previous revisions
 

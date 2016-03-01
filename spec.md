@@ -18,14 +18,14 @@ By Golix integer representation:
   **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537.  
   **Symmetric encryption:** AES-256 in **CTR mode with nonce distributed privately with the key**  
   **Symmetric shared secrets:** Elliptic curve Diffie-Hellman using Curve25519.  
-  **Key agreement from shared secret:** HKDF+SHA512. Salt is application-specific.  
+  **Key agreement from shared secret:** HKDF+SHA512. Salt with bitwise XOR of the the address components of the two parties' GUIDs.  
   **Symmetric signatures / MAC:** HMAC+SHA512
 + **0x2:** SHA512/AES256/RSA4096.  
   **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537. Salt length 64 bytes.  
   **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537.  
   **Symmetric encryption:** AES-256 in **SIV mode (formally AEAD_AES_SIV_CMAC_512)**  
   **Symmetric shared secrets:** Elliptic curve Diffie-Hellman using Curve25519.  
-  **Key agreement from shared secret:** HKDF+SHA512. Salt is application-specific.  
+  **Key agreement from shared secret:** HKDF+SHA512. Salt with bitwise XOR of the the address components of the two parties' GUIDs.  
   **Symmetric signatures / MAC:** HMAC+SHA512
 
 **Quick note:** Why not elliptic curves first? Basically, development resource allocation. There was a reasonably large amount of thought put into this decision, and I stand by it. We need a prototype that works and is suitably secure for alpha testing. ECC is a very high priority for the production standard. If you want to discuss this further, please [get in contact directly](mailto:badg@muterra.io).
@@ -320,7 +320,12 @@ The full GUID (hash algorithm byte + file hash) of the GEOC object containing th
 
 ### 5. Target GUID
 
-The GUID of the GEOC resource to bind to.
+The GUID of the resource to bind to. Valid choices are:
+
+1. Static GEOC address
+2. Dynamic GOBD address
+
+Binding to the address prevents its removal by the persistence provider.
 
 ### 6. Address algorithm
 
@@ -340,7 +345,7 @@ See Author Signature above.
 + Secondary stored file extension: .guid
 + Tertiary stored file extension: .gobd
 
-GOBDs must be stored until, and only until, they are cleared by a debinding, or successfully updated by their binder.
+GOBDs must be stored until, and only until, they are cleared by a debinding, or successfully updated by their binder. Like GEOC objects, external bindings may prevent debinding. In this case, the persistence provider must retain the author's debind object as it otherwise would, even if the GOBD object persists.
 
 **Terminology:**
 
@@ -351,21 +356,20 @@ Note that the static GUID applies to *this particular frame*.
 
 ## Format
 
-| Decimal Offset    | Decimal Length | Name                      | Format              |
-| ------            | ---------      | -------------------       | -----------         |
-| 0                 | 4B             | Magic number              | 0x 47 4F 42 44      |
-| 4                 | 4B             | Version number            | Unsigned 32-bit int |
-| 8                 | 1B             | Cipher suite              | Unsigned 8-bit int  |
-| 9                 | 65B            | Binder GUID               | Bytes               |
-| 74                | 2B             | History length *LR*       | Unsigned 16-bit int |
-| 76                | *LR*           | Historical frames         | Bytes               |
-| 76 + *LR*         | 4B             | Targets length *LN*       | Unsigned 32-bit int |
-| 80 + *LR*         | *LN*           | Target GUIDs              | Bytes               |
-| 80 + *LR* + *LN*  | 1B             | Dynamic address algorithm | Unsigned 8-bit int  |
-| 81 + *LR* + *LN*  | 64B            | Dynamic hash              | Bytes               |
-| 145 + *LR* + *LN* | 1B             | File address algorithm    | Unsigned 8-bit int  |
-| 146 + *LR* + *LN* | 64B            | File hash                 | Bytes               |
-| 210 + *LR* + *LN* | 512B           | Binder signature          | Bytes               |
+| Decimal Offset | Decimal Length | Name                      | Format              |
+| ------         | ---------      | -------------------       | -----------         |
+| 0              | 4B             | Magic number              | 0x 47 4F 42 44      |
+| 4              | 4B             | Version number            | Unsigned 32-bit int |
+| 8              | 1B             | Cipher suite              | Unsigned 8-bit int  |
+| 9              | 65B            | Binder GUID               | Bytes               |
+| 74             | 2B             | History length *LR*       | Unsigned 16-bit int |
+| 76             | *LR*           | Historical frames         | Bytes               |
+| 80 + *LR*      | *LN*           | Target GUID               | Bytes               |
+| 145 + *LR*     | 1B             | Dynamic address algorithm | Unsigned 8-bit int  |
+| 146 + *LR*     | 64B            | Dynamic hash              | Bytes               |
+| 210 + *LR*     | 1B             | File address algorithm    | Unsigned 8-bit int  |
+| 211 + *LR*     | 64B            | File hash                 | Bytes               |
+| 275 + *LR*     | 512B           | Binder signature          | Bytes               |
 
 ### 1. Magic number
 
@@ -373,7 +377,7 @@ ASCII "GOBD" (47 4F 42 44)
 
 ### 2. Version
 
-See above for description. **Currently 14.**
+See above for description. **Currently 15.**
 
 ### 3. Cipher suite
 
@@ -441,47 +445,39 @@ Result: Failed update
 
 **Note:** without this field, dynamic bindings are susceptible to replay attacks. All GOBD records must either include at least one historical GUID, or be the root dynamic binding. There is a balance here between network state management (more history is better) and size optimization (less history is better). If (and only if) the history length is zero will this indicate a new dynamic binding, in which case historical frames will be empty (zero-length).
 
-### 7. Targets length
+### 7. Target GUID
 
-The length, in bytes, of the list of targets.
+The GUID of the object representing the current state of the binding. The only valid targets are:
 
-### 8. Target GUIDs
++ The static GUID of a GEOC object
++ The dynamic GUID of a GOBD object
 
-An ordered list of the GUIDs for each frame. Order will be enforced and can be meaningful. Note that targets must only address static GEOC addresses; however, this condition may be unenforced by persistence providers. Violating this constraint is highly likely to break applications, and so may be harmful to the binder, but will not otherwise effect the network.
+Circular references between dynamic bindings are not allowed. Persistence providers must detect any attempts to create these references, and must always reject the latest of the dynamic bindings (the one that "closes" the circular reference). If multiple closing bindings are submitted within the same individual transport request, the persistence provider should reject all of them. Persistence providers may enforce a maximum depth for chained dynamic bindings.
 
-Note that it is impossible to have two *different* dynamic bindings with identical initial target lists. It is therefore also impossible to preallocate multiple dynamic "branches". Applications seeking such functionality should create a new dynamic binding at the branch point, updating downstream references to point to the new binding where appropriate. Alternatively, they may immediately create two dynamic bindings with no history, but different target lists, for example:
+Note that it is impossible to have two *different* dynamic bindings with identical initial target lists. It is therefore also impossible to directly preallocate multiple dynamic "branches". Applications seeking such functionality have two options:
 
-Binding A:
+1. Create a new dynamic binding at the branch point, updating downstream references to point to the new binding where appropriate. 
+2. Immediately create two dynamic bindings, with one targeting the other.
 
-1. GUID #1
-2. GUID #2
-3. GUID #3**a**
-
-Binding B:
-
-1. GUID #1
-2. GUID #2
-3. GUID #3**b**
-
-### 9. Dynamic address algorithm
+### 8. Dynamic address algorithm
 
 See above for description. Applies to the dynamic hash.
 
-### 10. Dynamic hash
+### 9. Dynamic hash
 
 The GUID hash for the secondary address for the dynamic object. Remains static for the life of the binding. Is used to address the binding.
 
 Like a file hash, generated from the concatenation of the entire preceding file of the original frame in the binding using the hash algorithm described in the Address Algorithm field.
 
-### 11. File address algorithm
+### 10. File address algorithm
 
 See above for description. Applies to the file hash.
 
-### 12. File hash
+### 11. File hash
 
 See above for description.
 
-### 13. Binder signature
+### 12. Binder signature
 
 See above for description.
 
@@ -689,7 +685,7 @@ Pipe acknowledgements are identified by the ASCII string "AK" ( 0x 41 4B ).
 
 + Requested GUID: the GUID used in the original pipe request.
 
-Note that here, the author is the entity-agent acknowledging the pipe -- ie, the recipient of the pipe request. Likewise, the MPAK recipient is the author of the original pipe request.
+Note that here, the author is the entity-agent acknowledging the pipe, not the entity that made the request. Also note that the requested GUID references the request's GUID, **not** the request's target's GUID.
 
 | Offset | Length    | Name                   | Format      |
 | ------ | --------- | -------------------    | ----------- |
@@ -702,7 +698,7 @@ Pipe non-acknowledgements (NAKs) should only be used during pipe negotiation. Th
 
 Pipe acknowledgements are identified by the ASCII string "NK" ( 0x 4E 4B ).
 
-Note that here, the author is the entity-agent non-acknowledging the pipe -- ie, the recipient of the pipe request. Likewise, the MPAK recipient is the author of the original pipe request.
+Note that here, the author is the entity-agent non-acknowledging the pipe, not the entity that made the request. Also note that the requested GUID references the request's GUID, **not** the request's target's GUID.
 
 | Offset | Length    | Name                   | Format      |
 | ------ | --------- | -------------------    | ----------- |
