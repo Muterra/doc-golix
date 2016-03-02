@@ -1,4 +1,4 @@
-# Current revision: 1 March 2016
+# Current revision: 2 March 2016
 
 + Clarified use of dynamic binding historical frames
 + Removed support for multiple targets in dynamic bindings; incremented version accordingly.
@@ -7,6 +7,7 @@
 + Added salt definition in key agreement
 + Clarified requested GUID and author/recipient in asymmetric requests.
 + Clarified valid targets for static bindings
++ Changed "pipe request" to "pipe handshake" to differentiate from "asymmetric request"
 
 # Previous revisions
 

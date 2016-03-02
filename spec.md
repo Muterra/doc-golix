@@ -663,11 +663,11 @@ The material for input into the signature algorithm is the entire preceding file
 
 Though the outer container of asymmetric requests is always identical, the internals may differ. The Golix standard currently defines four different objects for use in asymmetric requests:
 
-### Pipe request (RQ)
+### Pipe handshake (HS)
 
 Pipe requests are used (primarily) to establish a dynamically-bound GEOC pipe between two Golix identities. They are really only intended to be used once between any particular entity-entity pairing; best practice is to immediately construct a *symmetric* share between the two entities, and use that to bootstrap any additional pipes.
 
-Pipe requests are identified by the ASCII string "RQ" ( 0x 52 51 ).
+Pipe requests are identified by the ASCII string "HS" ( 0x 48 53 ).
 
 | Offset | Length    | Name                | Format      |
 | ------ | --------- | ------------------- | ----------- |
