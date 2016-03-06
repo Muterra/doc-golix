@@ -1,4 +1,4 @@
-# Current revision: 2 March 2016
+# Current revision: 6 March 2016
 
 + Clarified use of dynamic binding historical frames
 + Removed support for multiple targets in dynamic bindings; incremented version accordingly.
@@ -6,8 +6,9 @@
 + Explained debinding chains
 + Added salt definition in key agreement
 + Clarified requested GUID and author/recipient in asymmetric requests.
-+ Clarified valid targets for static bindings
++ Clarified valid targets for static, dynamic bindings
 + Changed "pipe request" to "pipe handshake" to differentiate from "asymmetric request"
++ Potential deprecation warning in ciphersuite 2
 
 # Previous revisions
 

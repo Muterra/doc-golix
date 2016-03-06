@@ -28,7 +28,9 @@ By Golix integer representation:
   **Key agreement from shared secret:** HKDF+SHA512. Salt with bitwise XOR of the the address components of the two parties' GUIDs.  
   **Symmetric signatures / MAC:** HMAC+SHA512
 
-**Quick note:** Why not elliptic curves first? Basically, development resource allocation. There was a reasonably large amount of thought put into this decision, and I stand by it. We need a prototype that works and is suitably secure for alpha testing. ECC is a very high priority for the production standard. If you want to discuss this further, please [get in contact directly](mailto:badg@muterra.io).
+**WARNING:** Ciphersuite **0x2** is likely to be removed and replaced in the near future. Implementations should not expect its definition to stay stable, and should instead rely upon **0x1** until future notice.
+
+**Quick note:** Why not elliptic curves first? Basically, development resource allocation. There was a reasonably large amount of thought put into this decision, and I stand by it. We need a prototype that works and is suitably secure for alpha testing. ECC is a very high priority for the production standard. If you want to discuss this further, please [get in contact directly](mailto:badg@muterra.io). We'd like to experiment some with the **0x1** ciphersuite, and make sure integrated packaging of nonce+key works how we'd like it to, and from there we will likely replace **0x2** with curve25519/ed25519/ecies.
 
 **Quick note 2:** Why not an AE/AEAD block mode? The added complexity doesn't make sense in this application. Dynamic bindings don't use symmetric encryption, and everything else is non-malleable. There's already a hash, and a signature, on top of the existing non-malleability, for GEOC records. CTR is very simple, which makes it much harder to screw up.
 
@@ -451,6 +453,7 @@ The GUID of the object representing the current state of the binding. The only v
 
 + The static GUID of a GEOC object
 + The dynamic GUID of a GOBD object
++ The static GUID of a GIDC object
 
 Circular references between dynamic bindings are not allowed. Persistence providers must detect any attempts to create these references, and must always reject the latest of the dynamic bindings (the one that "closes" the circular reference). If multiple closing bindings are submitted within the same individual transport request, the persistence provider should reject all of them. Persistence providers may enforce a maximum depth for chained dynamic bindings.
 
