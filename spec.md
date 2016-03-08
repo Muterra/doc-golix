@@ -785,14 +785,14 @@ All of the following commands must be supported by all persistence providers. Ad
 
 ```A``` queries ```B``` to determine reachability.
 
-```A``` sends bare request, or request with a GUID to indicate an update.
+```A``` sends bare request
 
 ```B``` responds with:
 
 + ACK if reachable and ready
 + NAK if reachable and unready
 
-This command is also used by ```A``` to initiate a connection with ```B```.
+This command can also used by ```A``` to initiate a connection with ```B```.
 
 ## Publish
 
@@ -816,7 +816,7 @@ This command is also used by ```A``` to initiate a connection with ```B```.
 + The object if successful
 + NAK if unsuccessful
 
-There is no return response from ```A```. Retries are initiated with a new get command.
+There is no return response from ```A```. Retries are initiated with a new get command. Persistence providers should always be capable of graceful handling of requests for missing objects.
 
 ## Subscribe
 
@@ -834,7 +834,7 @@ If ```B``` receives:
 + An updated copy of a dynamic binding with the indicated dynamic GUID
 + An asymmetric request with the indicated GUID as recipient
 
-then ```B``` starts to ping ```A``` with the GUID only (not the actual object). If unsuccessful, ```B``` *may* repeat ping until successful.
+then ```B``` will publish only that specific object (GOBD or GARQ) to ```A```. If unsuccessful, ```B``` *may* repeat until successful.
 
 ## Unsubscribe
 

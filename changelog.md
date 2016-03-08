@@ -1,4 +1,4 @@
-# Current revision: 6 March 2016
+# Current revision: 7 March 2016
 
 + Clarified use of dynamic binding historical frames
 + Removed support for multiple targets in dynamic bindings; incremented version accordingly.
@@ -9,6 +9,7 @@
 + Clarified valid targets for static, dynamic bindings
 + Changed "pipe request" to "pipe handshake" to differentiate from "asymmetric request"
 + Potential deprecation warning in ciphersuite 2
++ Removed optional guid request in persistence provider pings, and clarified several responses to/from persistence providers.
 
 # Previous revisions
 
