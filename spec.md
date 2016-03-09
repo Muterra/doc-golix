@@ -562,6 +562,7 @@ Only one object can be debound per debinding. The target GUID is the address alg
 1. Static bindings (reference the static binding's GUID, not the object's GUID)
 2. Dynamic binding frames (reference the dynamic GUID, not the individual frame's GUID)
 3. Debindings (reference the debinding's GUID)
+4. Asymmetric requests (reference the GARQ's GUID)
 
 ### 8. Address algorithm
 
