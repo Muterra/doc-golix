@@ -44,7 +44,8 @@
 2. Verify object author is known to persister
 3. Verify object signature
 4. Verify no pre-existing debinding for GDXX address exists (NOT the target)
-5. Add to object store if successful
+5. Verify author/recipient is same as referenced object
+6. Add to object store if successful
 
 ### GARQ
 

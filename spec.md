@@ -861,15 +861,29 @@ then ```B``` will publish only that specific object (GOBD or GARQ) to ```A```. I
 
 There is no return response from ```A```. Retries are initiated with a new list command.
 
-## List binders
+## List bindings
 
-```A``` requests a list of agents who have bound to a specified GUID ```B```.
+```A``` requests a list of bindings targeting a specified GUID ```B```.
 
 ```A``` sends GUID
 
 ```B``` responds with:
 
 + List if successful
++ NAK if unsuccessful
+
+There is no return response from ```A```. Retries are initiated with a new list command.
+
+## Query debinding
+
+```A``` requests to know if a specified binding GUID ```B``` has been targeted for debinding.
+
+```A``` sends GUID
+
+```B``` responds with:
+
++ GUID of debinding if successful and binding exists
++ Null object if successful and binding does not exist
 + NAK if unsuccessful
 
 There is no return response from ```A```. Retries are initiated with a new list command.

@@ -73,7 +73,8 @@ All persistence providers must, at a minimum, support the following commands:
 + List address subscriptions
 + Acknowledge (ack) transmission
 + Non-acknowledge (nak) transmission
-+ List agents with bindings to an object
++ List bindings targeting an object
++ Query if a debinding targets an address
 + Disconnect
 
 ## Data retention and removal
