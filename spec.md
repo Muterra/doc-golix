@@ -874,6 +874,13 @@ There is no return response from ```A```. Retries are initiated with a new list 
 
 There is no return response from ```A```. Retries are initiated with a new list command.
 
+The list returned must be ordered as follows:
+
+1. Static bindings must be first (leftmost)
+2. Dynamic bindings follow (rightmost)
+3. For any of the above two sets, bindings placed by the author must come first (leftmost)
+4. No other order is defined.
+
 ## Query debinding
 
 ```A``` requests to know if a specified binding GUID ```B``` has been targeted for debinding.

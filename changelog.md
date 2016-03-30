@@ -1,4 +1,4 @@
-# Current revision: 15 March 2016
+# Current revision: 29 March 2016
 
 + Clarified use of dynamic binding historical frames
 + Removed support for multiple targets in dynamic bindings; incremented version accordingly.
@@ -12,6 +12,7 @@
 + Removed optional guid request in persistence provider pings, and clarified several responses to/from persistence providers.
 + Added "query debinding" persistence provider command
 + Modified behavior of "list bindings" persistence provider command to return the binding guids instead of their authors
++ List bindings (the persistence provider command) now has a specified order.
 
 # Previous revisions
 
