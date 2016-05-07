@@ -87,39 +87,39 @@ Our solution is inspired by high-level memory-managed programming languages. Obj
 
 ## Addressing content
 
-As a mediating party between machine-based transport networks and agent-based social networks, Golix content requires a Golix unique identifier (GUID) -- essentially, our equivalent of a URL. We consider human-readable names to be an application-specific concern; once again, a distributed sensor network may have no need for them. Their use for objects adhering to the Golix protocol is therefore out-of-scope. Instead, we desire a simple, machine-readable, unique address for all content.
+As a mediating party between machine-based transport networks and agent-based social networks, Golix content requires a Golix unique identifier -- essentially, our equivalent of a URL. We consider human-readable names to be an application-specific concern; once again, a distributed sensor network may have no need for them. Their use for objects adhering to the Golix protocol is therefore out-of-scope. Instead, we desire a simple, machine-readable, unique address for all content.
 
-Instead of a centralized content identifier (for example: a unique integer assigned by a trusted oracle), Golix uses cryptographic hash functions to deterministically assign collision-resistant addresses for content. Choosing a sufficiently strong hash function and allowing for future algorithm changes can minimize the risk of redundant addressing, whilst simultaneously adding an extra layer of security; any attempt to modify existing content should result in a new address.
+Instead of a centralized content identifier (for example: a unique integer assigned by a trusted oracle), Golix uses cryptographic hash functions to deterministically assign collision-resistant addresses for content. Choosing a sufficiently strong hash function and allowing for future algorithm changes can minimize the risk of redundant addressing, whilst simultaneously adding an extra layer of security; any attempt to modify existing content should result in a new address. This unique address is the Golix Hash Identifier, or GHID.
 
 This address scheme works quite well for static content, but it also fails to provide any form of dynamic referencing. Now, on the one hand, all individual observations are static: if we were to record the temperature of a room at 1-minute intervals for the rest of time, any particular data point would be forever immutable. From this perspective, one could argue that information mutability is, in reality, an application concern -- that a network like Golix has no business with dynamic addresses. However, given that the assumption of the one-way nature of secure hash functions precludes the ability to predict addresses in advance, as a practical concern, a very primitive form of dynamic addressing is exceptionally useful. A profound number of basic network operations (both physical and social) either require or are greatly simplified by a consistently-addressed, time-variant data stream. As such, we argue that the potentially unwanted abstraction overhead of any particular dynamic address system is justified, so long as applications are free to ignore it with no performance consequences.
 
-Therefore, the Golix protocol defines a second kind of object binding. Like static bindings, they prevent object garbage collection; unlike static bindings, they generate a new address for existing content. Like static objects, they can only be created (or updated) by a single agent; however, that agent need not be the author of the objects bound by the address. Dynamic bindings are constructed as an ordered list of bound static GUID(s). The meaning of this list may be application-specific, but is generally assumed to be a buffer, and in such a use is formulated with the newest entry first. The dynamic address is generated once, as the hash of the first set of bound GUID(s), and is then included in all subsequent revisions of the binding.
+Therefore, the Golix protocol defines a second kind of object binding. Like static bindings, they prevent object garbage collection; unlike static bindings, they generate a new address for existing content. Like static objects, they can only be created (or updated) by a single agent; however, that agent need not be the author of the objects bound by the address. Dynamic bindings are constructed as an ordered list of bound static GHID(s). The meaning of this list may be application-specific, but is generally assumed to be a buffer, and in such a use is formulated with the newest entry first. The dynamic address is generated once, as the hash of the first set of bound GHID(s), and is then included in all subsequent revisions of the binding.
 
 ## Content management primitives
 
 At this point we can fully enumerate the required **public** components in a Golix encrypted object container (GEOC) record:
 
-1. File hash / GUID
-2. Author GUID
+1. File hash / GHID
+2. Author GHID
 3. Author's signature of the file hash
 4. Symmetrically encrypted payload
 
 As well as a Golix static object binding (GOBS) record:
 
-1. GUID of the agent placing the binding (the binding agent)
+1. GHID of the agent placing the binding (the binding agent)
 2. Binding agent's signature
-3. GUID for the object to bind (the target)
+3. GHID for the object to bind (the target)
 
 And a Golix dynamic object binding (GOBD) record:
 
-1. GUID of the binding agent
+1. GHID of the binding agent
 2. Binding agent's signature
 3. Dynamic address
-4. GUID(s) for static target(s)
+4. GHID(s) for static target(s)
 
 And a Golix address debinding (GDXX) statement:
 
-1. GUID of the debinding agent
+1. GHID of the debinding agent
 2. Debinding agent's signature
 3. Address to be debound
 
@@ -143,7 +143,7 @@ Many (perhaps most) protocols include some kind of key management within the ord
 
 The chief downside to this approach when creating a high-level protocol like PGP or OTR is that it does not integrate conveniently with most message-based transport exchanges. This is particularly true for email, where building a usable client for such a system would imply a very heavy-handed post-receipt merger of the separate content and key messages.
 
-However, as a standalone entity, the Golix protocol bears no such limitation. Our biggest concern, then, with this separation of key and message, is how to create a reliable, secure, unambiguous link between the two. This problem can be easily solved by sharing keys paired not with the content itself, but with that content's GUID.
+However, as a standalone entity, the Golix protocol bears no such limitation. Our biggest concern, then, with this separation of key and message, is how to create a reliable, secure, unambiguous link between the two. This problem can be easily solved by sharing keys paired not with the content itself, but with that content's GHID.
 
 ## Inter-agent "pipes"
 
@@ -159,9 +159,9 @@ Finally, once a pipe-based transaction is complete, the terminating agent (Alice
 
 Conspicuously absent from this basic description of pipes is the initial keysharing process.  Because the Golix protocol is capable of asynchronous operation, and pipe initiation may not always be between previously "acquainted" agents, the only way to eliminate metadata publicly linking the pipe participants is for the pipe handshake to use public/private cryptography.
 
-This process is fully symmetric and can be initiated by either party. First, Alice creates her half-pipe. She then uses Bob's public key to privately announce the half-pipe's dynamic GUID and its key to Bob, and he responds with either a pipe ACK (if successful) or pipe NAK (if unsuccessful). If a full pipe is desired, Bob can then repeat this process for Alice.
+This process is fully symmetric and can be initiated by either party. First, Alice creates her half-pipe. She then uses Bob's public key to privately announce the half-pipe's dynamic GHID and its key to Bob, and he responds with either a pipe ACK (if successful) or pipe NAK (if unsuccessful). If a full pipe is desired, Bob can then repeat this process for Alice.
 
-Of course, for Bob to respond, this request must be provably Alice's. Once again, though, we are explicitly avoiding publicly linking Alice and Bob in the handshake request. This has the somewhat undesirable consequence that Bob can only verify Alice's signature *after* decrypting the request. Though this prevents a malicious party from successfully initiating an API pipe on someone else's behalf, it also means that signature verification cannot be performed by the network. This opens a potential DoS-style attack vulnerability: an agent's application could be overwhelmed by spoofed pipe requests with invalid signatures from invalid GUIDs. Such an attack would compromise the victim's ability to initiate new pipes, but presumably leave its existing pipes minimally affected.
+Of course, for Bob to respond, this request must be provably Alice's. Once again, though, we are explicitly avoiding publicly linking Alice and Bob in the handshake request. This has the somewhat undesirable consequence that Bob can only verify Alice's signature *after* decrypting the request. Though this prevents a malicious party from successfully initiating an API pipe on someone else's behalf, it also means that signature verification cannot be performed by the network. This opens a potential DoS-style attack vulnerability: an agent's application could be overwhelmed by spoofed pipe requests with invalid signatures from invalid GHIDs. Such an attack would compromise the victim's ability to initiate new pipes, but presumably leave its existing pipes minimally affected.
 
 Mitigations against this style of attack will likely need to be developed, but it's worth mentioning that, since pipe requests are strictly a one-to-one transaction, they need not be signed asymmetrically. Rather, if both agents' public identities include a Diffie-Hellman public key, the request can be signed using a MAC with a key derived from their DH shared secret. This substantially decreases signature verification time, and therefore increases the computational footprint required for a successful attack. It also has the added benefit of inherent immunity to attempts to link Alice and Bob together by testing signature validity against a dictionary of public keys.
 
@@ -177,24 +177,24 @@ Fortunately, key memory is a relatively direct form of persistence. It happens a
 
 At this point we can fully enumerate the required components in a Golix asymmetric request (GARQ) record:
 
-1. Recipient agent GUID (public)
-2. Requesting agent GUID (private)
+1. Recipient agent GHID (public)
+2. Requesting agent GHID (private)
 3. Payload (private)
 4. Requesting agent MAC (public)
 
 The private payload requirements can then be broken down into three categories. Pipe initiation requests require:
 
-1. Target half-pipe GUID
+1. Target half-pipe GHID
 2. Half-pipe initial symmetric key
 
 Pipe acknowledgement records require:
 
-1. Target half-pipe GUID
+1. Target half-pipe GHID
 2. Initialization status code (optional)
 
 And a pipe non-acknowledgement requires:
 
-1. Target half-pipe GUID
+1. Target half-pipe GHID
 2. Failure code (optional)
 
 # Identity management
@@ -218,7 +218,7 @@ A key shortcoming of PGP-over-email is that public keys are distributed on a dif
 
 However, an alternative would be a protocol where "email addresses" were inseparable from their public key(s). This system, though still vulnerable to phishing attacks (as nearly all human-interfacing systems are), could never suffer from such a direct impersonation attack: if Eve replaced the public key in a malicious response to Alice's key request, Alice would be aware that the new address mismatched her request.
 
-On a Golix-implementing network, use of hash-based GUIDs already provides this property; by storing Alice's identity in a Golix object, we can ensure that changing its content (her public keys) results in the generation of a new GUID. Within the context of Golix, we then refer to "Alice" *only* by the GUID of the container for her public keys. We therefore acquire self-security recipient "addresses" without any added infrastructure overhead. The network, including agent identities, can be wholly self-hosting. 
+On a Golix-implementing network, use of hash-based GHIDs already provides this property; by storing Alice's identity in a Golix object, we can ensure that changing its content (her public keys) results in the generation of a new GHID. Within the context of Golix, we then refer to "Alice" *only* by the GHID of the container for her public keys. We therefore acquire self-security recipient "addresses" without any added infrastructure overhead. The network, including agent identities, can be wholly self-hosting. 
 
 ## Aliases and their selective deniability
 

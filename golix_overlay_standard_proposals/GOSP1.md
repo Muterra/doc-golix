@@ -12,7 +12,7 @@
 
 Formatted as a zbg-encoded dictionary with the following structure:
 
-1. ASCII '```__class__```': <API class muid>
+1. ASCII '```__class__```': <API class ghid>
 1. ASCII '```version```': <version identifier>
 2. <ciphersuite identifier>:
     1. ASCII '```sign```': <signature key>
@@ -23,4 +23,4 @@ and raw binary encoding of the keys themselves:
 
 1. n-bit 
 
-The container author muid should be 66 bytes of ```00```
+The container author ghid should be 66 bytes of ```00```

@@ -4,7 +4,7 @@
 
 **Goals:**
 
-1. Once the container's MUID is known, the private keys contained within should be accessible through a single password
+1. Once the container's GHID is known, the private keys contained within should be accessible through a single password
 2. The container file must, on its own, be heavily resistant to brute-force cracking attacks
 3. For usability reasons, a single container should enclose all three private keys.
 

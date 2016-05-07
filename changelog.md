@@ -5,13 +5,13 @@
 + Updated debindings to be stateless; incremented version accordingly.
 + Explained debinding chains
 + Added salt definition in key agreement
-+ Clarified requested GUID and author/recipient in asymmetric requests.
++ Clarified requested GHID and author/recipient in asymmetric requests.
 + Clarified valid targets for static, dynamic bindings
 + Changed "pipe request" to "pipe handshake" to differentiate from "asymmetric request"
 + Potential deprecation warning in ciphersuite 2
-+ Removed optional guid request in persistence provider pings, and clarified several responses to/from persistence providers.
++ Removed optional ghid request in persistence provider pings, and clarified several responses to/from persistence providers.
 + Added "query debinding" persistence provider command
-+ Modified behavior of "list bindings" persistence provider command to return the binding guids instead of their authors
++ Modified behavior of "list bindings" persistence provider command to return the binding ghids instead of their authors
 + List bindings (the persistence provider command) now has a specified order.
 
 # Previous revisions
@@ -38,10 +38,10 @@
 + Major readme revision for better expressibility
 + Removed shameless plugs
 + Switched numeric identification of ciphersuites 1 and 2 in preparation for possible removal of SIV mode
-+ Changed lengths of any GUID lists into absolute lengths, to ease support of potential future address algorithms of different lengths. Updated version numbers accordingly.
++ Changed lengths of any GHID lists into absolute lengths, to ease support of potential future address algorithms of different lengths. Updated version numbers accordingly.
 + Moved all of the asymmetric operations into a single primitive (GARQ) with differing payloads. Added another payload definition for arbitrary content, to support future protocol development.
 + Clarified available size of asymmetric payload and appropriateness of use
-+ Changed all secondary file extensions to .guid and tertiary to object identifiers (ex .geoc)
++ Changed all secondary file extensions to .ghid and tertiary to object identifiers (ex .geoc)
 + Added support for different static/dynamic address algorithms in dynamic binding
 
 ## 18 Jan 2016, #4fcba8f

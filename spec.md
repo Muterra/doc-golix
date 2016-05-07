@@ -18,14 +18,14 @@ By Golix integer representation:
   **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537.  
   **Symmetric encryption:** AES-256 in **CTR mode with nonce distributed privately with the key**  
   **Symmetric shared secrets:** Elliptic curve Diffie-Hellman using Curve25519.  
-  **Key agreement from shared secret:** HKDF+SHA512. Salt with bitwise XOR of the the address components of the two parties' GUIDs.  
+  **Key agreement from shared secret:** HKDF+SHA512. Salt with bitwise XOR of the the address components of the two parties' GHIDs.  
   **Symmetric signatures / MAC:** HMAC+SHA512
 + **0x2:** SHA512/AES256/RSA4096.  
   **Signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537. Salt length 64 bytes.  
   **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537.  
   **Symmetric encryption:** AES-256 in **SIV mode (formally AEAD_AES_SIV_CMAC_512)**  
   **Symmetric shared secrets:** Elliptic curve Diffie-Hellman using Curve25519.  
-  **Key agreement from shared secret:** HKDF+SHA512. Salt with bitwise XOR of the the address components of the two parties' GUIDs.  
+  **Key agreement from shared secret:** HKDF+SHA512. Salt with bitwise XOR of the the address components of the two parties' GHIDs.  
   **Symmetric signatures / MAC:** HMAC+SHA512
 
 **WARNING:** Ciphersuite **0x2** is likely to be removed and replaced in the near future. Implementations should not expect its definition to stay stable, and should instead rely upon **0x1** until future notice.
@@ -106,16 +106,16 @@ Secondly, and much less importantly, we are considering defining 0x2 as a concat
 # Identity containers (GIDC)
 
 + Preferred stored file extension: no extension
-+ Secondary stored file extension: .guid
++ Secondary stored file extension: .ghid
 + Tertiary stored file extension: .gidc
 
-Identities are contained within specially-formatted container objects. Unlike other Golix objects, identity containers do not require a binding to persist. A persistence provider should only remove an identity container under extreme circumstances; they should be considered, generally speaking, to be indefinitely persistent. However, they may be bound by dynamic bindings, and that dynamic address may be used as a proxy for the author's GUID.
+Identities are contained within specially-formatted container objects. Unlike other Golix objects, identity containers do not require a binding to persist. A persistence provider should only remove an identity container under extreme circumstances; they should be considered, generally speaking, to be indefinitely persistent. However, they may be bound by dynamic bindings, and that dynamic address may be used as a proxy for the author's GHID.
 
-Because they may have different versions, identity containers are not necessarily deterministically reproducible; rebuilding them from the base public keys without knowing what identity container version was originally used will generally result in a different author GUID. Furthermore, each individual identity container can only support a single ciphersuite.
+Because they may have different versions, identity containers are not necessarily deterministically reproducible; rebuilding them from the base public keys without knowing what identity container version was originally used will generally result in a different author GHID. Furthermore, each individual identity container can only support a single ciphersuite.
 
-An author using multiple author GUIDs for the same public keys may have catastrophic consequences for that author, but will leave the network unaffected. Given the difficulty of identity recreation, Golix best practices are to **always** wrap identity containers within a dynamic binding as a proxy, *even if there is only a single GIDC associated with that entity.*
+An author using multiple author GHIDs for the same public keys may have catastrophic consequences for that author, but will leave the network unaffected. Given the difficulty of identity recreation, Golix best practices are to **always** wrap identity containers within a dynamic binding as a proxy, *even if there is only a single GIDC associated with that entity.*
 
-The file hash of the GIDC container (or, again, its dynamic binding proxy) is the Author/Recipient GUID for all other objects.
+The file hash of the GIDC container (or, again, its dynamic binding proxy) is the Author/Recipient GHID for all other objects.
 
 ## Format
 
@@ -190,7 +190,7 @@ Key material formatting, including length, is determined by the declared ciphers
 
 ### 7. Address algorithm
 
-Golix may eventually need multiple hash algorithms. They are represented as an 8-bit integer immediately following the magic number. The protocol specification defines which algorithm corresponds to which integer. The 1-byte address algorithm field is prepended to the file hash to form the GUID.
+Golix may eventually need multiple hash algorithms. They are represented as an 8-bit integer immediately following the magic number. The protocol specification defines which algorithm corresponds to which integer. The 1-byte address algorithm field is prepended to the file hash to form the GHID.
 
 See "Cipher suites and address algorithms" above for details.
 
@@ -206,12 +206,12 @@ The hash digest of the file, using the algorithm described by the Address Algori
 6. Exchange key material
 7. Address algorithm
 
-The file hash is appended to the 1-byte address algorithm field to construct a static GUID.
+The file hash is appended to the 1-byte address algorithm field to construct a static GHID.
 
 # Object container (GEOC)
 
 + Preferred stored file extension: no extension
-+ Secondary stored file extension: .guid
++ Secondary stored file extension: .ghid
 + Tertiary stored file extension: .geoc
 
 GEOCs must be stored by a persistence provider if, and only if, they are referenced in a GOBS or GOBD stored at the same persistence provider.
@@ -220,7 +220,7 @@ GEOCs must be stored by a persistence provider if, and only if, they are referen
 
 + Author: the entity-agent creating the GEOC
 + Payload: all information to be protected by the container
-+ Static GUID: the immutable, unique identifier for this particular object. It is always the (address algorithm + file hash) combination for that object.
++ Static GHID: the immutable, unique identifier for this particular object. It is always the (address algorithm + file hash) combination for that object.
 
 ## Format
 
@@ -229,7 +229,7 @@ GEOCs must be stored by a persistence provider if, and only if, they are referen
 | 0              | 4B             | Magic number        | 0x 47 45 4F 43      |
 | 4              | 4B             | Version number      | Unsigned 32-bit int |
 | 8              | 1B             | Cipher suite        | Unsigned 8-bit int  |
-| 9              | 65B            | Author GUID         | Bytes               |
+| 9              | 65B            | Author GHID         | Bytes               |
 | 74             | 8B             | Payload length, *N* | Unsigned 64-bit int |
 | 82             | *N*            | Private payload     | Encrypted blob      |
 | 82 + *N*       | 1B             | Address algorithm   | Unsigned 8-bit int  |
@@ -252,9 +252,9 @@ Golix supports multiple cipher suites. They are represented as an 8-bit integer.
 
 See "Cipher suites and address algorithms" above for details.
 
-### 4. Author GUID
+### 4. Author GHID
 
-The full GUID of the GEOC object containing the author's identity (her public keys).
+The full GHID of the GEOC object containing the author's identity (her public keys).
 
 ### 5. Payload length
 
@@ -279,7 +279,7 @@ This field is always an asymmetric cryptographic signature of the file hash fiel
 # Static binding (GOBS)
 
 + Preferred stored file extension: no extension
-+ Secondary stored file extension: .guid
++ Secondary stored file extension: .ghid
 + Tertiary stored file extension: .gobs
 
 GOBS must be stored by a persistence provider until, and only until, they are cleared by a debinding.
@@ -287,9 +287,9 @@ GOBS must be stored by a persistence provider until, and only until, they are cl
 **Terminology:**
 
 + Binder: the entity-agent creating the binding (not necessarily the same as the bound GEOC's author)
-+ Target GUID: the static GUID for the bound GEOC
++ Target GHID: the static GHID for the bound GEOC
 
-Note that the static GUID applies to this particular binding, not to the target.
+Note that the static GHID applies to this particular binding, not to the target.
 
 ## Format
 
@@ -298,8 +298,8 @@ Note that the static GUID applies to this particular binding, not to the target.
 | 0              | 4B             | Magic number        | 0x 47 4F 42 53      |
 | 4              | 4B             | Version number      | Unsigned 32-bit int |
 | 8              | 1B             | Cipher suite        | Unsigned 8-bit int  |
-| 9              | 65B            | Binder GUID         | Bytes               |
-| 74             | 65B            | Target GUID         | Bytes               |
+| 9              | 65B            | Binder GHID         | Bytes               |
+| 74             | 65B            | Target GHID         | Bytes               |
 | 139            | 1B             | Address algorithm   | Unsigned 8-bit int  |
 | 140            | 64B            | File hash           | Bytes               |
 | 204            | 512B           | Binder signature    | Bytes               |
@@ -316,13 +316,13 @@ See above for description. **Currently 6.**
 
 See above for description.
 
-### 4. Binder GUID 
+### 4. Binder GHID 
 
-The full GUID (hash algorithm byte + file hash) of the GEOC object containing the identity (the public keys) of the agent placing the binding.
+The full GHID (hash algorithm byte + file hash) of the GEOC object containing the identity (the public keys) of the agent placing the binding.
 
-### 5. Target GUID
+### 5. Target GHID
 
-The GUID of the resource to bind to. Valid choices are:
+The GHID of the resource to bind to. Valid choices are:
 
 1. Static GEOC address
 2. Dynamic GOBD address
@@ -344,17 +344,17 @@ See Author Signature above.
 # Dynamic binding (GOBD)
 
 + Preferred stored file extension: no extension
-+ Secondary stored file extension: .guid
++ Secondary stored file extension: .ghid
 + Tertiary stored file extension: .gobd
 
 GOBDs must be stored until, and only until, they are cleared by a debinding, or successfully updated by their binder. Like GEOC objects, external bindings may prevent debinding. In this case, the persistence provider must retain the author's debind object as it otherwise would, even if the GOBD object persists.
 
 **Terminology:**
 
-+ Dynamic GUID, dynamic address: The secondary address for this binding. Static for the lifetime of the binding.
-+ Frame: Any particular version of the binding with this dynamic GUID.
++ Dynamic GHID, dynamic address: The secondary address for this binding. Static for the lifetime of the binding.
++ Frame: Any particular version of the binding with this dynamic GHID.
 
-Note that the static GUID applies to *this particular frame*.
+Note that the static GHID applies to *this particular frame*.
 
 ## Format
 
@@ -363,10 +363,10 @@ Note that the static GUID applies to *this particular frame*.
 | 0              | 4B             | Magic number              | 0x 47 4F 42 44      |
 | 4              | 4B             | Version number            | Unsigned 32-bit int |
 | 8              | 1B             | Cipher suite              | Unsigned 8-bit int  |
-| 9              | 65B            | Binder GUID               | Bytes               |
+| 9              | 65B            | Binder GHID               | Bytes               |
 | 74             | 2B             | History length *LR*       | Unsigned 16-bit int |
 | 76             | *LR*           | Historical frames         | Bytes               |
-| 80 + *LR*      | *LN*           | Target GUID               | Bytes               |
+| 80 + *LR*      | *LN*           | Target GHID               | Bytes               |
 | 145 + *LR*     | 1B             | Dynamic address algorithm | Unsigned 8-bit int  |
 | 146 + *LR*     | 64B            | Dynamic hash              | Bytes               |
 | 210 + *LR*     | 1B             | File address algorithm    | Unsigned 8-bit int  |
@@ -385,17 +385,17 @@ See above for description. **Currently 15.**
 
 See above for description.
 
-### 4. Binder GUID 
+### 4. Binder GHID 
 
 See above for description.
 
 ### 5. History length
 
-The length, in bytes, of the GUID history included in the binding. If zero, this is the first frame.
+The length, in bytes, of the GHID history included in the binding. If zero, this is the first frame.
 
 ### 6. Historical frames
 
-A record of the recent history of the dynamic binding's static GUIDs, sorted in ascending order of recency (ie, oldest first). A persistence provider must reject any new dynamic binding frame for an existing binding that does not contain the existing frame in its history list. For example:
+A record of the recent history of the dynamic binding's static GHIDs, sorted in ascending order of recency (ie, oldest first). A persistence provider must reject any new dynamic binding frame for an existing binding that does not contain the existing frame in its history list. For example:
 
 **Scenario 1**
 
@@ -445,15 +445,15 @@ New #Dynamic123
 Result: Failed update
 ```
 
-**Note:** without this field, dynamic bindings are susceptible to replay attacks. All GOBD records must either include at least one historical GUID, or be the root dynamic binding. There is a balance here between network state management (more history is better) and size optimization (less history is better). If (and only if) the history length is zero will this indicate a new dynamic binding, in which case historical frames will be empty (zero-length).
+**Note:** without this field, dynamic bindings are susceptible to replay attacks. All GOBD records must either include at least one historical GHID, or be the root dynamic binding. There is a balance here between network state management (more history is better) and size optimization (less history is better). If (and only if) the history length is zero will this indicate a new dynamic binding, in which case historical frames will be empty (zero-length).
 
-### 7. Target GUID
+### 7. Target GHID
 
-The GUID of the object representing the current state of the binding. The only valid targets are:
+The GHID of the object representing the current state of the binding. The only valid targets are:
 
-+ The static GUID of a GEOC object
-+ The dynamic GUID of a GOBD object
-+ The static GUID of a GIDC object
++ The static GHID of a GEOC object
++ The dynamic GHID of a GOBD object
++ The static GHID of a GIDC object
 
 Circular references between dynamic bindings are not allowed. Persistence providers must detect any attempts to create these references, and must always reject the latest of the dynamic bindings (the one that "closes" the circular reference). If multiple closing bindings are submitted within the same individual transport request, the persistence provider should reject all of them. Persistence providers may enforce a maximum depth for chained dynamic bindings.
 
@@ -468,7 +468,7 @@ See above for description. Applies to the dynamic hash.
 
 ### 9. Dynamic hash
 
-The GUID hash for the secondary address for the dynamic object. Remains static for the life of the binding. Is used to address the binding.
+The GHID hash for the secondary address for the dynamic object. Remains static for the life of the binding. Is used to address the binding.
 
 Like a file hash, generated from the concatenation of the entire preceding file of the original frame in the binding using the hash algorithm described in the Address Algorithm field.
 
@@ -487,7 +487,7 @@ See above for description.
 # Debind record (GDXX)
 
 + Preferred stored file extension: no extension
-+ Secondary stored file extension: .guid
++ Secondary stored file extension: .ghid
 + Tertiary stored file extension: .gdxx
 
 Note that, without chaining, binding and debinding are subject to replay attacks. Therefore, GDXXs must be stored until, and only until, they are cleared by subsequent debinding. For example (ignoring garbage collection):
@@ -524,7 +524,7 @@ In each case, the *most recent* set of bindings and debindings must be retained 
 
 + Debinder: The entity-agent removing a binding.
 
-Note that the static GUID applies to *this particular debinding*.
+Note that the static GHID applies to *this particular debinding*.
 
 ## Format
 
@@ -533,8 +533,8 @@ Note that the static GUID applies to *this particular debinding*.
 | 0              | 4B             | Magic number        | 0x 47 44 58 58      |
 | 4              | 4B             | Version number      | Unsigned 32-bit int |
 | 8              | 1B             | Cipher suite        | Unsigned 8-bit int  |
-| 9              | 65B            | Debinder GUID       | Bytes               |
-| 74             | 65B            | Target GUID         | Bytes               |
+| 9              | 65B            | Debinder GHID       | Bytes               |
+| 74             | 65B            | Target GHID         | Bytes               |
 | 139            | 1B             | Address algorithm   | Unsigned 8-bit int  |
 | 140            | 64B            | File hash           | Bytes               |
 | 204            | 512B           | Debinder signature  | Bytes               |
@@ -551,18 +551,18 @@ See above for description. **Currently 9.**
 
 See above for description.
 
-### 4. Debinder GUID 
+### 4. Debinder GHID 
 
-The full GUID (hash algorithm byte + file hash) of the GEOC object containing the identity (the public keys) of the debinding agent.
+The full GHID (hash algorithm byte + file hash) of the GEOC object containing the identity (the public keys) of the debinding agent.
 
-### 7. Target GUID
+### 7. Target GHID
 
-Only one object can be debound per debinding. The target GUID is the address algorithm + file hash of the particular binding or debinding to remove. The **only** valid debind targets are:
+Only one object can be debound per debinding. The target GHID is the address algorithm + file hash of the particular binding or debinding to remove. The **only** valid debind targets are:
 
-1. Static bindings (reference the static binding's GUID, not the object's GUID)
-2. Dynamic binding frames (reference the dynamic GUID, not the individual frame's GUID)
-3. Debindings (reference the debinding's GUID)
-4. Asymmetric requests (reference the GARQ's GUID)
+1. Static bindings (reference the static binding's GHID, not the object's GHID)
+2. Dynamic binding frames (reference the dynamic GHID, not the individual frame's GHID)
+3. Debindings (reference the debinding's GHID)
+4. Asymmetric requests (reference the GARQ's GHID)
 
 ### 8. Address algorithm
 
@@ -579,7 +579,7 @@ See Binder Signature above.
 # Golix encrypted asymmetric request (GARQ)
 
 + Preferred stored file extension: no extension
-+ Secondary stored file extension: .guid
++ Secondary stored file extension: .ghid
 + Tertiary stored file extension: .garq
 
 GARQs must be stored until, and only until, they are cleared by a debinding from their recipient.
@@ -600,7 +600,7 @@ Note that the author is the entity-agent requesting the pipe.
 | 0              | 4B             | Magic number               | 0x 47 41 52 51      |
 | 4              | 4B             | Version number             | Unsigned 32-bit int |
 | 8              | 1B             | Cipher suite               | Unsigned 8-bit int  |
-| 9              | 65B            | Recipient GUID             | Bytes               |
+| 9              | 65B            | Recipient GHID             | Bytes               |
 | 140            | 512B           | Private inner container    | Bytes               |
 | 652            | 1B             | Address algorithm          | Unsigned 8-bit int  |
 | 653            | 64B            | File hash                  | Bytes               |
@@ -610,7 +610,7 @@ Note that the author is the entity-agent requesting the pipe.
 
 | Offset | Length    | Name                 | Format              |
 | ------ | --------- | -------------------  | -----------         |
-| 0      | 65B       | Author GUID          | Bytes               |
+| 0      | 65B       | Author GHID          | Bytes               |
 | 65     | 2B        | Payload identifier   | Bytes               |
 | 67     | 2B        | Payload length, *LA* | Unsigned 16-bit int |
 | 69     | *LA*      | Payload              | Bytes               |
@@ -627,15 +627,15 @@ See above for description. **Currently 12.**
 
 See above for description.
 
-### 4. Recipient GUID 
+### 4. Recipient GHID 
 
-The GUID of the recipient.
+The GHID of the recipient.
 
 ### 5. Private inner container
 
 Encrypted asymmetrically against the public key for the recipient. Once decrypted, the plaintext contents are defined as:
 
-1. The GUID of the GARQ author.
+1. The GHID of the GARQ author.
 2. A 2-byte identifier for the payload contents
 3. The length, in bytes, of the payload
 4. The payload
@@ -675,7 +675,7 @@ Pipe requests are identified by the ASCII string "HS" ( 0x 48 53 ).
 
 | Offset | Length    | Name                | Format      |
 | ------ | --------- | ------------------- | ----------- |
-| 69     | 65B       | Target GUID         | Bytes       |
+| 69     | 65B       | Target GHID         | Bytes       |
 | 134    | 1B        | Secret length, *LK* | Bytes       |
 | 135    | *LK*      | Target secret       | Bytes       |
 
@@ -687,13 +687,13 @@ Pipe acknowledgements are identified by the ASCII string "AK" ( 0x 41 4B ).
 
 **Terminology:**
 
-+ Requested GUID: the GUID used in the original pipe request.
++ Requested GHID: the GHID used in the original pipe request.
 
-Note that here, the author is the entity-agent acknowledging the pipe, not the entity that made the request. Also note that the requested GUID references the request's GUID, **not** the request's target's GUID.
+Note that here, the author is the entity-agent acknowledging the pipe, not the entity that made the request. Also note that the requested GHID references the request's GHID, **not** the request's target's GHID.
 
 | Offset | Length    | Name                   | Format      |
 | ------ | --------- | -------------------    | ----------- |
-| 69     | 65B       | Requested GUID         | Bytes       |
+| 69     | 65B       | Requested GHID         | Bytes       |
 | 134    | 32B       | Status code (optional) | Bytes       |
 
 ### Pipe non-acknowledgement (NK)
@@ -702,11 +702,11 @@ Pipe non-acknowledgements (NAKs) should only be used during pipe negotiation. Th
 
 Pipe acknowledgements are identified by the ASCII string "NK" ( 0x 4E 4B ).
 
-Note that here, the author is the entity-agent non-acknowledging the pipe, not the entity that made the request. Also note that the requested GUID references the request's GUID, **not** the request's target's GUID.
+Note that here, the author is the entity-agent non-acknowledging the pipe, not the entity that made the request. Also note that the requested GHID references the request's GHID, **not** the request's target's GHID.
 
 | Offset | Length    | Name                   | Format      |
 | ------ | --------- | -------------------    | ----------- |
-| 69     | 65B       | Requested GUID         | Bytes       |
+| 69     | 65B       | Requested GHID         | Bytes       |
 | 134    | 32B       | Status code (optional) | Bytes       |
 
 ### Arbitrary content (0x0000)
@@ -810,7 +810,7 @@ This command can also used by ```A``` to initiate a connection with ```B```.
 
 ```A``` requests an object from ```B```.
 
-```A``` sends GUID
+```A``` sends GHID
 
 ```B``` responds with:
 
@@ -823,7 +823,7 @@ There is no return response from ```A```. Retries are initiated with a new get c
 
 ```A``` requests to be subscribed to an address at ```B```.
 
-```A``` sends GUID
+```A``` sends GHID
 
 ```B``` responds with:
 
@@ -832,8 +832,8 @@ There is no return response from ```A```. Retries are initiated with a new get c
 
 If ```B``` receives:
 
-+ An updated copy of a dynamic binding with the indicated dynamic GUID
-+ An asymmetric request with the indicated GUID as recipient
++ An updated copy of a dynamic binding with the indicated dynamic GHID
++ An asymmetric request with the indicated GHID as recipient
 
 then ```B``` will publish only that specific object (GOBD or GARQ) to ```A```. If unsuccessful, ```B``` *may* repeat until successful.
 
@@ -841,7 +841,7 @@ then ```B``` will publish only that specific object (GOBD or GARQ) to ```A```. I
 
 ```A``` requests to be unsubscribed from an object at ```B```.
 
-```A``` sends GUID
+```A``` sends GHID
 
 ```B``` responds with:
 
@@ -850,31 +850,31 @@ then ```B``` will publish only that specific object (GOBD or GARQ) to ```A```. I
 
 ## List subscribed addresses
 
-```A``` requests a list of subscribed GUIDs from ```B```.
+```A``` requests a list of subscribed GHIDs from ```B```.
 
 ```A``` sends bare command
 
 ```B``` responds with:
 
-+ List of GUIDs if successful
++ List of GHIDs if successful
 + NAK if unsuccessful
 
 There is no return response from ```A```. Retries are initiated with a new list command.
 
 ## List bindings
 
-```A``` requests a list of bindings targeting a specified GUID ```B```.
+```A``` requests a list of bindings targeting a specified GHID ```B```.
 
-```A``` sends GUID
+```A``` sends GHID
 
 ```B``` responds with:
 
-+ List if successful
++ List if successful (may be empty)
 + NAK if unsuccessful
 
 There is no return response from ```A```. Retries are initiated with a new list command.
 
-The list returned must be ordered as follows:
+If the specified GHID exists at ```B```, then ```B``` must return successfully, even if there are no bindings for that GHID, or if the target is an invalid target for bindings. The list returned must be ordered as follows:
 
 1. Static bindings must be first (leftmost)
 2. Dynamic bindings follow (rightmost)
@@ -883,13 +883,13 @@ The list returned must be ordered as follows:
 
 ## Query debinding
 
-```A``` requests to know if a specified binding GUID ```B``` has been targeted for debinding.
+```A``` requests to know if a specified binding GHID ```B``` has been targeted for debinding.
 
-```A``` sends GUID
+```A``` sends GHID
 
 ```B``` responds with:
 
-+ GUID of debinding if successful and binding exists
++ GHID of debinding if successful and binding exists
 + Null object if successful and binding does not exist
 + NAK if unsuccessful
 
@@ -945,7 +945,7 @@ Note that in all cases, if a Golix object is successfully received, verified, an
         2. Retrieve binder's identity file
         3. Verify binder's identity file includes public signature key for cipher suite
     + Digest remaining file
-        1. Verify target GUID exists at persistence provider
+        1. Verify target GHID exists at persistence provider
         2. Verify address algorithm
         3. Verify file hash
 6. Verify signature
@@ -960,8 +960,8 @@ Note that in all cases, if a Golix object is successfully received, verified, an
     + GOBD consistency check
         1. Check if dynamic address already exists at persistence provider. If so:
             1. If frame count is zero, check fails. Issue NAK.
-            2. If binder GUID differs from existing dynamic address binding, check fails. Issue NAK.
-            3. If preexisting binding's static GUID is not contained within historical frames, check fails. Issue NAK.
+            2. If binder GHID differs from existing dynamic address binding, check fails. Issue NAK.
+            3. If preexisting binding's static GHID is not contained within historical frames, check fails. Issue NAK.
         2. If dynamic address does not exist at persistence provider,
             1. Verify no unchained debinding exists from the binder for the target address. If one exists, check fails; issue NAK
             2. If chained debinding exists from the binder for the target address, verify that chain permits rebinding. If not, check fails; issue NAK
@@ -970,7 +970,7 @@ Note that in all cases, if a Golix object is successfully received, verified, an
         2. Retrieve binder's identity file
         3. Verify binder's identity file includes public signature key for cipher suite
     + Digest remaining file
-        1. Verify at least one target GUID exists at persistence provider
+        1. Verify at least one target GHID exists at persistence provider
         2. Verify address algorithm
         3. Verify dynamic hash
         4. Verify file hash
@@ -984,12 +984,12 @@ Note that in all cases, if a Golix object is successfully received, verified, an
 4. Verify length is correct for properly formatted file
 5. (The following steps may be done in parallel)
     + GDXX status check
-        1. If static GUID for the in-verification GDXX already exists at persistence provider, check passes; continue (new state identical to old state if rest of verification passes)
-        2. If static GUID for the in-verification GDXX exists within an existing debinding chain, check fails; issue NAK
-        3. If the in-verification GDXX has a chain length greater than one, and the persistence provider does not have at least one target GUID in storage, check fails; issue NAK
+        1. If static GHID for the in-verification GDXX already exists at persistence provider, check passes; continue (new state identical to old state if rest of verification passes)
+        2. If static GHID for the in-verification GDXX exists within an existing debinding chain, check fails; issue NAK
+        3. If the in-verification GDXX has a chain length greater than one, and the persistence provider does not have at least one target GHID in storage, check fails; issue NAK
     + GDXX reference check
-        1. Verify at least one target GUID exists at persistence provider
-        2. Verify binder GUID matches author GUID (for GOBS, GOBD, GDXX) or recipient GUID (for MEPR, MPAK, MPNK)
+        1. Verify at least one target GHID exists at persistence provider
+        2. Verify binder GHID matches author GHID (for GOBS, GOBD, GDXX) or recipient GHID (for MEPR, MPAK, MPNK)
     + Binder retrieval
         1. Verify binder exists at persistence provider
         2. Retrieve binder's identity file
