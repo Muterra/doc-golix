@@ -1,35 +1,129 @@
+**WARNING:** This is a draft document dated May 2016. It is under review and is definitely not finalized. If you'd like to stay updated, consider joining our [mailing list](https://www.muterra.io/mailing-signup.html).
+
 # Introduction
 
+If internet 2 were defined by , internet 3 by sharing, internet 4 will be IoT. Like each of its predecessors, IoT will include and build upon the past; and indeed, apps like Periscope demonstrate that a webcam isn't a webcam unless it's sharable. Given the emergence of, for example, search engines for hacked IoT baby monitors, security is clearly 1. important and 2. botched. But existing security options are bleak: developers are left to choose between deploying an SSL cert to every device, or trusting a third-party server with full access to the connected data. The former option, if extrapolated across the explosive projected growth of IoT, would result in orders of magnitude more certificates being issued for IoT devices than across the entire history of the internet. The latter option would ultimately entail trusting companies like Facebook with unfettered access to baby monitors. Clearly, neither option is particularly attractive.
+
+An alternative approach would be to force end-to-end encryption of all IoT information, allowing centralized services to concentrate security certificates without granting them access to data. This is an enticing compromise; however, with the requirement of scalable sharability, and more immediate constraints like dynamic data streams, existing protocols like PGP cannot fill this need. Golix is intended to fill this void with:
+
++ (MUST be asynchronous)
 + Scalable encryption of data at rest
 + Any-to-any sharing of data
 + Zero-trust
 + Pub/sub-capable
 
+ **Note on things that are missing:** need to talk about having asynchronous comms, and (very importantly) asynchronous/"dynamic" sharing. Asynchronous messaging with synchronous sharing isn't wholly asynchronous.
+
+## Nomenclature notes
+
++ Terms being used with a specific technical meaning will be ```monospace``` formatted and link to their corresponding Glossary entry.
+
 # Threat model
 
-Will be shared / available to a network, but transport analysis is ignored
+Golix protects the informational autonomy of an abstract digital ```entity-agent``` comprised of three public/private keypairs. That is to say, the Golix protocol affords these ```entities``` strict and exclusive control over:
 
-## Adversaries included
+1. creation,
+2. retention,
+3. and sharing
 
-+ Confidential until shared
-+ Social graph analysis
-+ Authentication, without web of (or centralized) trust
-+ Data integrity
-+ Malicious deletion / retention
+of any and all information ```possessed``` by the ```entity-agent```. Note that Golix does not include any concept of information ownership or intellectual property. Within a Golix context, information ```possession``` means only that an agent-entity retains that particular piece of information. As such, once information is shared, **the sharer's authority over the information stops at the point of share;** the recipient has explicit autonomy over their digital "memory" of that information, as does the sharer.
 
-## Adversaries excluded
+To enforce such agency cryptographically, Golix protects:
 
-+ Everything re: transport
-+ Authorization (aka access control)
-+ Verification (aka real-world identity correspondance)
-+ Deniability (note: different from repudiation)
-+ Device compromise
-+ Denial of service
++ information *confidentiality* against ```illegitimate access``` by any adversary,
++ information *integrity* against deliberate or incidental modification by any adversary, and
++ information *authenticity* of authorship against impersonation by any adversary.
 
-## Adversaries partially included
+However, Golix provides only limited protections:
 
-+ DDoS of endpoint, ex: spamming handshake requests
-+ Metadata analysis
++ against meta-analysis of Golix data or traffic,
++ against flooding ```entities``` with requests, effectively (D)DoSing them, and
++ against malicious information retention or removal.
+
+And Golix protections explicitly exclude:
+
++ any compromise of the underlying cryptographic primitives used by the protocol,
++ any compromise of ```entity``` (client) devices, and
++ any connection between physical entities and Golix ```entities```.
+
+The following discusses what specific capabilities are afforded to various adversaries. Each capability builds upon (and includes) the previous category.
+
+## *Any* adversary can...
+
+Cryptographic compromises:
+
++ Use a collision of the address hash algorithm to tamper with existing information
++ Use a break of the signature algorithm to impersonate an ```entity``` in the future
++ Use a break of the public key encryption algorithm to intercept future key exchanges and compromise stored past key exchanges
++ Use a break of the symmetric encryption algorithm to expose the plaintext of past and future objects
++ Use a break of the exchange algorithm to impersonate an alias of an existing ```entity``` in the future
++ Use a break of the KDF algorithm to impersonate an alias of an existing ```entity``` in the future
++ Use a break of the exchange algorithm to forge key exchanges in the future
++ Use a break of the MAC algorithm to forge key exchanges in the future
++ Use a break of the KDF algorithm to forge key exchanges in the future
+
+Client compromises:
+
++ Use a compromised client device to fully impersonate the client ```entity```
++ Use a compromised client device to gain access to the client ```entity``` private keys
++ Use a compromised client device to gain access to any client-stored content symmetric keys
+
+Meta-analyses:
+
++ Tie any piece of information to exactly one ```entity```: typically the ```entity``` that created the information, but occasionally the ```entity``` that received it
++ Calculate the exact, or near-exact, length of confidential information
+
+Denials of service:
+
++ Flood a ```persister``` server with *traffic*
++ Flood a client device with *messages*
+
+## An ```entity``` (*client*) adversary can...
+
+Denials of service:
+
++ Flood a ```persister``` with *messages* 
+
+Denials of availability:
+
++ Maliciously prevent deletion of arbitrary data
++ Maliciously delete possessed data
+
+## A ```persister``` (*server*) adversary can...
+
+Meta-analyses:
+
++ Analyze connection traffic to infer connections between a Golix ```entity``` and its viewed ```GHID```s
++ Analyze connection information to infer physical identity, IP address, probable time zone, etc
+
+Denials of service:
+
++ Maliciously take itself offline
++ Flood a client device with traffic
+
+Denials of availability:
+
++ Maliciously delete arbitrary data
++ Maliciously retain arbitrary data
+
+## A *global passive* adversary can...
+
+Meta-analyses:
+
++ Analyze traffic on the transport level to tie Golix ```entities``` to physical identities
++ Analyze traffic on the transport level to infer connections between multiple Golix ```entities```
+
+## *No* adversary can...
+
+Client compromises:
+
++ No adversary can directly escalate one client compromise into another client compromise.
+
+Meta-analyses:
+
++ No adversary can perform social graph analysis of ```entities```.
++ No adversary can tie object ```recipient``` entities with object ```author``` entities
++ No adversary can deduce content types, content format, or any other content metadata, without access to the content itself
 
 # Golix addresses and identities
 
@@ -57,15 +151,59 @@ Overview:
 
 ## Identity container (GIDC)
 
+1. Signature ```PUBKEY```
+2. Encryption ```PUBKEY```
+3. Exchange ```PUBKEY```
+4. ```GHID```
+
 ## Object container (GEOC)
+
+1. Author ```GHID```
+2. Symmetrically encrypted payload {  
+    + ```Arbitrary bytes```  
+  }
+3. ```GHID```
+4. Author ```SIGNATURE```
 
 ## Static object binding (GOBS)
 
+1. Binder ```GHID```
+2. Target ```GHID```
+3. ```GHID```
+4. Binder ```SIGNATURE```
+
+Unlike objects, bindings 
+
 ## Dynamic object binding (GOBD)
+
+1. Binder ```GHID```
+2. Previous frame ```GHID```s
+3. Current target ```GUID```
+4. Dynamic ```GHID```
+5. Frame ```GHID```
+6. Binder ```SIGNATURE```
 
 ## Debinding (GDXX)
 
+1. Debinder ```GHID```
+2. Target ```GHID```
+3. ```GHID```
+4. Debinder ```SIGNATURE```
+
+Like bindings, debindings are subject to replay attacks.
+
+Replay attacks!!
+
 ## Asymmetric request/response (GARQ)
+
+1. Recipient ```GHID```
+2. Asymmetrically encrypted payload {  
+    + ```Author GHID```  
+    + ```Target GHUD```  
+    + ```Keyshare, ACK, NAK```  
+   }
+3. ```GHID```
+4. Author ```HMAC```
 
 # Golix state analysis
 
@@ -77,3 +215,26 @@ Overview:
 
 # Discussion and conclusion
 
+# Glossary
+
+## GHID
+
+The "Golix hash identifier": a unique content-based static address for content on a Golix-compliant network or device.
+
+## Entity-agent
+
+An abstract digital entity represented by three linked public/private keypairs and a ```GHID```. Also informally referred to as an agent, entity, or identity. Entity-agents are the Golix equivalent of a single consistent consciousness. **The Golix protocol does not inherently relate Golix entities with physical entities.** Any such connection must be made by applications.
+
+## Possession
+
+Within a Golix context, information possession is wholly unrelated to information authorship or any notion of intellectual property. Here, to possess information means only that a particular entity-agent retains it.
+
+## Illegitimate access
+
+The access of information by any party with whom that information has not affirmatively, explicitly been shared. This party is an arbitrary adversary, who is not limited to attacks within the Golix protocol.
+
+*note: should this be renamed to unsanctioned access?*
+
+## Persistence providers
+
+The servers that physically store Golix data. Also referred to as persisters, persistence, and occasionally (and highly informally) servers.
