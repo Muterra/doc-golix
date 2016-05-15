@@ -2,17 +2,20 @@
 
 # Introduction
 
-If internet 2 were defined by , internet 3 by sharing, internet 4 will be IoT. Like each of its predecessors, IoT will include and build upon the past; and indeed, apps like Periscope demonstrate that a webcam isn't a webcam unless it's sharable. Given the emergence of, for example, search engines for hacked IoT baby monitors, security is clearly 1. important and 2. botched. But existing security options are bleak: developers are left to choose between deploying an SSL cert to every device, or trusting a third-party server with full access to the connected data. The former option, if extrapolated across the explosive projected growth of IoT, would result in orders of magnitude more certificates being issued for IoT devices than across the entire history of the internet. The latter option would ultimately entail trusting companies like Facebook with unfettered access to baby monitors. Clearly, neither option is particularly attractive.
+If Web 2.0 has been defined by the rise of the social internet, Web 3.0 will surely include the connected physical devices now being dubbed the "Internet of Things". Like its predecessors, the Internet of Things (IoT) will include and build upon the past. The emergence of social applications with physical components (currently these predominantly involve video sharing) attests to the importance of continued sharability. But a generally-accepted security solution for IoT has yet to materialize; and sites like Shodan -- which includes a search engine for vulnerable video feeds -- are yet another indication that this need is dire.
 
-An alternative approach would be to force end-to-end encryption of all IoT information, allowing centralized services to concentrate security certificates without granting them access to data. This is an enticing compromise; however, with the requirement of scalable sharability, and more immediate constraints like dynamic data streams, existing protocols like PGP cannot fill this need. Golix is intended to fill this void with:
+However, IoT security imposes substantially different challenges than Web 2.0. Broadly speaking there are two primary possible approaches, given existing best practices:
 
-+ (MUST be asynchronous)
-+ Scalable encryption of data at rest
-+ Any-to-any sharing of data
-+ Zero-trust
-+ Pub/sub-capable
+1. Issue certificates for each connected device, allowing end-to-end security
+2. Issue certificates for a central server, requiring full trust in its owner
 
- **Note on things that are missing:** need to talk about having asynchronous comms, and (very importantly) asynchronous/"dynamic" sharing. Asynchronous messaging with synchronous sharing isn't wholly asynchronous.
+Even conservative growth estimates for IoT would imply that the first option, if pursued through existing certificate authority, would require orders of magnitude more certificates to be issued for IoT devices than in the entire previous history of the internet. Eschewing the certificate authorities might be possible, but with potentially dynamic IP addresses on both ends of the connection, sharability and reachability would remain substantial problems. And the second approach ultimately entails trusting companies with Facebook with access to internet-connected baby monitors. Clearly, neither option is particularly attractive.
+
+An alternative approach would be to force end-to-end encryption of all IoT information, and implement a new addressing mechanism to communicate socially between devices. This would allow centralized, auditable services to concentrate transport-level security certificates without granting them access to data. This is an enticing compromise; however, with the requirement of scalable sharability, and more immediate constraints like dynamic data streams, existing protocols like PGP cannot fill this need.
+
+Golix is a cryptgraphic protocol designed to fill this void. It allows for both asynchronous delivery and asynchronous sharing, making scalable encryption of data at rest possible even for highly-dynamic social systems. Critically, it requires no trust in a centralized server to achieve confidentiality of transferred data.
+
+**Note on things that are missing:** need to talk about having asynchronous comms, and (very importantly) asynchronous/"dynamic" sharing. Asynchronous messaging with synchronous sharing isn't wholly asynchronous.
 
 ## Nomenclature notes
 
