@@ -17,10 +17,6 @@ Golix is a cryptgraphic protocol designed to fill this void. It allows for both 
 
 **Note on things that are missing:** need to talk about having asynchronous comms, and (very importantly) asynchronous/"dynamic" sharing. Asynchronous messaging with synchronous sharing isn't wholly asynchronous.
 
-## Nomenclature notes
-
-+ Terms being used with a specific technical meaning will be ```monospace``` formatted and link to their corresponding Glossary entry.
-
 # Threat model
 
 Golix protects the informational autonomy of an abstract digital ```entity-agent``` comprised of three public/private keypairs. That is to say, the Golix protocol affords these ```entities``` strict and exclusive control over:
@@ -214,11 +210,9 @@ Replay attacks!!
 
 ## Privileged ("client") state analysis
 
-# Crypto primitives
-
 # Discussion and conclusion
 
-# Glossary
+# Appendix A: Glossary
 
 ## GHID
 
@@ -241,3 +235,5 @@ The access of information by any party with whom that information has not affirm
 ## Persistence providers
 
 The servers that physically store Golix data. Also referred to as persisters, persistence, and occasionally (and highly informally) servers.
+
+# Appendix B: Cryptographic primitives
