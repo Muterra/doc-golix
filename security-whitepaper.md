@@ -168,9 +168,11 @@ Overview:
 4. **Author's ```GHID```**
 5. Payload length
 6. **Symmetrically encrypted payload:**  
-   ```{```  
-   ```    Arbitrary bytes```  
-   ```}```
+   ```
+{  
+    Arbitrary bytes
+}
+```
 7. **Resultant ```GHID```**
     1. Hash algorithm
     2. Hash digest
