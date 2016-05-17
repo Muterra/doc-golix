@@ -150,59 +150,93 @@ Overview:
 
 ## Identity container (GIDC)
 
-1. Signature ```PUBKEY```
-2. Encryption ```PUBKEY```
-3. Exchange ```PUBKEY```
-4. ```GHID```
+1. Magic number
+2. Version number
+3. Cipher suite designation
+4. **Signature public key**
+5. **Encryption public key**
+6. **Exchange public key**
+7. **Resultant ```GHID```**
+    1. Hash algorithm
+    2. Hash digest
 
 ## Object container (GEOC)
 
-1. Author ```GHID```
-2. Symmetrically encrypted payload {  
-    + ```Arbitrary bytes```  
-  }
-3. ```GHID```
-4. Author ```SIGNATURE```
+1. Magic number
+2. Version number
+3. Cipher suite designation
+4. **Author's ```GHID```**
+5. Payload length
+6. **Symmetrically encrypted payload:**  
+   ```{```  
+   ```    Arbitrary bytes```  
+   ```}```
+7. **Resultant ```GHID```**
+    1. Hash algorithm
+    2. Hash digest
+8. **Author's signature**
 
 ## Static object binding (GOBS)
 
-1. Binder ```GHID```
-2. Target ```GHID```
-3. ```GHID```
-4. Binder ```SIGNATURE```
+1. Magic number
+2. Version number
+3. Cipher suite designation
+4. **Binding author's ```GHID```**
+5. **Binding target's ```GHID```**
+6. **Resultant ```GHID```**
+    1. Hash algorithm
+    2. Hash digest
+7. **Binding author's signature**
 
-Unlike objects, bindings 
+Unlike objects, replay attacks on bindings are potentially meaningful... (but this is our solution)
 
 ## Dynamic object binding (GOBD)
 
-1. Binder ```GHID```
-2. Previous frame ```GHID```s
-3. Current target ```GUID```
-4. Dynamic ```GHID```
-5. Frame ```GHID```
-6. Binder ```SIGNATURE```
+1. Magic number
+2. Version number
+3. Cipher suite designation
+4. **Binding author's ```GHID```**
+5. Historical frame list length
+6. **Historical frame ```GHID``` list**
+7. **Binding's target ```GUID```** (for this particular frame)
+8. **Resultant ```GHID```** ("dynamic" or "portable" GHID)
+    1. Hash algorithm
+    2. Hash digest
+9. **Resultant ```GHID```** ("static" or "frame" GHID)
+    1. Hash algorithm
+    2. Hash digest
+10. **Binding author's signature**
 
 ## Debinding (GDXX)
 
-1. Debinder ```GHID```
-2. Target ```GHID```
-3. ```GHID```
-4. Debinder ```SIGNATURE```
+1. Magic number
+2. Version number
+3. Cipher suite designation
+4. **Debinding author's ```GHID```**
+5. **Debinding target's ```GHID```**
+6. **Resultant ```GHID```**
+    1. Hash algorithm
+    2. Hash digest
+7. **Debinding author's signature**
 
-Like bindings, debindings are subject to replay attacks.
-
-Replay attacks!!
+Like bindings, debindings are subject to replay attacks... (but this is our solution)
 
 ## Asymmetric request/response (GARQ)
 
-1. Recipient ```GHID```
-2. Asymmetrically encrypted payload {  
-    + ```Author GHID```  
-    + ```Target GHUD```  
-    + ```Keyshare, ACK, NAK```  
-   }
-3. ```GHID```
-4. Author ```HMAC```
+1. Magic number
+2. Version number
+3. Cipher suite designation
+4. **Request recipient's ```GHID```**
+5. **Asymmetrically encrypted payload:**  
+   ```{```  
+   ```    Author GHID```  
+   ```    Target GHID```  
+   ```    Keyshare``` or ```ACK``` or ```NAK```  
+   ```}```
+6. **Resultant ```GHID```**
+    1. Hash algorithm
+    2. Hash digest
+7. **Request author's ```HMAC```**
 
 # Golix state analysis
 
