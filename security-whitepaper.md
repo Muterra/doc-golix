@@ -168,11 +168,7 @@ Overview:
 4. **Author's ```GHID```**
 5. Payload length
 6. **Symmetrically encrypted payload:**  
-   ```
-{  
-    Arbitrary bytes
-}
-```
+   ```{``` ```Arbitrary bytes``` ```}```
 7. **Resultant ```GHID```**
     1. Hash algorithm
     2. Hash digest
@@ -230,11 +226,7 @@ Like bindings, debindings are subject to replay attacks... (but this is our solu
 3. Cipher suite designation
 4. **Request recipient's ```GHID```**
 5. **Asymmetrically encrypted payload:**  
-   ```{```  
-   ```    Author GHID```  
-   ```    Target GHID```  
-   ```    Keyshare``` or ```ACK``` or ```NAK```  
-   ```}```
+   ```{``` ```Author GHID``` ```|``` ```Target GHID``` ```|``` ```<Keyshare>``` or ```<ACK>``` or ```<NAK>``` ```}```
 6. **Resultant ```GHID```**
     1. Hash algorithm
     2. Hash digest
