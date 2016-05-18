@@ -124,7 +124,15 @@ Meta-analyses:
 + No adversary can tie object ```recipient``` entities with object ```author``` entities
 + No adversary can deduce content types, content format, or any other content metadata, without access to the content itself
 
-# Golix addresses and identities
+# Golix identities and addresses
+
+1. All content is created by entities
+2. Entities are, somewhat tautologically, defined as agents capable of performing action
+3. Minimum requirement is then all of the cryptographic public keys needed to create content
+4. Long-term keys are necessary for this system to work
+
+
+
 
 ## Addresses
 
@@ -150,13 +158,16 @@ Overview:
 
 ## Identity container (GIDC)
 
-1. Magic number
-2. Version number
-3. Cipher suite designation
+1. Magic number  
+2. Version number  
+   Note: The version number is specific to each Golix primitive type.
+3. Cipher suite designation  
+   Note: the cipher suite designation is an integer that corresponds to a combination of algorithms defined within the Golix spec.
 4. **Signature public key**
 5. **Encryption public key**
 6. **Exchange public key**
-7. **Resultant ```GHID```**
+7. **Resultant ```GHID```**  
+   Note: the hash digest includes all of the previous bytes in the file, including the hash algorithm definition.
     1. Hash algorithm
     2. Hash digest
 
@@ -165,14 +176,16 @@ Overview:
 1. Magic number
 2. Version number
 3. Cipher suite designation
-4. **Author's ```GHID```**
+4. **Author's ```GHID```**  
+   Note: author ```GHID```s are the resultant ```GHID``` from the author's identity container (GIDC).
 5. Payload length
 6. **Symmetrically encrypted payload:**  
    ```{``` ```Arbitrary bytes``` ```}```
 7. **Resultant ```GHID```**
     1. Hash algorithm
     2. Hash digest
-8. **Author's signature**
+8. **Author's signature**  
+   Note: the author signs only the bytes composing the hash digest in the ```GHID```. She does not sign the entire ```GHID```.
 
 ## Static object binding (GOBS)
 
@@ -180,7 +193,8 @@ Overview:
 2. Version number
 3. Cipher suite designation
 4. **Binding author's ```GHID```**
-5. **Binding target's ```GHID```**
+5. **Binding target's ```GHID```**  
+   Note: similarly to author references, target references refer to the resultant ```GHID``` of the object container (GEOC) being bound.
 6. **Resultant ```GHID```**
     1. Hash algorithm
     2. Hash digest
@@ -195,12 +209,16 @@ Unlike objects, replay attacks on bindings are potentially meaningful... (but th
 3. Cipher suite designation
 4. **Binding author's ```GHID```**
 5. Historical frame list length
-6. **Historical frame ```GHID``` list**
-7. **Binding's target ```GUID```** (for this particular frame)
-8. **Resultant ```GHID```** ("dynamic" or "portable" GHID)
+6. **Historical frame ```GHID``` list**  
+   Note: historical frames refer to a most-recent-first sorted list of previous "static" / "frame" GHIDs. They are necessary for replay protection. The very first frame in a binding contains no history and must have a length of zero bytes.
+7. **Binding's target ```GUID```**  
+   Note: the binding target applies to only this particular frame.
+8. **Resultant ```GHID```**  
+   Note: the first GHID in the dynamic binding is the "dynamic" or "portable" GHID. It is defined only once -- upon finalizing the first frame of the binding. This GHID may be used as a proxy address for the most current target of the binding. Like any other GHID, it is defined as the hash digest of the entire preceding file.
     1. Hash algorithm
     2. Hash digest
-9. **Resultant ```GHID```** ("static" or "frame" GHID)
+9. **Resultant ```GHID```**  
+   Note: the second GHID in the dynamic binding is the "static" or "frame" GHID. It is re-defined every time the binding is updated based upon the current content of the binding. It is used primarily as a reference point for the historical frame list.
     1. Hash algorithm
     2. Hash digest
 10. **Binding author's signature**
@@ -230,7 +248,8 @@ Like bindings, debindings are subject to replay attacks... (but this is our solu
 6. **Resultant ```GHID```**
     1. Hash algorithm
     2. Hash digest
-7. **Request author's ```HMAC```**
+7. **Request author's ```MAC```**  
+   Note: here, both the MAC algorithm and the key agreement process are defined by the cipher suite designation. For reference, with CS-0x1 it is an HMAC performed with the key from a Diffie-Hellman exchange between the Author's and Recipient's exchange keys. This process must be carefully chosen to prevent an attacker from checking the signature against all known identities to unmask the author.
 
 # Golix state analysis
 
