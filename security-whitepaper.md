@@ -124,37 +124,65 @@ Meta-analyses:
 + No adversary can tie object ```recipient``` entities with object ```author``` entities
 + No adversary can deduce content types, content format, or any other content metadata, without access to the content itself
 
-# Golix identities and addresses
-
-1. All content is created by entities
-2. Entities are, somewhat tautologically, defined as agents capable of performing action
-3. Minimum requirement is then all of the cryptographic public keys needed to create content
-4. Long-term keys are necessary for this system to work
-
-
-
-
-## Addresses
-
-+ Static
-+ Dynamic
+# Golix overview
 
 ## Identities
 
-+ Deniability != repudiation
-+ Authentication != authorization
-+ Authentication != verification
+Creating Golix content requires an ```identity```. This ```identity``` is used primarily for:
+
+1. data authorship (as metadata)
+2. data retention "binding" (as metadata)
+3. data sharing (as a sharing endpoint)
+
+These ```identities``` require the ability to asymmetrically sign data, receive asymmetrically encrypted data, and perform symmetric key agreement. To divide the requirements of these three separate operations, and to minimize the damage of a break against the underlying cryptographic primitives, a separate key is used for each. As such, each ```identity``` comprises of exactly three public keys:
+
+1. The signature key, used for signing and verifying data
+2. The encryption key, used to encrypt and decrypt keyshares to the identity
+3. The exchange key, used for key agreement in explicitly one-to-one operations
+
+It is crucial to note that a Golix ```identity``` has no explicit link to any physical entity. Since there are no restrictions on the creation of new ```identities```, it is therefore very important to draw a distinction between the actual capabilities of a Golix ```identity```, and those that might be expected of a physical entity. In particular, note that though the digital Golix ```entity``` explicitly lacks content deniability, a physical entity retains the ability to repudiate any links to the Golix ```identity```. Similarly, though Golix assures consistent authentication of data, it makes no claims surrounding an ```identity```'s authorization to view that data, or of any verification of that ```identity```'s claimed physical counterpart. Put simply: with Golix, deniability is wholly different from repudiation; and authentication wholly different from authorization or verification.
+
+Furthermore, as a result of content's dynamic sharability, and the distributed, highly-asynchronous nature of social graphs, it is preferable to use long-term keypairs instead of short-term ephemeral keys: the enormous added complexity of a key update mechanism simply cannot justify the correspondingly modest gains in forward secrecy.
+
+## Addresses
+
+An unambiguous reference to Golix objects is critical for network operation. However, as Golix is intended to be capable of cross-server federation *without breaking addressability*, traditional URL schemes are insufficient. Furthermore, URLs have no inherent relationship with the content they represent, which results in a complicated trust relationship between URL owner and content consumer. To avoid this entirely, Golix makes use of a static, deterministic address scheme. Put simply, absolutely every Golix object is addressed by its cryptographic hash digest. This address is termed the "Golix hash identifier" or ```GHID```.
+
+The use of hashes as an address mechanism ensures that, provided the underlying hash algorithm remains cryptographically secure, all Golix content is fundamentally non-malleable; that is to say, once created, content cannot be altered by **any** party, deliberately or accidentally. 
+
+That being said, it is obviously often useful to treat multiple sequential pieces of static content as a single dynamic object. Given a thermometer, for example, though every individual temperature reading is inherently static, the room's temperature is not. To relate the static content to dynamic concepts, Golix allows ```entity-agents``` to bind a secondary address to changing content. That way, this "dynamic" or "portable" ```GHID``` may be used to refer to changing content with an unchanging address. The security of this reference is discussed within the Dynamic Binding object type below.
+
+## Example exchanges
+
+Preface: 
+
+1. Golix "clients" are ```identities```, and "servers" are ```persistence providers```. However, these ```identities``` and ```persistence providers``` have no direct, explicit relation to individual devices: a ```persister``` may in fact be a cloud services provider, and the ```identity``` may be simultaneously used on multiple devices.
+2. There are no restrictions placed on distribution of content *in encrypted form*. Any **device** may request any Golix resource, and the ```persister``` will deliver it. Sessions between **devices** and ```persisters``` are wholly ephemeral, and any session state will always be destroyed upon disconnection. Any stateful operations must be maintained by the device client, or from within Golix objects (and therefore referencing Golix ```identities```).
+
+Content creation:
+
+1. An ```identity``` is initially created on the client device, and then uploaded to the ```persister```.
+2. The ```identity``` creates content within an encrypted object container
+3. The ```identity``` creates a static (and/or dynamic) object binding for that container *prior to uploading the content*. This binding prevents garbage collection of the actual object, analogously to a memory-managed programming language.
+4. The client device uploads the bindings.
+5. The client device uploads the object container.
+
+Content removal:
+
+1. An ```identity``` with an existing binding creates a debinding. An ```identity``` may only remove their own bindings.
+2. The client device uploads the debinding. Once validated, this clears the binding, dereferencing the original object.
+3. If the original object reference count has reached zero, the object is deleted by the ```persistence provider```.
+4. If the reference count is greater than zero, the client device may request a list of ```identities``` preventing the object's deletion.
+
+Sharing content:
+
+1. An ```identity``` creates a handshake request. Unlike other objects, which include a public reference to their *creator*, the handshake request includes a public reference to its *recipient* and a **private** reference to its creator. The handshake request also references the object to share, and includes its symmetric key.
+2. The sharer's client device uploads the handshake request to the ```persister```.
+3. If another connection at the ```persistence provider``` has already subscribed to the recipient ```identity```'s ```GHID```, then that device is notified of the request.
+4. Any subsequent new ```persister``` connections subscribing to the recipient ```identity```'s ```GHID``` are also notified of the handshake, until it is removed.
+5. The recipient ```identity``` removes the request by debinding it. The recipient may also respond to the request with an acknowledgment (or non-acknowledgment) of success, by repeating the process in reverse, referencing the handshake request's ```GHID``` instead of the original object, and omitting the key.
 
 # Golix network primitives
-
-Overview: 
-
-1. to author content, first create an identity. 
-2. Identities then publish encrypted containers. All object containers are publicly associated with the address of their author.
-3. Like a memory-managed programming language, these containers are garbage collected by the persistence providers when no references to them remain. 
-4. These references may be either static or dynamic bindings. There is no restriction on the creation of bindings (they need not be created by the content's author). They are publicly associated with the address of their binder (again, not necessarily the same as the content author).
-5. Bindings may be removed through debinding records, but only by their binder.
-6. Key exchanges are initiated through asymmetric request/response objects. Unlike other objects, these are publicly associated with their recipient.
 
 ## Identity container (GIDC)
 
