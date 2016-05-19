@@ -148,9 +148,9 @@ Furthermore, as a result of content's dynamic sharability, and the distributed, 
 
 An unambiguous reference to Golix objects is critical for network operation. However, as Golix is intended to be capable of cross-server federation *without breaking addressability*, traditional URL schemes are insufficient. Furthermore, URLs have no inherent relationship with the content they represent, which results in a complicated trust relationship between URL owner and content consumer. To avoid this entirely, Golix makes use of a static, deterministic address scheme. Put simply, absolutely every Golix object is addressed by its cryptographic hash digest. This address is termed the "Golix hash identifier" or ```GHID```.
 
-The use of hashes as an address mechanism ensures that, provided the underlying hash algorithm remains cryptographically secure, all Golix content is fundamentally non-malleable; that is to say, once created, content cannot be altered by **any** party, deliberately or accidentally. 
+The use of hashes as an address mechanism ensures that, provided the underlying hash algorithm remains cryptographically secure, all Golix content is fundamentally non-malleable; that is to say, once created, content cannot be altered by **any** party, deliberately or accidentally. It also bears explicit mentioning that the address is constructed in an **encrypt-then-hash** order, and as such protects the confidentiality of encrypted containers from compromises and attacks of the underlying hash function.
 
-That being said, it is obviously often useful to treat multiple sequential pieces of static content as a single dynamic object. Given a thermometer, for example, though every individual temperature reading is inherently static, the room's temperature is not. To relate the static content to dynamic concepts, Golix allows ```entity-agents``` to bind a secondary address to changing content. That way, this "dynamic" or "portable" ```GHID``` may be used to refer to changing content with an unchanging address. The security of this reference is discussed within the Dynamic Binding object type below.
+That being said, it is obviously often useful to treat multiple sequential pieces of static content as a single dynamic object. Given a thermometer, for example, though every individual temperature reading is inherently static, the room's temperature is not. To relate the static content to dynamic concepts, Golix allows ```entity-agents``` to bind a secondary address to changing content. That way, this "dynamic" or "portable" ```GHID``` may be used to refer to changing content with an unchanging address. The security properties of this reference are discussed within the Dynamic Binding object type below.
 
 ## Example exchanges
 
@@ -161,30 +161,36 @@ Preface:
 
 Content creation:
 
-1. An ```identity``` is initially created on the client device, and then uploaded to the ```persister```.
+1. An ```identity``` is initially created on the client device, and then uploaded to a ```persister```'s server(s).
 2. The ```identity``` creates content within an encrypted object container
 3. The ```identity``` creates a static (and/or dynamic) object binding for that container *prior to uploading the content*. This binding prevents garbage collection of the actual object, analogously to a memory-managed programming language.
-4. The client device uploads the bindings.
-5. The client device uploads the object container.
+4. The client device uploads the bindings to the ```persister```'s server(s).
+5. The client device uploads the object container to the ```persister```'s server(s).
 
 Content removal:
 
 1. An ```identity``` with an existing binding creates a debinding. An ```identity``` may only remove their own bindings.
-2. The client device uploads the debinding. Once validated, this clears the binding, dereferencing the original object.
+2. The client device uploads the debinding to the ```persister```'s server(s). Once validated, this clears the binding, dereferencing the original object.
 3. If the original object reference count has reached zero, the object is deleted by the ```persistence provider```.
 4. If the reference count is greater than zero, the client device may request a list of ```identities``` preventing the object's deletion.
 
 Sharing content:
 
 1. An ```identity``` creates a handshake request. Unlike other objects, which include a public reference to their *creator*, the handshake request includes a public reference to its *recipient* and a **private** reference to its creator. The handshake request also references the object to share, and includes its symmetric key.
-2. The sharer's client device uploads the handshake request to the ```persister```.
+2. The sharer's client device uploads the handshake request to the ```persister```'s server(s).
 3. If another connection at the ```persistence provider``` has already subscribed to the recipient ```identity```'s ```GHID```, then that device is notified of the request.
 4. Any subsequent new ```persister``` connections subscribing to the recipient ```identity```'s ```GHID``` are also notified of the handshake, until it is removed.
 5. The recipient ```identity``` removes the request by debinding it. The recipient may also respond to the request with an acknowledgment (or non-acknowledgment) of success, by repeating the process in reverse, referencing the handshake request's ```GHID``` instead of the original object, and omitting the key.
 
 # Golix network primitives
 
+Golix network primitives comprise all stateful objects on Golix ```persisters```. Any other traffic between a client device and a ```persister``` server is ephemeral.
+
 ## Identity container (GIDC)
+
+Identity containers combine a Golix ```entity```'s three public keys, permanently tying them together with a single static address. Identity containers are not intended to be removable from ```persisters``` and are therefore not subject to replay attacks. 
+
+Identity containers are the concatenation of:
 
 1. Magic number  
 2. Version number  
@@ -200,6 +206,10 @@ Sharing content:
     2. Hash digest
 
 ## Object container (GEOC)
+
+Object containers are used to store **all** application content on Golix ```persisters```, tying it to static addresses. They are analogous to the data encapsulation schemes used by hybrid cryptosystems, but are wholly separate from key encapsulation and distribution. Because their retention lifetimes at ```persisters``` are wholly dictated by bindings, they are not subject to replay attacks. 
+
+Object containers are the concatenation of:
 
 1. Magic number
 2. Version number
@@ -217,6 +227,10 @@ Sharing content:
 
 ## Static object binding (GOBS)
 
+Static bindings prevent object garbage collection, reusing the object's original ```GHID``` for addressing (*ie* the target object is referenced directly, and not by the static binding's resultant ```GHID```). Note that, because they can be removed by their creator, they **are** potentially subject to replay attacks. As such, any debinding must be retained by the ```persister``` until and unless that debinding itself is debound. See "Persister state analysis" below for more details.
+
+Static bindings are the concatenation of:
+
 1. Magic number
 2. Version number
 3. Cipher suite designation
@@ -228,9 +242,11 @@ Sharing content:
     2. Hash digest
 7. **Binding author's signature**
 
-Unlike objects, replay attacks on bindings are potentially meaningful... (but this is our solution)
-
 ## Dynamic object binding (GOBD)
+
+Dynamic bindings also prevent object garbage collection, while also creating a secondary proxy address for whatever object is currently referenced by the binding. Like static bindings, they are potentially subject to replay attacks, and must follow the same mitigation process. See "Persister state analysis" below for more details.
+
+Dynamic bindings are the concatenation of:
 
 1. Magic number
 2. Version number
@@ -253,6 +269,10 @@ Unlike objects, replay attacks on bindings are potentially meaningful... (but th
 
 ## Debinding (GDXX)
 
+Debindings remove existing bindings, reducing their reference count and eventually freeing them for garbage collection. They may also remove existing debindings, allowing previously removed objects to be rebound and reuploaded to the ```persister```. Like bindings, they are subject to replay attacks, and so their debindings must be retained by the ```persister``` until they themselves are debound. This creates a debinding chain, the length of which will increase after every upload/delete cycle. See "Persister state analysis" below for more details.
+
+Debindings are the concatenation of:
+
 1. Magic number
 2. Version number
 3. Cipher suite designation
@@ -263,9 +283,11 @@ Unlike objects, replay attacks on bindings are potentially meaningful... (but th
     2. Hash digest
 7. **Debinding author's signature**
 
-Like bindings, debindings are subject to replay attacks... (but this is our solution)
-
 ## Asymmetric request/response (GARQ)
+
+Asymmetric requests share an object with a recipient, or reply to an attempted share. They are analogous to the key encapsulation component of a hybrid cryptosystem such as PGP, but wholly separated from the data encapsulation, which is implemented by object containers. Unlike most Golix primitives, their author is not publicly available; instead, they are associated with their intended recipient, and encrypted against the recipient's public encryption key, as defined by the recipient's identity container. This results in full verification being only possible by the recipient; see "Entity state analysis" below for more details. They are removed via debinding by their recipient. A request replay attack is not particularly meaningful, but would result in ```persister``` congestion, and as such their debindings are subject to the same retention process as bindings and debindings. See "Persister state analysis" below for more details.
+
+Asymmetric requests are the concatenation of:
 
 1. Magic number
 2. Version number
@@ -279,11 +301,11 @@ Like bindings, debindings are subject to replay attacks... (but this is our solu
 7. **Request author's ```MAC```**  
    Note: here, both the MAC algorithm and the key agreement process are defined by the cipher suite designation. For reference, with CS-0x1 it is an HMAC performed with the key from a Diffie-Hellman exchange between the Author's and Recipient's exchange keys. This process must be carefully chosen to prevent an attacker from checking the signature against all known identities to unmask the author.
 
-# Golix state analysis
+# State analysis
 
-## Non-privileged ("server") state analysis
+## ```Persister``` ("server") state analysis
 
-## Privileged ("client") state analysis
+## ```Entity``` ("client") state analysis
 
 # Discussion and conclusion
 
