@@ -186,7 +186,7 @@ Sharing content:
 
 Golix network primitives comprise all stateful objects on Golix ```persisters```. Any other traffic between a client device and a ```persister``` server is ephemeral.
 
-## Identity container (GIDC)
+## Identity container (```GIDC```)
 
 Identity containers combine a Golix ```entity```'s three public keys, permanently tying them together with a single static address. Identity containers are not intended to be removable from ```persisters``` and are therefore not subject to replay attacks. 
 
@@ -205,7 +205,7 @@ Identity containers are the concatenation of:
     1. Hash algorithm
     2. Hash digest
 
-## Object container (GEOC)
+## Object container (```GEOC```)
 
 Object containers are used to store **all** application content on Golix ```persisters```, tying it to static addresses. They are analogous to the data encapsulation schemes used by hybrid cryptosystems, but are wholly separate from key encapsulation and distribution. Because their retention lifetimes at ```persisters``` are wholly dictated by bindings, they are not subject to replay attacks. 
 
@@ -225,7 +225,7 @@ Object containers are the concatenation of:
 8. **Author's signature**  
    Note: the author signs only the bytes composing the hash digest in the ```GHID```. She does not sign the entire ```GHID```.
 
-## Static object binding (GOBS)
+## Static object binding (```GOBS```)
 
 Static bindings prevent object garbage collection, reusing the object's original ```GHID``` for addressing (*ie* the target object is referenced directly, and not by the static binding's resultant ```GHID```). Note that, because they can be removed by their creator, they **are** potentially subject to replay attacks. As such, any debinding must be retained by the ```persister``` until and unless that debinding itself is debound. See "Persister state analysis" below for more details.
 
@@ -242,7 +242,7 @@ Static bindings are the concatenation of:
     2. Hash digest
 7. **Binding author's signature**
 
-## Dynamic object binding (GOBD)
+## Dynamic object binding (```GOBD```)
 
 Dynamic bindings also prevent object garbage collection, while also creating a secondary proxy address for whatever object is currently referenced by the binding. Like static bindings, they are potentially subject to replay attacks, and must follow the same mitigation process. See "Persister state analysis" below for more details.
 
@@ -267,7 +267,7 @@ Dynamic bindings are the concatenation of:
     2. Hash digest
 10. **Binding author's signature**
 
-## Debinding (GDXX)
+## Debinding (```GDXX```)
 
 Debindings remove existing bindings, reducing their reference count and eventually freeing them for garbage collection. They may also remove existing debindings, allowing previously removed objects to be rebound and reuploaded to the ```persister```. Like bindings, they are subject to replay attacks, and so their debindings must be retained by the ```persister``` until they themselves are debound. This creates a debinding chain, the length of which will increase after every upload/delete cycle. See "Persister state analysis" below for more details.
 
@@ -283,7 +283,7 @@ Debindings are the concatenation of:
     2. Hash digest
 7. **Debinding author's signature**
 
-## Asymmetric request/response (GARQ)
+## Asymmetric request/response (```GARQ```)
 
 Asymmetric requests share an object with a recipient, or reply to an attempted share. They are analogous to the key encapsulation component of a hybrid cryptosystem such as PGP, but wholly separated from the data encapsulation, which is implemented by object containers. Unlike most Golix primitives, their author is not publicly available; instead, they are associated with their intended recipient, and encrypted against the recipient's public encryption key, as defined by the recipient's identity container. This results in full verification being only possible by the recipient; see "Entity state analysis" below for more details. They are removed via debinding by their recipient. A request replay attack is not particularly meaningful, but would result in ```persister``` congestion, and as such their debindings are subject to the same retention process as bindings and debindings. See "Persister state analysis" below for more details.
 
@@ -303,9 +303,154 @@ Asymmetric requests are the concatenation of:
 
 # State analysis
 
+The criteria for acceptance or non-acceptance of Golix primitives is identical for all primitives except the asymmetric request. The request verification process varies based on the role of the verifier: the recipient ```entity```, which has privileged access to the private contents of the request, is the only party that can validate the origin and authenticity of the request. In all other cases, Golix primitives can be verified using only public information.
+
 ## ```Persister``` ("server") state analysis
 
+As ```persisters``` are non-privileged data retention services, they can only verify Golix primitives based on their public information.
+
+### Identity container (```GIDC```)
+
+Identity containers must be accepted by the persister if and only if the following procedure terminates successfully:
+
+1. Verify magic number
+2. Verify version
+3. Verify cipher suite
+4. Verify length is correct for properly-formatted file
+5. (The following steps may be done in parallel)
+    + Verify valid signature public key
+    + Verify valid encryption public key
+    + Verify valid exchange public key
+    + Digest remaining file
+        1. Verify address algorithm
+        2. Verify file hash
+
+### Object container (```GEOC```)
+
+Object containers must be accepted by the persister if and only if the following procedure terminates successfully:
+
+1. Verify magic number
+2. Verify version
+3. Verify cipher suite
+4. Verify length is correct for properly-formatted file
+5. (The following steps may be done in parallel)
+    + Author retrieval
+        1. Verify author exists at persistence provider
+        2. Retrieve author's identity file
+        3. Verify author's identity file includes public signature key for cipher suite
+    + Digest remaining file
+        1. Verify address algorithm
+        2. Verify file hash
+6. Verify signature
+
+### Static object binding (```GOBS```)
+
+Static bindings must be accepted by the persister if and only if the following procedure terminates successfully:
+
+1. Verify magic number
+2. Verify version
+3. Verify cipher suite
+4. Verify length is correct for properly-formatted file
+5. (The following steps may be done in parallel)
+    + GOBS status check
+        1. Verify no unchained debinding exists from the binder for the target address. If one exists, check fails; issue NAK
+        2. If chained debinding exists from the binder for the target address, verify that chain permits rebinding. If not, check fails; issue NAK
+    + Binder retrieval
+        1. Verify binder exists at persistence provider
+        2. Retrieve binder's identity file
+        3. Verify binder's identity file includes public signature key for cipher suite
+    + Digest remaining file
+        1. Verify target GHID exists at persistence provider
+        2. Verify address algorithm
+        3. Verify file hash
+6. Verify signature
+
+### Dynamic object binding (```GOBD```)
+
+Dynamic bindings must be accepted by the persister if and only if the following procedure terminates successfully:
+
+1. Verify magic number
+2. Verify version
+3. Verify cipher suite
+4. Verify length is correct for properly-formatted file
+5. (The following steps may be done in parallel)
+    + GOBD consistency check
+        1. Check if dynamic address already exists at persistence provider. If so:
+            1. If frame count is zero, check fails. Issue NAK.
+            2. If binder GHID differs from existing dynamic address binding, check fails. Issue NAK.
+            3. If preexisting binding's static GHID is not contained within historical frames, check fails. Issue NAK.
+        2. If dynamic address does not exist at persistence provider,
+            1. Verify no unchained debinding exists from the binder for the target address. If one exists, check fails; issue NAK
+            2. If chained debinding exists from the binder for the target address, verify that chain permits rebinding. If not, check fails; issue NAK
+    + Binder retrieval
+        1. Verify binder exists at persistence provider
+        2. Retrieve binder's identity file
+        3. Verify binder's identity file includes public signature key for cipher suite
+    + Digest remaining file
+        1. Verify at least one target GHID exists at persistence provider
+        2. Verify address algorithm
+        3. Verify dynamic hash
+        4. Verify file hash
+6. Verify signature
+
+### Debinding (```GDXX```)
+
+Debindings must be accepted by the persister if and only if the following procedure terminates successfully:
+
+1. Verify magic number
+2. Verify version
+3. Verify cipher suite
+4. Verify length is correct for properly formatted file
+5. (The following steps may be done in parallel)
+    + GDXX status check
+        1. If static GHID for the in-verification GDXX already exists at persistence provider, check passes; continue (new state identical to old state if rest of verification passes)
+        2. If static GHID for the in-verification GDXX exists within an existing debinding chain, check fails; issue NAK
+        3. If the in-verification GDXX has a chain length greater than one, and the persistence provider does not have at least one target GHID in storage, check fails; issue NAK
+    + GDXX reference check
+        1. Verify at least one target GHID exists at persistence provider
+        2. Verify binder GHID matches author GHID (for GOBS, GOBD, GDXX) or recipient GHID (for MEPR, MPAK, MPNK)
+    + Binder retrieval
+        1. Verify binder exists at persistence provider
+        2. Retrieve binder's identity file
+        3. Verify binder's identity file includes public signature key for cipher suite
+    + Digest remaining file
+        1. Verify address algorithm
+        2. Verify file hash
+6. Verify signature
+
+### Asymmetric request/response (```GARQ```)
+
+Asymmetric requests must be accepted by the persister if and only if the following procedure terminates successfully:
+
+1. Verify magic number
+2. Verify version
+3. Verify cipher suite
+4. Verify length is correct for properly formatted file
+5. (The following steps may be done in parallel)
+    + Recipient retrieval
+        1. Verify recipient exists at persistence provider
+        2. Retrieve recipient's identity file
+        3. Verify recipient's identity file includes public encryption key and exchange public key for cipher suite
+    + Digest remaining file
+        1. Verify address algorithm
+        2. Verify file hash
+
 ## ```Entity``` ("client") state analysis
+
+```Entities``` should independently verify all state analyses performed by the ```persister```. They should also perform additional privileged verification of the asymmetric request/response primitive.
+
+### Asymmetric request/response (```GARQ```)
+
+1. Public verification (see above)
+2. Decrypt private inner container
+3. Author verification
+    1. Verify author exists
+    2. Retrieve author's identity file
+    3. Verify author's identity file includes exchange public key for cipher suite
+4. Perform symmetric signature key agreement procedure (see "Author symmetric signature" above)
+5. Verify author symmetric signature
+6. Ensure the payload is properly formatted. If not, optionally reply to the sender with a GARQ NAK (recommended).
+7. If payload is successfully processed, optionally reply to the sender with a GARQ ACK (recommended).
 
 # Discussion and conclusion
 

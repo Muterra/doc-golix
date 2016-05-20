@@ -914,6 +914,20 @@ The following section outlines the order of operations while verifying objects, 
 
 Note that in all cases, if a Golix object is successfully received, verified, and stored, a persistence provider **must** issue an ACK, even if the persistence provider already had a copy of the object.
 
+## GIDC order of verification
+
+1. Verify magic number
+2. Verify version
+3. Verify cipher suite
+4. Verify length is correct for properly-formatted file
+5. (The following steps may be done in parallel)
+    + Verify valid signature public key
+    + Verify valid encryption public key
+    + Verify valid exchange public key
+    + Digest remaining file
+        1. Verify address algorithm
+        2. Verify file hash
+
 ## GEOC order of verification
 
 1. Verify magic number
@@ -1001,7 +1015,7 @@ Note that in all cases, if a Golix object is successfully received, verified, an
 
 Note that, since persistence providers are required to keep only their most recent GOBD frame, to successfully debind a GOBD requires the GDXX to reference the most recent available frame.
 
-## GARQ order of verification (DEPRECATED)
+## GARQ order of verification
 
 **Public verification:**
 
@@ -1013,77 +1027,20 @@ Note that, since persistence providers are required to keep only their most rece
     + Recipient retrieval
         1. Verify recipient exists at persistence provider
         2. Retrieve recipient's identity file
-        3. Verify recipient's identity file includes public encryption key and Diffie-Hellman public key for cipher suite
+        3. Verify recipient's identity file includes public encryption key and exchange public key for cipher suite
     + Digest remaining file
         1. Verify address algorithm
         2. Verify file hash
-6. Verify signature
 
-**Private verification:**
+**Privileged verification:**
 
 1. Public verification (see above)
 2. Decrypt private inner container
 3. Author verification
     1. Verify author exists
     2. Retrieve author's identity file
-    3. Verify author's identity file includes Diffie-Hellman public key for cipher suite
+    3. Verify author's identity file includes exchange public key for cipher suite
 4. Perform symmetric signature key agreement procedure (see "Author symmetric signature" above)
 5. Verify author symmetric signature
-
-## MPAK order of verification (DEPRECATED)
-
-**Public verification:**
-
-1. Verify magic number
-2. Verify version
-3. Verify cipher suite
-4. Verify length is correct for properly formatted file
-5. (The following steps may be done in parallel)
-    + Recipient retrieval
-        1. Verify recipient exists at persistence provider
-        2. Retrieve recipient's identity file
-        3. Verify recipient's identity file includes public encryption key and Diffie-Hellman public key for cipher suite
-    + Digest remaining file
-        1. Verify address algorithm
-        2. Verify file hash
-6. Verify signature
-
-**Private verification:**
-
-1. Public verification (see above)
-2. Decrypt private inner container
-3. Author verification
-    1. Verify author exists
-    2. Retrieve author's identity file
-    3. Verify author's identity file includes Diffie-Hellman public key for cipher suite
-4. Perform symmetric signature key agreement procedure (see "Author symmetric signature" above)
-5. Verify author symmetric signature
-
-## MPNK order of verification (DEPRECATED)
-
-**Public verification:**
-
-1. Verify magic number
-2. Verify version
-3. Verify cipher suite
-4. Verify length is correct for properly formatted file
-5. (The following steps may be done in parallel)
-    + Recipient retrieval
-        1. Verify recipient exists at persistence provider
-        2. Retrieve recipient's identity file
-        3. Verify recipient's identity file includes public encryption key and Diffie-Hellman public key for cipher suite
-    + Digest remaining file
-        1. Verify address algorithm
-        2. Verify file hash
-6. Verify signature
-
-**Private verification:**
-
-1. Public verification (see above)
-2. Decrypt private inner container
-3. Author verification
-    1. Verify author exists
-    2. Retrieve author's identity file
-    3. Verify author's identity file includes Diffie-Hellman public key for cipher suite
-4. Perform symmetric signature key agreement procedure (see "Author symmetric signature" above)
-5. Verify author symmetric signature
+6. Ensure the payload is properly formatted. If not, optionally reply to the sender with a GARQ NAK (recommended).
+7. If payload is successfully processed, optionally reply to the sender with a GARQ ACK (recommended).
