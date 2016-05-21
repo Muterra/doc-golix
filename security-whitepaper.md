@@ -311,7 +311,7 @@ As ```persisters``` are non-privileged data retention services, they can only ve
 
 ### Identity container (```GIDC```)
 
-Identity containers must be accepted by the persister if and only if the following procedure terminates successfully:
+Identity containers must be accepted by the ```persister``` if and only if the following procedure terminates successfully:
 
 1. Verify magic number
 2. Verify version
@@ -327,7 +327,7 @@ Identity containers must be accepted by the persister if and only if the followi
 
 ### Object container (```GEOC```)
 
-Object containers must be accepted by the persister if and only if the following procedure terminates successfully:
+Object containers must be accepted by the ```persister``` if and only if the following procedure terminates successfully:
 
 1. Verify magic number
 2. Verify version
@@ -345,7 +345,7 @@ Object containers must be accepted by the persister if and only if the following
 
 ### Static object binding (```GOBS```)
 
-Static bindings must be accepted by the persister if and only if the following procedure terminates successfully:
+Static bindings must be accepted by the ```persister``` if and only if the following procedure terminates successfully:
 
 1. Verify magic number
 2. Verify version
@@ -367,7 +367,7 @@ Static bindings must be accepted by the persister if and only if the following p
 
 ### Dynamic object binding (```GOBD```)
 
-Dynamic bindings must be accepted by the persister if and only if the following procedure terminates successfully:
+Dynamic bindings must be accepted by the ```persister``` if and only if the following procedure terminates successfully:
 
 1. Verify magic number
 2. Verify version
@@ -395,7 +395,7 @@ Dynamic bindings must be accepted by the persister if and only if the following 
 
 ### Debinding (```GDXX```)
 
-Debindings must be accepted by the persister if and only if the following procedure terminates successfully:
+Debindings must be accepted by the ```persister``` if and only if the following procedure terminates successfully:
 
 1. Verify magic number
 2. Verify version
@@ -420,7 +420,7 @@ Debindings must be accepted by the persister if and only if the following proced
 
 ### Asymmetric request/response (```GARQ```)
 
-Asymmetric requests must be accepted by the persister if and only if the following procedure terminates successfully:
+Asymmetric requests must be accepted by the ```persister``` if and only if the following procedure terminates successfully:
 
 1. Verify magic number
 2. Verify version
@@ -441,7 +441,9 @@ Asymmetric requests must be accepted by the persister if and only if the followi
 
 ### Asymmetric request/response (```GARQ```)
 
-1. Public verification (see above)
+Asymmetric requests must be accepted by the ```entity``` if and only if the following procedure terminates successfully:
+
+1. Perform public verification (see above)
 2. Decrypt private inner container
 3. Author verification
     1. Verify author exists
@@ -449,10 +451,18 @@ Asymmetric requests must be accepted by the persister if and only if the followi
     3. Verify author's identity file includes exchange public key for cipher suite
 4. Perform symmetric signature key agreement procedure (see "Author symmetric signature" above)
 5. Verify author symmetric signature
-6. Ensure the payload is properly formatted. If not, optionally reply to the sender with a GARQ NAK (recommended).
-7. If payload is successfully processed, optionally reply to the sender with a GARQ ACK (recommended).
 
-# Discussion and conclusion
+# Conclusion
+
+Because all Golix content is encrypted, it can be distributed freely, without regard to access credentials -- or, in a practical and immediate sense, with complete disregard to any session information. Though this renders the security of Golix information wholly dependent upon the protocol itself, such a relationship is, realistically speaking, already a practical reality for the vast majority of contemporary internet traffic via TLS.
+
+By embracing encryption as the sole source of confidentiality and treating all information as private by default, and then separating cryptographic content access from transactional content delivery, Golix effectively reduces the problem of access-restricted social sharing to the far simpler task of key encapsulation and distribution. In so doing, Golix allows centralized or federated servers to be used for asynchronous object persistence, without relying on them for an expectation of secrecy.
+
+These Golix ```persisters``` use Golix ```identities``` to distinguish ephemeral connection verbs (like address subscription and object retrieval) from state-mutating verbs (object creation or sharing). By forcing all mutating requests to use Golix primitives, Golix ```persisters``` can limit all connections to either ephemeral, nullipotent requests (ex: get, subscribe), or a single state-mutating request (publish). Furthermore, as all Golix content is hash-addressed, publishing a Golix primitive to a ```persister``` is guaranteed idempotent.
+
+In many ways, the critical insight of Golix is this *bidirectional* minimization of trust between client and server. Clients need not trust servers for confidentiality, and servers need not trust clients for authentication. Both clients and servers, operating in their capacities as ```entities``` and ```persisters``` respectively, are able to function independently. Provided the Golix primitives pass validation on the server, the ```persister``` is assured of authorized content, and provided the primitive is constructed properly on the client, the ```entity``` is assured of confidentiality.
+
+This strict division of concerns is especially advantageous to the emerging Internet of Things, where traditional trust infrastructure does not map well to its forecasted hyper-exponential growth. Importantly, it maintains the dynamic sharability that has become a hallmark of the social web, clearing the way for easy integration of these networked physical devices with a diverse range of social applications.
 
 # Appendix A: Glossary
 
@@ -479,3 +489,12 @@ The access of information by any party with whom that information has not affirm
 The servers that physically store Golix data. Also referred to as persisters, persistence, and occasionally (and highly informally) servers.
 
 # Appendix B: Cryptographic primitives
+
+## Ciphersuite ```0x1```
+
++ **Asymmetric signature:** RSASSA-PSS, MGF1+SHA512, public exponent 65537. Salt length 64 bytes.
++ **Asymmetric encryption:** RSAES-OAEP, MGF1+SHA512, public exponent 65537.
++ **Symmetric encryption:** AES-256 in CTR mode. Nonce distributed privately, with the key.
++ **Symmetric shared secrets:** ECDH over Curve25519.
++ **Key agreement from shared secret:** HKDF+SHA512. Salt with bitwise XOR of the the address components of the two parties' GHIDs.
++ **```GARQ``` MAC:** HMAC+SHA512
