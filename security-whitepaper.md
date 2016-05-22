@@ -480,9 +480,7 @@ Within a Golix context, information possession is wholly unrelated to informatio
 
 ## Illegitimate access
 
-The access of information by any party with whom that information has not affirmatively, explicitly been shared. This party is an arbitrary adversary, who is not limited to attacks within the Golix protocol.
-
-*note: should this be renamed to unsanctioned access?*
+The access of information by any party with whom that information has not been affirmatively, explicitly shared. This party is an arbitrary adversary, who is not limited to attacks within the Golix protocol.
 
 ## Persistence providers
 
