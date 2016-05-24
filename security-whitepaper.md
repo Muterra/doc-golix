@@ -188,6 +188,8 @@ Golix network primitives comprise all stateful objects on Golix ```persisters```
 
 ## Identity container (```GIDC```)
 
+<img align="right" src="assets/primitives-gidc.png">
+
 Identity containers combine a Golix ```entity```'s three public keys, permanently tying them together with a single static address. Identity containers are not intended to be removable from ```persisters``` and are therefore not subject to replay attacks. 
 
 Identity containers are the concatenation of:
@@ -206,6 +208,8 @@ Identity containers are the concatenation of:
     2. Hash digest
 
 ## Object container (```GEOC```)
+
+<img align="right" src="assets/primitives-geoc.png">
 
 Object containers are used to store **all** application content on Golix ```persisters```, tying it to static addresses. They are analogous to the data encapsulation schemes used by hybrid cryptosystems, but are wholly separate from key encapsulation and distribution. Because their retention lifetimes at ```persisters``` are wholly dictated by bindings, they are not subject to replay attacks. 
 
@@ -227,6 +231,8 @@ Object containers are the concatenation of:
 
 ## Static object binding (```GOBS```)
 
+<img align="right" src="assets/primitives-gobs.png">
+
 Static bindings prevent object garbage collection, reusing the object's original ```GHID``` for addressing (*ie* the target object is referenced directly, and not by the static binding's resultant ```GHID```). Note that, because they can be removed by their creator, they **are** potentially subject to replay attacks. As such, any debinding must be retained by the ```persister``` until and unless that debinding itself is debound. See "Persister state analysis" below for more details.
 
 Static bindings are the concatenation of:
@@ -243,6 +249,8 @@ Static bindings are the concatenation of:
 7. **Binding author's signature**
 
 ## Dynamic object binding (```GOBD```)
+
+<img align="right" src="assets/primitives-gobd.png">
 
 Dynamic bindings also prevent object garbage collection, while also creating a secondary proxy address for whatever object is currently referenced by the binding. Like static bindings, they are potentially subject to replay attacks, and must follow the same mitigation process. See "Persister state analysis" below for more details.
 
@@ -269,6 +277,8 @@ Dynamic bindings are the concatenation of:
 
 ## Debinding (```GDXX```)
 
+<img align="right" src="assets/primitives-gdxx.png">
+
 Debindings remove existing bindings, reducing their reference count and eventually freeing them for garbage collection. They may also remove existing debindings, allowing previously removed objects to be rebound and reuploaded to the ```persister```. Like bindings, they are subject to replay attacks, and so their debindings must be retained by the ```persister``` until they themselves are debound. This creates a debinding chain, the length of which will increase after every upload/delete cycle. See "Persister state analysis" below for more details.
 
 Debindings are the concatenation of:
@@ -284,6 +294,8 @@ Debindings are the concatenation of:
 7. **Debinding author's signature**
 
 ## Asymmetric request/response (```GARQ```)
+
+<img align="right" src="assets/primitives-garq.png">
 
 Asymmetric requests share an object with a recipient, or reply to an attempted share. They are analogous to the key encapsulation component of a hybrid cryptosystem such as PGP, but wholly separated from the data encapsulation, which is implemented by object containers. Unlike most Golix primitives, their author is not publicly available; instead, they are associated with their intended recipient, and encrypted against the recipient's public encryption key, as defined by the recipient's identity container. This results in full verification being only possible by the recipient; see "Entity state analysis" below for more details. They are removed via debinding by their recipient. A request replay attack is not particularly meaningful, but would result in ```persister``` congestion, and as such their debindings are subject to the same retention process as bindings and debindings. See "Persister state analysis" below for more details.
 
