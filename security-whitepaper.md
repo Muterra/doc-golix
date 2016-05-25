@@ -525,7 +525,7 @@ Note: the current secret serialization version is 2.
 
 ### Full ```GARQ``` MAC procedure
 
-From a resultant GHID ```rGHID``` that was already calculated during request creation:
+From a resultant GHID ```rGHID``` that was already calculated during request creation, MAC calculation (which uses the recipient's and author's ```exchange keys```, is performed as follows:
 
 ```
 ghidA = bytes(65)
@@ -538,7 +538,9 @@ saltB = ghidA[1:65]
 
 salt = saltA XOR saltB
 shared = ECDH(KA, KB)
-key = HKDF-SHA512(shared)
+key = HKDF-SHA512(shared, salt)
 
 A → B: HMAC-SHA512(key, rGHID)
 ```
+
+![MAC generation diagram](assets/operations-mac-cs1.png)
