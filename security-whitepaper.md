@@ -306,7 +306,7 @@ Asymmetric requests are the concatenation of:
 3. Cipher suite designation
 4. **Request recipient's ```GHID```**
 5. **Asymmetrically encrypted payload:**  
-   ```{``` ```Author GHID``` ```|``` ```Target GHID``` ```|``` ```<Keyshare>``` or ```<ACK>``` or ```<NAK>``` ```}```
+   ```{``` ```Author GHID``` ```||``` ```Target GHID``` ```||``` ```<Keyshare>``` or ```<ACK>``` or ```<NAK>``` ```}```
 6. **Resultant ```GHID```**
     1. Hash algorithm
     2. Hash digest
@@ -508,3 +508,37 @@ The servers that physically store Golix data. Also referred to as persisters, pe
 + **Symmetric shared secrets:** ECDH over Curve25519.
 + **Key agreement from shared secret:** HKDF+SHA512. Salt with bitwise XOR of the the address components of the two parties' GHIDs.
 + **```GARQ``` MAC:** HMAC+SHA512
+
+### Key/nonce serialization
+
+The serialization of the AES-CTR nonce and key (which are contained within asymmetric ```GARQ``` primitives) is as follows:
+
+| Offset | Length    | Name                       | Format                         |
+| ------ | --------- | -------------------        | -----------                    |
+| 0      | 2B        | Magic number               | ASCII "```SH```"               |
+| 2      | 2B        | Key servialization version | Unsigned 16-bit int            |
+| 4      | 1B        | Cipher suite identifier    | Unsigned 8-bit int: ```0x01``` |
+| 5      | 32B       | Key                        | Bytes                          |
+| 37     | 16B       | Nonce                      | Bytes                          |
+
+Note: the current secret serialization version is 2.
+
+### Full ```GARQ``` MAC procedure
+
+From a resultant GHID ```rGHID``` that was already calculated during request creation:
+
+```
+ghidA = bytes(65)
+addrA = ghidA[0:1] = 0x01
+saltA = ghidA[1:65]
+
+ghidB = bytes(65)
+addrB = ghidA[0:1] = 0x01
+saltB = ghidA[1:65]
+
+salt = saltA XOR saltB
+shared = ECDH(KA, KB)
+key = HKDF-SHA512(shared)
+
+A → B: HMAC-SHA512(key, rGHID)
+```
