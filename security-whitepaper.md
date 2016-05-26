@@ -328,14 +328,14 @@ Identity containers must be accepted by the ```persister``` if and only if the f
 1. Verify magic number
 2. Verify version
 3. Verify cipher suite
-4. Verify length is correct for properly-formatted file
-5. (The following steps may be done in parallel)
+4. (The following steps may be done in parallel)
     + Verify valid signature public key
     + Verify valid encryption public key
     + Verify valid exchange public key
     + Digest remaining file
         1. Verify address algorithm
         2. Verify file hash
+5. Verify EOF reached
 
 ### Object container (```GEOC```)
 
@@ -344,8 +344,7 @@ Object containers must be accepted by the ```persister``` if and only if the fol
 1. Verify magic number
 2. Verify version
 3. Verify cipher suite
-4. Verify length is correct for properly-formatted file
-5. (The following steps may be done in parallel)
+4. (The following steps may be done in parallel)
     + Author retrieval
         1. Verify author exists at persistence provider
         2. Retrieve author's identity file
@@ -353,7 +352,8 @@ Object containers must be accepted by the ```persister``` if and only if the fol
     + Digest remaining file
         1. Verify address algorithm
         2. Verify file hash
-6. Verify signature
+5. Verify signature
+6. Verify EOF reached
 
 ### Static object binding (```GOBS```)
 
@@ -362,8 +362,7 @@ Static bindings must be accepted by the ```persister``` if and only if the follo
 1. Verify magic number
 2. Verify version
 3. Verify cipher suite
-4. Verify length is correct for properly-formatted file
-5. (The following steps may be done in parallel)
+4. (The following steps may be done in parallel)
     + GOBS status check
         1. Verify no unchained debinding exists from the binder for the target address. If one exists, check fails; issue NAK
         2. If chained debinding exists from the binder for the target address, verify that chain permits rebinding. If not, check fails; issue NAK
@@ -375,7 +374,8 @@ Static bindings must be accepted by the ```persister``` if and only if the follo
         1. Verify target GHID exists at persistence provider
         2. Verify address algorithm
         3. Verify file hash
-6. Verify signature
+5. Verify signature
+6. Verify EOF reached
 
 ### Dynamic object binding (```GOBD```)
 
@@ -384,8 +384,7 @@ Dynamic bindings must be accepted by the ```persister``` if and only if the foll
 1. Verify magic number
 2. Verify version
 3. Verify cipher suite
-4. Verify length is correct for properly-formatted file
-5. (The following steps may be done in parallel)
+4. (The following steps may be done in parallel)
     + GOBD consistency check
         1. Check if dynamic address already exists at persistence provider. If so:
             1. If frame count is zero, check fails. Issue NAK.
@@ -403,7 +402,8 @@ Dynamic bindings must be accepted by the ```persister``` if and only if the foll
         2. Verify address algorithm
         3. Verify dynamic hash
         4. Verify file hash
-6. Verify signature
+5. Verify signature
+6. Verify EOF reached
 
 ### Debinding (```GDXX```)
 
@@ -412,8 +412,7 @@ Debindings must be accepted by the ```persister``` if and only if the following 
 1. Verify magic number
 2. Verify version
 3. Verify cipher suite
-4. Verify length is correct for properly formatted file
-5. (The following steps may be done in parallel)
+4. (The following steps may be done in parallel)
     + GDXX status check
         1. If static GHID for the in-verification GDXX already exists at persistence provider, check passes; continue (new state identical to old state if rest of verification passes)
         2. If static GHID for the in-verification GDXX exists within an existing debinding chain, check fails; issue NAK
@@ -428,7 +427,8 @@ Debindings must be accepted by the ```persister``` if and only if the following 
     + Digest remaining file
         1. Verify address algorithm
         2. Verify file hash
-6. Verify signature
+5. Verify signature
+6. Verify EOF reached
 
 ### Asymmetric request/response (```GARQ```)
 
@@ -437,8 +437,7 @@ Asymmetric requests must be accepted by the ```persister``` if and only if the f
 1. Verify magic number
 2. Verify version
 3. Verify cipher suite
-4. Verify length is correct for properly formatted file
-5. (The following steps may be done in parallel)
+4. (The following steps may be done in parallel)
     + Recipient retrieval
         1. Verify recipient exists at persistence provider
         2. Retrieve recipient's identity file
@@ -446,6 +445,7 @@ Asymmetric requests must be accepted by the ```persister``` if and only if the f
     + Digest remaining file
         1. Verify address algorithm
         2. Verify file hash
+5. Verify EOF reached
 
 ## ```Entity``` ("client") state analysis
 
