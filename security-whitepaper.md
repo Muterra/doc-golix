@@ -337,6 +337,8 @@ Identity containers must be accepted by the ```persister``` if and only if the f
         2. Verify file hash
 5. Verify EOF reached
 
+![GIDC verification diagram](assets/operations-verify-gidc.png)
+
 ### Object container (```GEOC```)
 
 Object containers must be accepted by the ```persister``` if and only if the following procedure terminates successfully:
