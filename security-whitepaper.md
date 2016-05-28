@@ -350,12 +350,13 @@ Object containers must be accepted by the ```persister``` if and only if the fol
     + Author retrieval
         1. Verify author exists at persistence provider
         2. Retrieve author's identity file
-        3. Verify author's identity file includes public signature key for cipher suite
     + Digest remaining file
         1. Verify address algorithm
         2. Verify file hash
 5. Verify signature
 6. Verify EOF reached
+
+![GEOC verification diagram](assets/operations-verify-geoc.png)
 
 ### Static object binding (```GOBS```)
 
@@ -365,19 +366,17 @@ Static bindings must be accepted by the ```persister``` if and only if the follo
 2. Verify version
 3. Verify cipher suite
 4. (The following steps may be done in parallel)
-    + GOBS status check
-        1. Verify no unchained debinding exists from the binder for the target address. If one exists, check fails; issue NAK
-        2. If chained debinding exists from the binder for the target address, verify that chain permits rebinding. If not, check fails; issue NAK
+    + GOBS status check: verify no debinding exists for the binding's resultant ```GHID```
     + Binder retrieval
         1. Verify binder exists at persistence provider
         2. Retrieve binder's identity file
-        3. Verify binder's identity file includes public signature key for cipher suite
     + Digest remaining file
-        1. Verify target GHID exists at persistence provider
-        2. Verify address algorithm
-        3. Verify file hash
+        1. Verify address algorithm
+        2. Verify file hash
 5. Verify signature
 6. Verify EOF reached
+
+![GOBS verification diagram](assets/operations-verify-gobs.png)
 
 ### Dynamic object binding (```GOBD```)
 
@@ -387,25 +386,25 @@ Dynamic bindings must be accepted by the ```persister``` if and only if the foll
 2. Verify version
 3. Verify cipher suite
 4. (The following steps may be done in parallel)
-    + GOBD consistency check
-        1. Check if dynamic address already exists at persistence provider. If so:
-            1. If frame count is zero, check fails. Issue NAK.
-            2. If binder GHID differs from existing dynamic address binding, check fails. Issue NAK.
-            3. If preexisting binding's static GHID is not contained within historical frames, check fails. Issue NAK.
-        2. If dynamic address does not exist at persistence provider,
-            1. Verify no unchained debinding exists from the binder for the target address. If one exists, check fails; issue NAK
-            2. If chained debinding exists from the binder for the target address, verify that chain permits rebinding. If not, check fails; issue NAK
+    + GOBD status check: verify no debinding exists for the binding's dynamic ```GHID```
+    + GOBD consistency check: 
+        + if dynamic address **does not exist** at persistence provider...
+            1. Verify binding has no history (*ie*, it's new)
+            2. Verify dynamic address algorithm
+            3. Verify dynamic hash
+        + else...
+            1. Verify existing binder matches uploaded binder
+            2. Verify existing frame ```GHID``` is included in list of historical ```GHID```s for the uploaded binding
     + Binder retrieval
         1. Verify binder exists at persistence provider
         2. Retrieve binder's identity file
-        3. Verify binder's identity file includes public signature key for cipher suite
     + Digest remaining file
-        1. Verify at least one target GHID exists at persistence provider
-        2. Verify address algorithm
-        3. Verify dynamic hash
-        4. Verify file hash
+        1. Verify frame address algorithm
+        2. Verify frame hash
 5. Verify signature
 6. Verify EOF reached
+
+![GOBD verification diagram](assets/operations-verify-gobd.png)
 
 ### Debinding (```GDXX```)
 
@@ -415,22 +414,20 @@ Debindings must be accepted by the ```persister``` if and only if the following 
 2. Verify version
 3. Verify cipher suite
 4. (The following steps may be done in parallel)
-    + GDXX status check
-        1. If static GHID for the in-verification GDXX already exists at persistence provider, check passes; continue (new state identical to old state if rest of verification passes)
-        2. If static GHID for the in-verification GDXX exists within an existing debinding chain, check fails; issue NAK
-        3. If the in-verification GDXX has a chain length greater than one, and the persistence provider does not have at least one target GHID in storage, check fails; issue NAK
+    + GDXX status check: verify no debinding exists for the debinding's resultant ```GHID```
     + GDXX reference check
-        1. Verify at least one target GHID exists at persistence provider
-        2. Verify binder GHID matches author GHID (for GOBS, GOBD, GDXX) or recipient GHID (for MEPR, MPAK, MPNK)
+        1. Verify target GHID exists at persistence provider
+        2. Verify debinder GHID matches binder GHID (for GOBS, GOBD, GDXX) or recipient GHID (for GARQ)
     + Binder retrieval
         1. Verify binder exists at persistence provider
         2. Retrieve binder's identity file
-        3. Verify binder's identity file includes public signature key for cipher suite
     + Digest remaining file
         1. Verify address algorithm
         2. Verify file hash
 5. Verify signature
 6. Verify EOF reached
+
+![GDXX verification diagram](assets/operations-verify-gdxx.png)
 
 ### Asymmetric request/response (```GARQ```)
 
@@ -440,14 +437,13 @@ Asymmetric requests must be accepted by the ```persister``` if and only if the f
 2. Verify version
 3. Verify cipher suite
 4. (The following steps may be done in parallel)
-    + Recipient retrieval
-        1. Verify recipient exists at persistence provider
-        2. Retrieve recipient's identity file
-        3. Verify recipient's identity file includes public encryption key and exchange public key for cipher suite
+    + Verify recipient exists at persistence provider
     + Digest remaining file
         1. Verify address algorithm
         2. Verify file hash
 5. Verify EOF reached
+
+![GARQ persister verification diagram](assets/operations-verify-garq_server.png)
 
 ## ```Entity``` ("client") state analysis
 
@@ -457,14 +453,23 @@ Asymmetric requests must be accepted by the ```persister``` if and only if the f
 
 Asymmetric requests must be accepted by the ```entity``` if and only if the following procedure terminates successfully:
 
-1. Perform public verification (see above)
-2. Decrypt private inner container
-3. Author verification
+1. Verify magic number
+2. Verify version
+3. Verify cipher suite
+4. Digest remaining file
+    1. Verify address algorithm
+    2. Verify file hash
+5. Verify EOF reached
+6. Decrypt payload
+7. Author verification
     1. Verify author exists
     2. Retrieve author's identity file
-    3. Verify author's identity file includes exchange public key for cipher suite
-4. Perform symmetric signature key agreement procedure (see "Author symmetric signature" above)
-5. Verify author symmetric signature
+8. Perform symmetric signature key agreement procedure (see Appendix B below)
+9. Verify author symmetric signature
+
+**Note that for the recipient, rejection should imply an immediate debinding of the GARQ,** optionally accompanied by a NAK response to the request's author, sent by a responding (second) GARQ.
+
+![GARQ recipient verification diagram](assets/operations-verify-garq_client.png)
 
 # Conclusion
 
