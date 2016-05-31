@@ -15,8 +15,6 @@ An alternative approach would be to force end-to-end encryption of all IoT infor
 
 Golix is a cryptgraphic protocol designed to fill this void. It allows for both asynchronous delivery and asynchronous sharing, making scalable encryption of data at rest possible even for highly-dynamic social systems. Critically, it requires no trust in a centralized server to achieve confidentiality of transferred data.
 
-**Note on things that are missing:** need to talk about having asynchronous comms, and (very importantly) asynchronous/"dynamic" sharing. Asynchronous messaging with synchronous sharing isn't wholly asynchronous.
-
 # Threat model
 
 Golix protects the informational autonomy of an abstract digital ```entity-agent``` comprised of three public/private keypairs. That is to say, the Golix protocol affords these ```entities``` strict and exclusive control over:
