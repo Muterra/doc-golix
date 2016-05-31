@@ -2,7 +2,7 @@
 
 **SPECIAL WARNING:** This protocol should not be used for private data in a production environment until subjected to a third-party audit. Until that time, consider all Golix information to be fully public.
 
-**NOTE:** This is a purely implementation document. For design discussion, see our [design document](/design_philosophy.md). For technical discussion, see our [whitepaper](/whitepaper.md). For security discussion, stay tuned for a detailed threat model and state-based analysis.
+**NOTE:** This is a purely implementation document. For design discussion, see our [design document](/design_philosophy.md). For technical discussion, see our [whitepaper](/whitepaper.md). For security discussion, see [here](security-whitepaper.md).
 
 # Cipher suites and address algorithms
 
