@@ -1,4 +1,4 @@
-**WARNING:** This is a draft document dated 28 February 2016. It is under review and is definitely **not finalized!** If you'd like to stay updated, consider joining our [mailing list](https://www.muterra.io/mailing-signup.html).
+**WARNING:** This is a draft document dated 28 February 2016. It is under review and is definitely **not finalized!** If you'd like to stay updated, consider joining the Hypergolix [mailing list](https://www.hypergolix.com/#page-top).
 
 **SPECIAL WARNING:** This protocol should not be used for private data in a production environment until subjected to a third-party audit. Until that time, consider all Golix information to be fully public.
 

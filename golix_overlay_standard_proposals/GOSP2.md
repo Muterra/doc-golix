@@ -1,6 +1,8 @@
-# MOSP 2: Private key storage container
+# WARNING: THIS DOCUMENT IS BOTH DEPRECATED AND UNDER REWRITE
 
-**Problem abstract:** In order to make digital identities (see [MOSP 1](/muse_overlay_standard_proposals/MOSP1.md)) available on multiple devices, and to enable safe Muse storage thereof, a secure private key container file is necessary.
+# GOSP 2: Private key storage container
+
+**Problem abstract:** In order to make digital identities (see [GOSP 1](/muse_overlay_standard_proposals/GOSP1.md)) available on multiple devices, and to enable safe Muse storage thereof, a secure private key container file is necessary.
 
 **Goals:**
 

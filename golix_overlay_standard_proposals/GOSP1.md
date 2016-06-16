@@ -1,4 +1,6 @@
-# MOSP 1: Digital identity container
+# WARNING: THIS DOCUMENT IS BOTH DEPRECATED AND UNDER REWRITE
+
+# GOSP 1: Digital identity container
 
 **Problem abstract:** The Muse requires a single object for digital identities, but does not define its structure. This document is a proposed format for the identity file.
 

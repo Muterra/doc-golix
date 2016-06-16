@@ -1,4 +1,4 @@
-**WARNING:** This is a draft document dated May 2016. It is under review and is definitely not finalized. If you'd like to stay updated, consider joining our [mailing list](https://www.muterra.io/mailing-signup.html).
+**WARNING:** This is a draft document dated May 2016. It is under review and is definitely not finalized. If you'd like to stay updated, consider joining the [Hypergolix mailing list](https://www.hypergolix.com/#page-top).
 
 # Introduction
 
