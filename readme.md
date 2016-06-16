@@ -1,4 +1,4 @@
-![Golix logo](/assets/branding-logo-padded.png)
+<img align="center" src="/assets/branding-logo-padded.png">
 
 **Warning:** this repo is considered public pre-release information and is in varying levels of completeness. If you have questions or comments, please [contact us](mailto:badg@muterra.io).
 
