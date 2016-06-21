@@ -35,9 +35,39 @@ Golix is a relatively low-level protocol and is not intended for *direct* use in
 
 Golix is the core technology powering [Hypergolix](https://www.hypergolix.com), a local background service that drastically simplifies IoT development. If you'd like to stay updated, please join the [Hypergolix mailing list](https://www.hypergolix.com/#page-top). **Note that the Golix Protocol used to be called "the Muse protocol".** It was re-branded as Golix in February 2016.
 
+# Contributing
+
+Help is welcome and needed. Unfortunately we're so under-staffed that we haven't even had time to make a thorough contribution guide. In the meantime:
+
+## Guide
+
++ Issues are great! Open them for anything: feature requests, bug reports, etc. 
++ Fork, then PR.
++ Open an issue for every PR.
+  + Use the issue for all discussion.
+  + Reference the PR somewhere in the issue discussion.
++ Please be patient. We'll definitely give feedback on anything we bounce back to you, but especially since we lack a contribution guide, style guide, etc, this may be a back-and-forth process.
++ Please be courteous in all discussion.
+
+## Project priorities
+
+Note: these needs are specific to external contributors. Internal development priorities differ substantially.
+
++ Contribution guide
++ Code of conduct
++ Protocol security audits
++ Slack channel (or similar)
+
+See also:
+
++ [Hypergolix contributions](https://github.com/Muterra/py_hypergolix#contributing)
++ [Hypergolix demo contributions](https://github.com/Muterra/py_hypergolix_demos#contributing)
+
 ## Sponsors and backers
 
-Golix finances are very tight. If you like what we're doing, please consider [sponsoring the project](https://opencollective.com/golix#sponsor)...
+If you like what we're doing, please consider [sponsoring the project](https://opencollective.com/golix#sponsor) or [becoming a backer](https://opencollective.com/golix).
+
+**Sponsors**
 
   <a href="https://opencollective.com/golix/sponsors/0/website" target="_blank"><img src="https://opencollective.com/golix/sponsors/0/avatar"></a>
   <a href="https://opencollective.com/golix/sponsors/1/website" target="_blank"><img src="https://opencollective.com/golix/sponsors/1/avatar"></a>
@@ -45,7 +75,9 @@ Golix finances are very tight. If you like what we're doing, please consider [sp
   <a href="https://opencollective.com/golix/sponsors/3/website" target="_blank"><img src="https://opencollective.com/golix/sponsors/3/avatar"></a>
   <a href="https://opencollective.com/golix/sponsors/4/website" target="_blank"><img src="https://opencollective.com/golix/sponsors/4/avatar"></a>
 
-... or [becoming a backer](https://opencollective.com/golix).
+-----
+
+**Backers**
 
   <a href="https://opencollective.com/golix/backers/0/website" target="_blank"><img src="https://opencollective.com/golix/backers/0/avatar"></a>
   <a href="https://opencollective.com/golix/backers/1/website" target="_blank"><img src="https://opencollective.com/golix/backers/1/avatar"></a>
