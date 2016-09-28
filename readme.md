@@ -4,6 +4,74 @@
 
 # Introduction
 
+## Almost plain English
+
+**Golix is a cryptographic protocol:**
+
++ It's a set of rules
++ that computer programs can agree on in advance,
++ which mathematically prove (with a few assumptions)
++ that a piece of data comes from a specific person,
++ and that the data cannot be seen by any third-parties.
+
+**It is trustless and self-authenticating:**
+
++ Unlike Google or Facebook, large companies built on Golix cannot see your data
++ Unlike Google or Facebook, you "log in" to Golix once locally (on *your* computer, not over the web), and that proves to everyone else that you are who you say you are
++ You don't need to contact a third party to log in, so it works (for example) within your home wireless network, even if your internet connection goes out
+
+**It is fully social:**
+
++ You can share and re-share data, at any time, with anyone
++ Unless and until you explicitly share something, it is provably private
+
+**It is especially well-suited to the "Internet of Things" (IoT):**
+
++ Golix works regardless of your internet connection
++ It is substantially simpler to develop on than existing IoT frameworks
++ It is designed to work with many, many more total devices than exist on the internet today
++ It doesn't expose your IoT devices to the "outside world"
+
+## More specifically
+
+If I'm ```Alice```, the point of Golix is that:
+
+1. I, ```Alice```, am always ```Alice```, and ```Alice``` is always me. 
+    1. If ```someone``` shares something with me, they are guaranteed to be sharing with ```Alice```. 
+    2. If I share something with ```someone```, they are guaranteed it comes from ```Alice```.
+2. When I, ```Alice```, create some piece of data, I am guaranteed that ```no one``` else can see it. This also includes the servers where the data is stored.
+3. I *may* choose to share that data with ```anyone```, at any time. I may also choose *not* to share it.
+    1. Once I share it with ```someone```, they may share it with ```anyone``` else, at any time, without any restriction.
+    2. Those recipients may, in turn, re-share it with ```anyone``` else, and so on.
+    3. There will be no public record of who has shared with whom.
+4. The data that I, ```Alice```, create, cannot be altered by ```anyone``` at any time, including by myself.
+5. That data will always be available at the same place.
+    1. It will always be accessible from a singular, exclusive, consistent address.
+    2. Any new servers that host it will preserve and reuse that address.
+6. I may also create a unique, consistent address for dynamic content.
+    1. This dynamic content will be composed of the unalterable pieces of data from (5).
+    2. The referent of this dynamic address (which piece of data it points to) can only be changed by me, ```Alice```.
+    3. ```Anyone``` can see and use this dynamic address.
+7. I may at any time declare a piece of data "in use".
+    1. This is a matter of public record. ```Anyone``` can see that I, ```Alice```, am using that data.
+    2. ```Anyone``` else may also declare the data "in use", regardless of who created it.
+8. Servers must retain data if, and only if, it is declared "in use".
+
+These constraints are enforced by:
+
+1. Cryptography (```Alice``` is identified only by her public key fingerprint).
+2. Cryptography (```Alice``` encrypts all data client-side immediately upon creation).
+3. Cryptography (Sharing is defined as the transfer of the secret key for the data, and the key is shared asymmetrically, **separately** from the data itself).
+4. Cryptography (Data is statically addressed by its hash digest).
+5. Cryptography (Data is statically addressed by its hash digest, as per above).
+6. Cryptography (```Alice``` must sign all dynamic addresses she creates, and monotonicity is enforced through a hash chain).
+7. Cryptography (```Alice``` must sign all data "bindings" she creates).
+8. Auditing the servers (in the long term, this could be enforced via blockchain).
+
+Note: here, ```Alice```, ```anyone```, ```no one```, and ```someone``` are *digital* entities. They may or may not have any relationship to *physical* entities: they could be a Nest thermostat, a person, a business, purely digital, etc.
+
+# Technical discussion
+
 **Abstract:** Golix provides end-to-end encryption for distributed agent-based networks, especially internet-connected physical devices (IoT), while substantially simplifying their development. This document begins with a brief overview of the Golix protocol, followed by a more detailed discussion of its most important aspects.
 
 Other documents:
