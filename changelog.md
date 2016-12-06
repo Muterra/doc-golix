@@ -1,5 +1,14 @@
 # Current revision: 29 March 2016
 
++ Changed dynamic bindings to use monotonic counter for replay protection and frame indexing, instead of a hash chain of frame GHIDs.
++ Changed dynamic bindings to use a target vector instead of current target and history separated
++ Updated dynamic binding version to 16
++ Updated spec and security whitepaper to reflect the change (however, GOBD diagramming still needs revision)
+
+# Previous revisions
+
+## 29 March 2016, #edfd65e
+
 + Clarified use of dynamic binding historical frames
 + Removed support for multiple targets in dynamic bindings; incremented version accordingly.
 + Updated debindings to be stateless; incremented version accordingly.
@@ -13,8 +22,6 @@
 + Added "query debinding" persistence provider command
 + Modified behavior of "list bindings" persistence provider command to return the binding ghids instead of their authors
 + List bindings (the persistence provider command) now has a specified order.
-
-# Previous revisions
 
 ## 28 Feb 2016, #8b925e8
 

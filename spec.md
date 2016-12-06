@@ -364,14 +364,14 @@ Note that the static GHID applies to *this particular frame*.
 | 4              | 4B             | Version number            | Unsigned 32-bit int |
 | 8              | 1B             | Cipher suite              | Unsigned 8-bit int  |
 | 9              | 65B            | Binder GHID               | Bytes               |
-| 74             | 2B             | History length *LR*       | Unsigned 16-bit int |
-| 76             | *LR*           | Historical frames         | Bytes               |
-| 80 + *LR*      | *LN*           | Target GHID               | Bytes               |
-| 145 + *LR*     | 1B             | Dynamic address algorithm | Unsigned 8-bit int  |
-| 146 + *LR*     | 64B            | Dynamic hash              | Bytes               |
-| 210 + *LR*     | 1B             | File address algorithm    | Unsigned 8-bit int  |
-| 211 + *LR*     | 64B            | File hash                 | Bytes               |
-| 275 + *LR*     | 512B           | Binder signature          | Bytes               |
+| 74             | 8B             | Monotonic frame counter   | Unsigned 64-bit int |
+| 82             | 2B             | Target vector length *LR* | Unsigned 16-bit int |
+| 84             | *LR*           | Target vector             | Bytes               |
+| 84 + *LR*      | 1B             | Dynamic address algorithm | Unsigned 8-bit int  |
+| 85 + *LR*      | 64B            | Dynamic hash              | Bytes               |
+| 149 + *LR*     | 1B             | File address algorithm    | Unsigned 8-bit int  |
+| 150 + *LR*     | 64B            | File hash                 | Bytes               |
+| 214 + *LR*     | 512B           | Binder signature          | Bytes               |
 
 ### 1. Magic number
 
@@ -379,7 +379,7 @@ ASCII "GOBD" (47 4F 42 44)
 
 ### 2. Version
 
-See above for description. **Currently 15.**
+See above for description. **Currently 16.**
 
 ### 3. Cipher suite
 
@@ -389,65 +389,17 @@ See above for description.
 
 See above for description.
 
-### 5. History length
+### 5. Monotonic frame counter
 
-The length, in bytes, of the GHID history included in the binding. If zero, this is the first frame.
+A monotonically increasing counter indicating frame ordering. The counter prevents replay attacks and state synchronization discrepancies. Persistence providers must reject any attempted frame with a counter lower than the existing frame at the persister. The counter is zero-indexed, *ie* the first frame uploaded has a counter of zero.
 
-### 6. Historical frames
+### 6. Target vector length
 
-A record of the recent history of the dynamic binding's static GHIDs, sorted in ascending order of recency (ie, oldest first). A persistence provider must reject any new dynamic binding frame for an existing binding that does not contain the existing frame in its history list. For example:
+The length, in bytes, of the GHID target vector included in the binding.
 
-**Scenario 1**
+### 7. Target vector
 
-```
-Existing #Dynamic123 
-    current frame: #Frame1
-    current history: []
-New #Dynamic123
-    new frame: #Frame2
-    new history: [#Frame1]
-Result: Successful update
-```
-
-**Scenario 2**
-
-```
-Existing #Dynamic123 
-    current frame: #Frame5
-    current history: [#Frame3, #Frame4]
-New #Dynamic123
-    new frame: #Frame7
-    new history: [#Frame5, #Frame6]
-Result: Successful update
-```
-
-**Scenario 3**
-
-```
-Existing #Dynamic123 
-    current frame: #Frame10
-    current history: [#Frame9]
-New #Dynamic123
-    new frame: #Frame8
-    new history: [#Frame7]
-Result: Failed update
-```
-
-**Scenario 4**
-
-```
-Existing #Dynamic123 
-    current frame: #Frame14
-    current history: [#Frame11, #Frame12, #Frame13]
-New #Dynamic123
-    new frame: #Frame16
-    new history: [#Frame15]
-Result: Failed update
-```
-
-**Note:** without this field, dynamic bindings are susceptible to replay attacks. All GOBD records must either include at least one historical GHID, or be the root dynamic binding. There is a balance here between network state management (more history is better) and size optimization (less history is better). If (and only if) the history length is zero will this indicate a new dynamic binding, in which case historical frames will be empty (zero-length).
-
-### 7. Target GHID
+A record of the recent history of the dynamic binding's target GHIDs, sorted from most recent to oldest. The first GHID in the target vector is the current target of the binding.
 
 The GHID of the object representing the current state of the binding. The only valid targets are:
 
@@ -457,10 +409,11 @@ The GHID of the object representing the current state of the binding. The only v
 
 Circular references between dynamic bindings are not allowed. Persistence providers must detect any attempts to create these references, and must always reject the latest of the dynamic bindings (the one that "closes" the circular reference). If multiple closing bindings are submitted within the same individual transport request, the persistence provider should reject all of them. Persistence providers may enforce a maximum depth for chained dynamic bindings.
 
-Note that it is impossible to have two *different* dynamic bindings with identical initial target lists. It is therefore also impossible to directly preallocate multiple dynamic "branches". Applications seeking such functionality have two options:
+Note that it is impossible to have two *different* dynamic bindings with identical initial target lists. It is therefore also impossible to directly preallocate multiple dynamic "branches". Applications seeking such functionality have at least two options:
 
 1. Create a new dynamic binding at the branch point, updating downstream references to point to the new binding where appropriate. 
 2. Immediately create two dynamic bindings, with one targeting the other.
+3. Create a disposable zeroth (initial) frame, constructing a target vector of a single random GHID, effectively using that GHID as a nonce. Then, update the binding with the desired (duplicate) target.
 
 ### 8. Dynamic address algorithm
 

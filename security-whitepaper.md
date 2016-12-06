@@ -250,6 +250,8 @@ Static bindings are the concatenation of:
 
 <img align="right" src="assets/primitives-gobd.png">
 
+**Note: the GOBD diagram is out-of-date; see description below.**
+
 Dynamic bindings also prevent object garbage collection, while also creating a secondary proxy address for whatever object is currently referenced by the binding. Like static bindings, they are potentially subject to replay attacks, and must follow the same mitigation process. See "Persister state analysis" below for more details.
 
 Dynamic bindings are the concatenation of:
@@ -258,11 +260,11 @@ Dynamic bindings are the concatenation of:
 2. Version number
 3. Cipher suite designation
 4. **Binding author's ```GHID```**
-5. Historical frame list length
-6. **Historical frame ```GHID``` list**  
-   Note: historical frames refer to a most-recent-first sorted list of previous "static" / "frame" GHIDs. They are necessary for replay protection. The very first frame in a binding contains no history and must have a length of zero bytes.
-7. **Binding's target ```GUID```**  
-   Note: the binding target applies to only this particular frame.
+5. **Monotonic counter for binding frame indexing**  
+   Note: the frame index monotonic counter is responsible for replay protection on dynamic bindings. They are zero-indexed. Persistence servers must reject any index smaller than the index currently existing at the server.
+6. Target vector length
+7. **Target vector ```GHID``` list**  
+   Note: a most-recent-first sorted list of target GHIDs. The first GHID in the list is the current target. The target vector applies to only this particular frame.
 8. **Resultant ```GHID```**  
    Note: the first GHID in the dynamic binding is the "dynamic" or "portable" GHID. It is defined only once -- upon finalizing the first frame of the binding. This GHID may be used as a proxy address for the most current target of the binding. Like any other GHID, it is defined as the hash digest of the entire preceding file.
     1. Hash algorithm
@@ -386,13 +388,15 @@ Dynamic bindings must be accepted by the ```persister``` if and only if the foll
 4. (The following steps may be done in parallel)
     + GOBD status check: verify no debinding exists for the binding's dynamic ```GHID```
     + GOBD consistency check: 
-        + if dynamic address **does not exist** at persistence provider...
-            1. Verify binding has no history (*ie*, it's new)
-            2. Verify dynamic address algorithm
-            3. Verify dynamic hash
-        + else...
+        + if dynamic address **does not exist** at persistence provider **and** its counter is zero...
+            1. Verify dynamic address algorithm
+            2. Verify dynamic hash
+        + elif dynamic address **does not exist** at persistence provider (but its counter is nonzero)...
+            1. Dynamic address cannot be validated in this case. Optionally, the server *may* reject the binding, but *should* accept it.
+        + else (binding exists and counter is nonzero):
             1. Verify existing binder matches uploaded binder
-            2. Verify existing frame ```GHID``` is included in list of historical ```GHID```s for the uploaded binding
+            2. Verify the frame index (the counter) increased
+            3. Optionally, detect resource contentions by comparing target vector ```GHID```s after aligning them by the frame index
     + Binder retrieval
         1. Verify binder exists at persistence provider
         2. Retrieve binder's identity file
